@@ -1,0 +1,44 @@
+/* IndyMAT marka token'ları */
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600&display=swap');
+/* Kendi sunucundan vermek için yukarıdaki satır yerine: @import url('../fonts/web/montserrat.css'); */
+
+:root {
+  /* renk */
+  --ink: #141516;
+  --graphite: #101112;
+  --paper: #FAFAFA;
+  --white: #FFFFFF;
+  --mist: #E4E5E6;
+  --slate: #686A6F;
+  --slate-light: #8C9094;
+
+  --bg: var(--paper);
+  --fg: var(--ink);
+  --fg-muted: var(--slate);
+  --bg-subtle: var(--mist);
+  --line: var(--mist);
+
+  /* yazı */
+  --font-sans: Montserrat, "Helvetica Neue", Arial, sans-serif;
+  --font-mono: "JetBrains Mono", Menlo, Consolas, monospace; /* öneri */
+  --tracking-wordmark: 0.14em;
+  --tracking-label: 0.3em;
+  --tracking-tagline: 0.819em;
+
+  /* boşluk ve köşe (öneri) */
+  --space-1: 8px; --space-2: 16px; --space-3: 24px; --space-4: 48px;
+  --radius-sm: 6px; --radius-md: 12px; --radius-icon: 22.37%;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) { --bg: var(--graphite); --fg: var(--white); --fg-muted: var(--slate-light); --bg-subtle: #1E2022; --line: #2C2E31; color-scheme: dark; }
+}
+:root[data-theme="dark"] { --bg: var(--graphite); --fg: var(--white); --fg-muted: var(--slate-light); --bg-subtle: #1E2022; --line: #2C2E31; color-scheme: dark; }
+
+.wordmark { font: 600 48px/1 var(--font-sans); letter-spacing: var(--tracking-wordmark); }
+.tagline  { font: 400 12px/1 var(--font-sans); letter-spacing: var(--tracking-tagline); text-transform: uppercase; color: var(--fg-muted); }
+.label    { font: 500 11px/1.4 var(--font-sans); letter-spacing: var(--tracking-label); text-transform: uppercase; color: var(--fg-muted); }
+.display  { font: 600 40px/1.15 var(--font-sans); letter-spacing: -0.01em; }
+.heading  { font: 600 24px/1.25 var(--font-sans); }
+.body     { font: 400 16px/1.6 var(--font-sans); }
+.caption  { font: 400 13px/1.5 var(--font-sans); color: var(--fg-muted); }
+.code     { font: 400 14px/1.6 var(--font-mono); }

@@ -1,0 +1,15 @@
+# Veri analizi ve sayısal yöntemler
+mean median mode std var range iqr prctile quantile cov corrcoef bounds rms
+histc histcounts histcounts2 accumarray discretize
+movmean movmedian movsum movmax movmin movstd movvar
+rescale normalize smoothdata detrend filter filter2 conv conv2 deconv
+rmmissing fillmissing ismissing standardizeMissing isoutlier rmoutliers filloutliers
+cumtrapz trapz gradient del2
+interp1 interp2 interp3 interpn griddata spline pchip makima ppval mkpp unmkpp griddedInterpolant scatteredInterpolant
+polyfit polyval polyder polyint roots poly residue
+fft ifft fft2 ifft2 fftn ifftn fftshift ifftshift nextpow2
+integral integral2 integral3 quad quadgk quadl quadv quad2d
+fzero fminsearch fminbnd fminunc fsolve lsqnonneg optimset optimget
+ode45 ode23 ode15s ode23s ode113 ode23t ode23tb ode15i odeset odeget deval bvp4c bvp5c pdepe dde23
+delaunay convhull voronoi polyarea inpolygon
+groupsummary groupcounts findgroups splitapply topkrows maxk mink

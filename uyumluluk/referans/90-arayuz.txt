@@ -1,0 +1,6 @@
+# Uygulama arayüzü
+uifigure uiaxes uibutton uilabel uieditfield uidropdown uicheckbox uislider uitable uitabgroup uitab uigridlayout uipanel
+uicontrol uimenu uicontextmenu uibuttongroup
+msgbox errordlg warndlg questdlg inputdlg listdlg helpdlg waitbar
+uigetfile uiputfile uigetdir uialert uiconfirm
+guidata guihandles uiwait uiresume waitfor

@@ -1,0 +1,16 @@
+# Dil ve programlama
+assert error warning rethrow MException throw lasterr getReport onCleanup
+nargin nargout narginchk nargoutchk inputname
+inputParser validateattributes validatestring
+mustBePositive mustBeNonnegative mustBeNumeric mustBeInteger mustBeFinite mustBeMember mustBeNonempty mustBeReal
+feval eval evalc evalin assignin func2str str2func functions fcnchk
+cellfun arrayfun structfun bsxfun deal
+exist isvarname who whos clear clearvars which what mlock munlock
+isa class cast isobject ismethod isprop methods properties superclasses metaclass
+tic toc cputime timeit pause clock etime
+disp display fprintf input keyboard
+run addpath rmpath path genpath pwd cd userpath
+dbstop dbclear dbcont dbstep dbquit dbstack dbstatus
+profile timer parfeval
+builtin inputname mfilename isdeployed ispc ismac isunix computer version ver getenv setenv system
+containers.Map dictionary isKey keys values remove

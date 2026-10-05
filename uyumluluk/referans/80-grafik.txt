@@ -1,0 +1,21 @@
+# Grafik ve görselleştirme
+figure axes gcf gca clf cla close hold subplot tiledlayout nexttile
+plot plot3 fplot fplot3 fimplicit semilogx semilogy loglog errorbar area stairs stem stem3
+bar barh bar3 histogram histogram2 hist pie pie3 pareto
+scatter scatter3 bubblechart swarmchart
+polarplot polar compass rose
+contour contourf contour3 contourc
+surf surfc surfl mesh meshc meshz waterfall ribbon pcolor imagesc image imshow
+quiver quiver3 streamline feather
+fill fill3 patch line rectangle
+heatmap boxchart violinplot wordcloud geoplot
+xlabel ylabel zlabel title subtitle sgtitle legend colorbar text annotation
+xlim ylim zlim axis grid box daspect pbaspect view
+xticks yticks zticks xticklabels yticklabels xtickangle ytickangle xtickformat ytickformat
+xline yline yyaxis
+colormap parula jet hsv hot cool gray bone copper turbo colororder caxis clim
+set get findobj findall isgraphics ishandle ishghandle delete copyobj
+drawnow refresh animatedline addpoints getframe movie comet
+print saveas savefig openfig exportgraphics
+light lighting shading material camlight
+ginput datacursormode zoom pan rotate3d

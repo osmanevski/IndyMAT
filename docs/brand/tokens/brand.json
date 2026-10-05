@@ -1,0 +1,197 @@
+{
+ "name": "IndyMAT",
+ "taglines": [
+  "Calculate freely",
+  "Same math. More freedom."
+ ],
+ "color": {
+  "ink": {
+   "hex": "#141516",
+   "rgb": [
+    20,
+    21,
+    22
+   ],
+   "cmyk": [
+    9,
+    5,
+    0,
+    91
+   ]
+  },
+  "graphite": {
+   "hex": "#101112",
+   "rgb": [
+    16,
+    17,
+    18
+   ],
+   "cmyk": [
+    11,
+    6,
+    0,
+    93
+   ]
+  },
+  "paper": {
+   "hex": "#FAFAFA",
+   "rgb": [
+    250,
+    250,
+    250
+   ],
+   "cmyk": [
+    0,
+    0,
+    0,
+    2
+   ]
+  },
+  "white": {
+   "hex": "#FFFFFF",
+   "rgb": [
+    255,
+    255,
+    255
+   ],
+   "cmyk": [
+    0,
+    0,
+    0,
+    0
+   ]
+  },
+  "mist": {
+   "hex": "#E4E5E6",
+   "rgb": [
+    228,
+    229,
+    230
+   ],
+   "cmyk": [
+    1,
+    0,
+    0,
+    10
+   ]
+  },
+  "slate": {
+   "hex": "#686A6F",
+   "rgb": [
+    104,
+    106,
+    111
+   ],
+   "cmyk": [
+    6,
+    5,
+    0,
+    56
+   ]
+  },
+  "slate-light": {
+   "hex": "#8C9094",
+   "rgb": [
+    140,
+    144,
+    148
+   ],
+   "cmyk": [
+    5,
+    3,
+    0,
+    42
+   ]
+  }
+ },
+ "contrast": {
+  "ink/paper": 17.5,
+  "white/graphite": 18.9,
+  "slate/paper": 5.2,
+  "slate-light/graphite": 5.8,
+  "ink/mist": 14.5,
+  "slate/mist": 4.3
+ },
+ "type": {
+  "family": "Montserrat",
+  "license": "SIL OFL 1.1",
+  "source": "https://fonts.google.com/specimen/Montserrat",
+  "wordmark": {
+   "weight": 600,
+   "tracking_em": 0.14
+  },
+  "tagline": {
+   "weight": 400,
+   "tracking_em": 0.819,
+   "uppercase": true
+  },
+  "label": {
+   "weight": 500,
+   "tracking_em": 0.3,
+   "uppercase": true
+  },
+  "mono_suggestion": "JetBrains Mono"
+ },
+ "logo": {
+  "tagline_tracking_em": 0.819,
+  "mark": {
+   "grid": "12u x 26v, v = u*tan(30deg)",
+   "unit_px": 40.0,
+   "left_piece_vertices_uv_radius_u": [
+    [
+     0,
+     8,
+     1.4
+    ],
+    [
+     8,
+     0,
+     0.58
+    ],
+    [
+     8,
+     10,
+     1.15
+    ],
+    [
+     3,
+     15,
+     1.15
+    ],
+    [
+     3,
+     20,
+     0.43
+    ],
+    [
+     0,
+     17,
+     1.15
+    ]
+   ],
+   "visual_width": 480.0,
+   "visual_height": 566.48,
+   "aspect_h_over_w": 1.1802
+  },
+  "wordmark": {
+   "font": "Montserrat SemiBold (600)",
+   "tracking_em": 0.14,
+   "width_over_cap": 7.547
+  },
+  "vertical": {
+   "cap_over_mark_w": 0.148,
+   "gap_over_mark_w": 0.085,
+   "tagline_cap_over_mark_w": 0.035,
+   "tagline_gap_over_mark_w": 0.098,
+   "wordmark_w_over_mark_w": 1.117
+  },
+  "horizontal": {
+   "cap_over_mark_h": 0.36,
+   "gap_over_mark_w": 0.34
+  },
+  "construction": {
+   "w": 640.0,
+   "h": 760.4442799572107
+  }
+ }
+}

@@ -1,0 +1,21 @@
+node_modules/
+.matlab-free/
+__pycache__/
+.DS_Store
+workspace/*.mat
+workspace/octave-workspace
+.packages/
+build/
+.build.noindex/
+.claude/settings.local.json
+
+# Private local project records; excluded from public source releases.
+.private-history/
+AGENTS.md
+arsiv/
+denemeler/
+aktarim-manifest.json
+release-manifest.json
+scripts/install_local.py
+docs/*
+!docs/brand/

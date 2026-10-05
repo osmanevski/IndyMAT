@@ -1,0 +1,11 @@
+# Veri tipleri ve kapsayıcılar
+double single int8 int16 int32 int64 uint8 uint16 uint32 uint64 logical true false
+isnumeric isfloat isinteger islogical typecast
+cell iscell cell2mat num2cell cellfun
+struct isstruct fieldnames isfield rmfield setfield getfield orderfields struct2cell cell2struct
+table istable array2table table2array cell2table table2cell struct2table table2struct
+addvars removevars renamevars movevars
+innerjoin outerjoin stack unstack varfun rowfun summary head tail
+categorical iscategorical categories countcats addcats removecats renamecats
+missing
+isenum enumeration

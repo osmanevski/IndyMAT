@@ -1,0 +1,13 @@
+# Dizgi ve metin
+sprintf sscanf num2str str2num str2double int2str mat2str
+strcat strvcat strsplit strjoin strtrim strrep strfind strtok strjust
+strcmp strcmpi strncmp strncmpi
+upper lower fliplr blanks deblank newline
+regexp regexpi regexprep regexptranslate
+contains startsWith endsWith count replace erase reverse strip pad
+split join splitlines extractBefore extractAfter extractBetween insertBefore insertAfter
+strlength compose isstrprop isspace isletter ischar iscellstr isstring
+char double cellstr string strings
+convertCharsToStrings convertStringsToChars
+native2unicode unicode2native
+textwrap validatestring lettersPattern digitsPattern

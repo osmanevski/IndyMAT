@@ -1,0 +1,18 @@
+# Matematik ve doğrusal cebir
+abs sign sqrt nthroot exp expm1 log log2 log10 log1p power realsqrt reallog hypot
+sin cos tan asin acos atan atan2 sinh cosh tanh asinh acosh atanh sec csc cot sind cosd tand asind acosd atand deg2rad rad2deg
+round fix floor ceil mod rem idivide
+real imag conj angle complex isreal unwrap cplxpair
+factorial nchoosek perms primes isprime factor gcd lcm rat rats
+gamma beta erf erfc erfinv gammaln besselj bessely legendre ellipke
+sum prod cumsum cumprod diff max min cummax cummin
+zeros ones eye rand randn randi randperm rng linspace logspace colon meshgrid ndgrid magic hilb pascal diag blkdiag
+size numel length ndims height width isempty isscalar isvector ismatrix isrow iscolumn
+reshape repmat cat horzcat vertcat permute squeeze circshift flip fliplr flipud rot90 tril triu kron
+sort sortrows unique union intersect setdiff setxor ismember find any all nnz
+det inv pinv rank trace norm vecnorm null orth rref cond expm logm sqrtm funm
+eig eigs svd svds lu qr chol schur hess balance qz lscov linsolve mldivide lsqminnorm
+cross dot transpose ctranspose mtimes times rdivide
+sparse full issparse speye sprand spdiags nonzeros
+isnan isinf isfinite NaN Inf pi eps realmax realmin intmax intmin flintmax
+bitand bitor bitxor bitshift dec2bin bin2dec dec2hex hex2dec dec2base

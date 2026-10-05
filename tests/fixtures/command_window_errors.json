@@ -1,0 +1,51 @@
+{
+  "version": "11.3.0",
+  "capture": "Real Kernel plus Handler.post('/api/execute') in lane K; loopback bind denied. Only the temporary workspace prefix in the parse error is replaced with <workspace>.",
+  "cases": [
+    {
+      "name": "cw_capture_function",
+      "source": "function value=cw_capture_function()\n  value=missing_cw_capture_function;\nendfunction\n",
+      "mode": "code",
+      "code": "cw_capture_function();",
+      "output": "",
+      "error": "'missing_cw_capture_function' undefined near line 2, column 9\n  cw_capture_function:2",
+      "locations": [{"path": "cw_capture_function", "line": 2}]
+    },
+    {
+      "name": "cw_capture_nested",
+      "source": "function value=cw_capture_nested()\n  value=inner();\n  function result=inner()\n    result=missing_cw_capture_nested;\n  endfunction\nendfunction\n",
+      "mode": "code",
+      "code": "cw_capture_nested();",
+      "output": "",
+      "error": "'missing_cw_capture_nested' undefined near line 4, column 12\n  cw_capture_nested>inner:4\n  cw_capture_nested:2",
+      "locations": [{"path": "cw_capture_nested>inner", "line": 4}, {"path": "cw_capture_nested", "line": 2}]
+    },
+    {
+      "name": "cw_capture_parse",
+      "source": "function value=cw_capture_parse()\n  value = ;\nendfunction\n",
+      "mode": "code",
+      "code": "cw_capture_parse();",
+      "output": "",
+      "error": "syntax error near line 2, column 11 in file <workspace>/cw_capture_parse.m",
+      "locations": [{"path": "<workspace>/cw_capture_parse.m", "line": 2}]
+    },
+    {
+      "name": "cw_capture_script",
+      "source": "first=1;\nerror('script failure');\n",
+      "mode": "file",
+      "code": "",
+      "output": "",
+      "error": "script failure\n  cw_capture_script:2\n  run:78",
+      "locations": [{"path": "cw_capture_script", "line": 2}, {"path": "run", "line": 78}]
+    },
+    {
+      "name": "command_line",
+      "source": null,
+      "mode": "code",
+      "code": "error('command line failure');",
+      "output": "",
+      "error": "command line failure",
+      "locations": []
+    }
+  ]
+}

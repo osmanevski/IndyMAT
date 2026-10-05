@@ -1,0 +1,12 @@
+# Dosya ve veri G/Ç
+fopen fclose fprintf fscanf fgetl fgets fread fwrite feof ferror frewind fseek ftell
+save load matfile
+readtable writetable readmatrix writematrix readcell writecell readlines writelines readstruct writestruct
+csvread csvwrite dlmread dlmwrite textscan textread importdata fileread
+xlsread xlswrite sheetnames detectImportOptions
+jsonencode jsondecode
+imread imwrite imfinfo audioread audiowrite audioinfo
+fullfile fileparts filesep pathsep tempdir tempname
+dir ls isfile isfolder mkdir rmdir delete copyfile movefile
+webread websave urlread urlwrite
+zip unzip tar untar gzip gunzip

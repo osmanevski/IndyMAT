@@ -1,0 +1,1301 @@
+{
+ "bulunamayan_adlar": [
+  "addcats",
+  "addvars",
+  "between",
+  "categories",
+  "countcats",
+  "dateshift",
+  "getReport",
+  "hms",
+  "innerjoin",
+  "isKey",
+  "isnat",
+  "isweekend",
+  "keys",
+  "movevars",
+  "outerjoin",
+  "remove",
+  "removecats",
+  "removevars",
+  "renamecats",
+  "renamevars",
+  "rowfun",
+  "stack",
+  "throw",
+  "timeofday",
+  "unstack",
+  "values",
+  "varfun",
+  "ymd"
+ ],
+ "durumlar": {
+  "arayuz-guidata": {
+   "hash": "3c9457bee65ccfe494e00c16bb4ef674b94d5336967dbd21203864b221fa0c25",
+   "status": "OK"
+  },
+  "arayuz-uicontrol": {
+   "hash": "e8ba6db231e984f9b51ea755cdd367508f7b0544fd9b0a227f648671424679b7",
+   "status": "OK"
+  },
+  "arayuz-uifigure": {
+   "hash": "1bb7272b8430ed7e271cc5759f4fbdb731b43f3055a0bfbeac3feb114f46468e",
+   "status": "OK"
+  },
+  "dil-arguments-blogu": {
+   "hash": "3163fe88d959a1329687c2085c1fc5fd4e7081d1d00ccd2b0560d452a275a492",
+   "status": "OK"
+  },
+  "dil-arguments-dogrulama": {
+   "hash": "94e3c305e2ce8d7225b8097393a8d248d1f641418b1347e9a8302c631d0394e0",
+   "status": "OK"
+  },
+  "dil-cift-tirnak-string": {
+   "hash": "831c4bedb05f7f28bbe9037f06710ddee0dd67f15e9d3d0eae7f680491550c30",
+   "status": "OK"
+  },
+  "dil-classdef-deger": {
+   "hash": "63f4a13a14a5e2bfc91d7f138041339c707d76c651d6393ad880c1b3455f06ba",
+   "status": "OK"
+  },
+  "dil-classdef-enumeration": {
+   "hash": "82500999aaa8d521692348452d919b6846d17e8e0fc2e0bf7bfecd18a1cfcbc6",
+   "status": "OK"
+  },
+  "dil-classdef-handle": {
+   "hash": "d4bbc77543966b0b44a84c443bb32d407c27177579099ea420973546210d7b2b",
+   "status": "OK"
+  },
+  "dil-containers-map": {
+   "hash": "992501bc872d2061fdb7a0c6600fe55f154f292cca2b72affab5dcb2eccfaa51",
+   "status": "OK"
+  },
+  "dil-degisken-cikti": {
+   "hash": "05c78e963ed87436b14cd31b98d4b002aeb1627a62f9d7d1a0c678f23c622ab6",
+   "status": "OK"
+  },
+  "dil-dictionary": {
+   "hash": "815b3f90ea87a2ae5dd4da4eabcba45b41e46897c3808edcaaa44648d3fedbfb",
+   "status": "OK"
+  },
+  "dil-evalc": {
+   "hash": "270f83e37ba7a44e1147da5bfccebea6dcb2b7c06bd9e13cd467366a02d345b4",
+   "status": "OK"
+  },
+  "dil-fonksiyon-tutamaci": {
+   "hash": "bf178785b66f1461c196421795d6c46b1e66e376a30eb95422571dea7752909d",
+   "status": "OK"
+  },
+  "dil-func2str-bicimi": {
+   "hash": "8bdecda96238b275215c2f129a8a9734304bb70eabac620859d33c32a1cb8738",
+   "status": "OK"
+  },
+  "dil-hata-yakalama": {
+   "hash": "96d968a479f2156f10da1e4443b801c47d40b29d51a37b51d40b8e6703e03102",
+   "status": "OK"
+  },
+  "dil-hucre-ve-yapi": {
+   "hash": "fe140de49a8a53f700ec27eb851c508d1fc0fdd60b17a2584bd48b9d2bc70d1a",
+   "status": "OK"
+  },
+  "dil-inputparser": {
+   "hash": "b4984669801a9c41b000430898bfad50df6ad82c5dc1fe0011ef7b23dd9f927f",
+   "status": "OK"
+  },
+  "dil-mantiksal-indeks": {
+   "hash": "6d7e7f34339029361fe5a9aba1432f6660a3e52ceb7d938b25670080e2d144db",
+   "status": "OK"
+  },
+  "dil-mexception-nesnesi": {
+   "hash": "eeaee4be9fe2a363eb543c9c2e4db79f35a9c29420687119d313705e40bfec19",
+   "status": "OK"
+  },
+  "dil-mustbe-dogrulayicilar": {
+   "hash": "91dc2f86858ce86144d4f23db17f38c10b87cf779c6eeddbf64521ce2eb1c8f8",
+   "status": "OK"
+  },
+  "dil-oncleanup": {
+   "hash": "a2f06b19adac8e7b15a19e09fb305303b23f63d15f8433dfc1ddf1cfe828d3c1",
+   "status": "OK"
+  },
+  "dil-ortuk-genisleme": {
+   "hash": "92ee0ebf753a5feecddd640158c025680d75243d98351246f98b9384f8bd880d",
+   "status": "OK"
+  },
+  "dil-string-birlestirme": {
+   "hash": "b0740e3ec210aaf0283ca6a1d617b028ace6f242a05be157135e60ba2479aa38",
+   "status": "OK"
+  },
+  "dil-timer": {
+   "hash": "cd9e0c5ec560dfad4d8bf29c0f00d5e4ea84cf20e22b5bdb49846ac26dab49a9",
+   "status": "OK"
+  },
+  "dil-validateattributes": {
+   "hash": "5589eec492b13e024cbf7486b048928846cb21cd07c18dd7298cdfaad987a220",
+   "status": "OK"
+  },
+  "dil-zaman-olcumu": {
+   "hash": "875212bd8145966000dc810b39675ba6c483ce2b100f2bd6d8cfb5d2b474f4ff",
+   "status": "OK"
+  },
+  "dizgi-bicimleme": {
+   "hash": "fe3f12d3c0309de6e689d22ad2400b244b08bab2182b73b235b2ccef07757d2b",
+   "status": "OK"
+  },
+  "dizgi-bolme-birlestirme": {
+   "hash": "b2a9a34b93621e714c3faa428875b7c366d5696031c5660b1ee6ffbe7013427e",
+   "status": "OK"
+  },
+  "dizgi-char-cikarma": {
+   "hash": "8a9c5dcfcb969116a3c757c443d92d0961649bf4bacec5e58d3488d63d400ddb",
+   "status": "OK"
+  },
+  "dizgi-char-kirpma": {
+   "hash": "b2cd28d5709e42236ab708f4b0b1f18c5a97386c422e930353e365930947a429",
+   "status": "OK"
+  },
+  "dizgi-char-sayma-degistirme": {
+   "hash": "f6b9d9743e9be157b64d39fe24a9a151a1e5c41663f0dab57eed19ea205b0d26",
+   "status": "OK"
+  },
+  "dizgi-char-split-join": {
+   "hash": "853f082d2ebe785a3fdf9977be89e8845c46bc94a8173347f37ef34a4e8b2024",
+   "status": "OK"
+  },
+  "dizgi-compose": {
+   "hash": "85004caa84c9430cfea27f6044d7a34c619a4fbeb52b0fb5a2f238d538d97c9e",
+   "status": "OK"
+  },
+  "dizgi-dizisi-char-toplama": {
+   "hash": "4d8843743ea370f6644fa989ce780c2d3be839e53536492a6855c974003706f1",
+   "status": "OK"
+  },
+  "dizgi-dizisi-islemleri": {
+   "hash": "5a1baa2caa39ea8a06f00e91c9b56d40bd08b3c7342b56efa8a9d8eb7c93ac94",
+   "status": "OK"
+  },
+  "dizgi-dizisi-sayi": {
+   "hash": "fcf7b327fe210a69bca49c26ca9cad2b797054f39ef6c2fe78ddfe219b48cd23",
+   "status": "OK"
+  },
+  "dizgi-dizisi-sorgu": {
+   "hash": "7f2781e075f443b8997f6ca60b57354de26131a7a3d3e2267b3c86f98a44b41f",
+   "status": "OK"
+  },
+  "dizgi-hucre-donusum": {
+   "hash": "e415e114590f98c558ae951d4123cf01ce0a084a19b9b5497cd4de016946da94",
+   "status": "OK"
+  },
+  "dizgi-icerik-sorgu": {
+   "hash": "76fd586b00ff3b3198d414014cf932a7a273ab11ce4328a151e287c62aee50a4",
+   "status": "OK"
+  },
+  "dizgi-karakter-sinifi": {
+   "hash": "fb9ab5d60216e2cf0d6f84892e9d1fde0ad945bf47f5a06321bfc3c500862eee",
+   "status": "OK"
+  },
+  "dizgi-karsilastirma": {
+   "hash": "11a76fa87e037a0ae76d56ee56c77a4a28e8b2808d0dc5ccb03320a195502d3d",
+   "status": "OK"
+  },
+  "dizgi-regexp": {
+   "hash": "11abdf5704fb094a1a3dbff781e399f46115329c535927f5acf89e2e54e2edd2",
+   "status": "OK"
+  },
+  "dizgi-sayiya-donusum": {
+   "hash": "d9587112c8bac7bd6f6203f60c4b67e2f8f0f73cef310d68d705fd7eeb04608f",
+   "status": "OK"
+  },
+  "dizgi-strlength-char": {
+   "hash": "e5007313e811a2e94dedf99c2617ae00ab0501be94b7069814e49d590889a087",
+   "status": "OK"
+  },
+  "dizgiy-baslar-biter-cell": {
+   "hash": "95f6f4a3efc6678fa0333d1349dfb2eb8d932e1d9fb4c65369957bb782a303e0",
+   "status": "OK"
+  },
+  "dizgiy-baslar-biter-char": {
+   "hash": "ec0e8ba87bce7f18752e813a0ad510acc1ce6dee07a5ee7775edd71b85658861",
+   "status": "OK"
+  },
+  "dizgiy-compose-dizi": {
+   "hash": "fe518f39082dc81f5fb9dc228f3b368a4c7d0dfe0b5a20b0fe4b135aad477dd9",
+   "status": "OK"
+  },
+  "dizgiy-compose-kacis": {
+   "hash": "b9c3609c61295c1e9bbd46b560dc81df6080ebf3a6b6b716078a4955625dddf3",
+   "status": "OK"
+  },
+  "dizgiy-compose-temel": {
+   "hash": "8d6f30b2da0539c7b7d7476f58f744faabdd27b54dc1827563812c075acd0c5a",
+   "status": "OK"
+  },
+  "dizgiy-contains-cell-ignorecase": {
+   "hash": "dfa2c71633af37786da3cf1fee6392bb17c30d59c831d0d64553e88589a3bbf4",
+   "status": "OK"
+  },
+  "dizgiy-contains-char-coklu": {
+   "hash": "a0ec1df9b9664e54600cb0fa1b9e7207884cbe5dc377e14c04c87516a16e3d25",
+   "status": "OK"
+  },
+  "dizgiy-count-cakisma": {
+   "hash": "c09ab90527dd51d3b8b26db63cd415c1814a9f29e14a82c5378ad84143c55db8",
+   "status": "OK"
+  },
+  "dizgiy-count-cell-coklu": {
+   "hash": "2380ebaf2401f9d896f230c934b6b9d401e9e642cf0040af4279d6f2a46cf2c0",
+   "status": "OK"
+  },
+  "dizgiy-desteklenmeyen-tip-hata": {
+   "hash": "23dd60434e487f9d4644745000a2adcb2de24d9c735e160e5d80a7f22eddad38",
+   "status": "OK"
+  },
+  "dizgiy-dizisi-contains-bos": {
+   "hash": "fc22b9f3d240e67d46d8a66f0b171c54f71318f2beb936b364bc8b3a0305ff06",
+   "status": "OK"
+  },
+  "dizgiy-dizisi-count-cakisma": {
+   "hash": "f43e4648253dbdc73c2077e6bf27cee3dc2db3a1b365a16fc6b6577f458e2fa7",
+   "status": "OK"
+  },
+  "dizgiy-erase-cakisma": {
+   "hash": "f8d64ffd55333da96677409e1dfef57f07fbc2597005d04c1d120f450a1435ae",
+   "status": "OK"
+  },
+  "dizgiy-extract-between-pattern": {
+   "hash": "acb40aa28ae03e457deefff5adbaac47c0c4bd7cd4e63cabe984f8d84e72921e",
+   "status": "OK"
+  },
+  "dizgiy-extract-between-position": {
+   "hash": "3d7a7554c6a59ad43afed443314c9b7a7835feacf70db8ddb1aa72135fdac64d",
+   "status": "OK"
+  },
+  "dizgiy-extract-side-pattern": {
+   "hash": "e6dc9c361a579a78c0383019f4d492b007619cba7aa71dcd7c995ad9f5ef603c",
+   "status": "OK"
+  },
+  "dizgiy-extract-side-position": {
+   "hash": "16f9119cbd2bfc204709dd13c7b37961091abdbbe58b2df19eea228709c45f39",
+   "status": "OK"
+  },
+  "dizgiy-gecersiz-secenekler": {
+   "hash": "6064435425492c5096a18d5c80d39787b227f265e2647e0fa632f9e9cd65cf3f",
+   "status": "OK"
+  },
+  "dizgiy-gecersiz-tip-konum": {
+   "hash": "b024f8c87a9f0e261766497484302f28c7d085cd1ddaee7ba49b3601d3b4d93a",
+   "status": "OK"
+  },
+  "dizgiy-join-ayirac-dizisi": {
+   "hash": "2dee797248a1c1acc35a50ee578ed8841cef78b796bab8057db2a136fda55e18",
+   "status": "OK"
+  },
+  "dizgiy-join-temel": {
+   "hash": "de8e0ad451490444c7211a787a65993319038168bdabcc086c8561439e9aaddb",
+   "status": "OK"
+  },
+  "dizgiy-karisik-compose": {
+   "hash": "993b2e15564203d1caa7a536c1983a92a7cc81f0e6fe48b063a3c674e987fc52",
+   "status": "OK"
+  },
+  "dizgiy-karisik-contains": {
+   "hash": "34bb0542e14b9561154ba3aeb9a04da3b8dc98445610781c522c31b217d3681f",
+   "status": "OK"
+  },
+  "dizgiy-karisik-erase": {
+   "hash": "228672a4f5ac7bc0b099658fdfbd2a446cd6b0c627750356e2a8cde4b8702aee",
+   "status": "OK"
+  },
+  "dizgiy-karisik-join": {
+   "hash": "357d1d691c3d31b926f794fef3bc7753dcd85bc4618ab61dff4d422b0e4eeda5",
+   "status": "OK"
+  },
+  "dizgiy-karisik-replace": {
+   "hash": "93d0065a39fc9647525502a9b6f13b8c6e87a859e0df2a15702182935043dfa7",
+   "status": "OK"
+  },
+  "dizgiy-karisik-split": {
+   "hash": "9123e883b43ff9e25bce8a35a0ab122910b4d2fbc07f295ca2350b147bfc6c75",
+   "status": "OK"
+  },
+  "dizgiy-literal-bolme-birlestirme": {
+   "hash": "1cf54bb535960c30ed5d443a45f602c42fa9b3e740491205c98e4319918a77da",
+   "status": "OK"
+  },
+  "dizgiy-literal-degistirme": {
+   "hash": "91216d74da4986955dbc634c95ea700b30b330afac1b4ecbc77cf02f48812186",
+   "status": "OK"
+  },
+  "dizgiy-literal-sorgu": {
+   "hash": "357241840690da35546aaa86f49e080dd89a6e276e9e9216ba54a2caff9ce067",
+   "status": "OK"
+  },
+  "dizgiy-pad-varsayilan": {
+   "hash": "0642b2fbc58fe12b80d55a89be845173b3401ebbcb3b705af84bb935891a14e7",
+   "status": "OK"
+  },
+  "dizgiy-pad-yon-karakter": {
+   "hash": "848281091ce4d0e1b8911a01377107705f09a56eb896e2e0d254a080b96382ad",
+   "status": "OK"
+  },
+  "dizgiy-replace-cell-no-match": {
+   "hash": "de6af853611377097be137ae8337b788be631d69c0e4a277dc7ad410dde7c8d3",
+   "status": "OK"
+  },
+  "dizgiy-replace-char-coklu": {
+   "hash": "5f54af616381190440596b1036fe912d6eb2a80dc5f08a7c96b9d59976d078ea",
+   "status": "OK"
+  },
+  "dizgiy-reverse-tip-bos": {
+   "hash": "ecdb3cc24c59b742e94b35d43c9c31167d10eb497fd0b87228a9cda006febfa0",
+   "status": "OK"
+  },
+  "dizgiy-split-cell-boyut": {
+   "hash": "2636729067a5c8415c57254bd8639ecf3d1f6383aead91763f58f3fe2eff94b6",
+   "status": "OK"
+  },
+  "dizgiy-split-coklu-match": {
+   "hash": "42c2513065670df3e609694604e309bea3e60b3bb4f9af11c9bd80d3b820b533",
+   "status": "OK"
+  },
+  "dizgiy-split-tekrar": {
+   "hash": "f15ef11d5d6b8e9eeabbb23bd15293723d719e5708f0987cbf6369c46248fbb7",
+   "status": "OK"
+  },
+  "dizgiy-splitlines-crlf": {
+   "hash": "31e8d193661d4b5d107688c5e5422e285465e114fcfb081338dff490d04f5d8e",
+   "status": "OK"
+  },
+  "dizgiy-strip-bosluk": {
+   "hash": "ea221323e21ffafd33fa4828ce901ea04a46728438db75b50543dd9ff2faaa42",
+   "status": "OK"
+  },
+  "dizgiy-strip-yon-karakter": {
+   "hash": "17b2cc3f0170aa487b867cccc571faea772e2281fcbe321b136ac274018cc9fc",
+   "status": "OK"
+  },
+  "dizgiy-strlength-tip-bos": {
+   "hash": "c7709fc868a8ed67606f96ff3f86d77ca550f208c27a3429576ef3ba466909d5",
+   "status": "OK"
+  },
+  "dizgiy-utf8-konum": {
+   "hash": "b02db6c143a3314c6e925388bce8ca721f9dcf0baf9aa1422a1b19888a402593",
+   "status": "OK"
+  },
+  "dizgiy-utf8-literal": {
+   "hash": "56387f49d6dc114acd7c00cba59293dd61872b146e256c3358c667afb1869fd7",
+   "status": "OK"
+  },
+  "dizgiy-utf8-pad-strip": {
+   "hash": "8d3a53b3cb11b8d9c515e1c1fae769cafc604cfca7d240f09f5f9a1ac266b6ac",
+   "status": "OK"
+  },
+  "dizgiy-utf8-satir-bicim": {
+   "hash": "0ac0d7161964128035603a6d0c54257209074da0350240a882b6ce3ad5da7c3b",
+   "status": "OK"
+  },
+  "dizgiy-utf8-uzunluk-ters": {
+   "hash": "fb797eef145fd68f6675133c77e577f572944f3f10df31aa1abcf7ba8440f7e1",
+   "status": "OK"
+  },
+  "dosya-excel": {
+   "hash": "a27ed8773ad4d135c0f3d3e1bf862fa37d24a4f2e7c44e305d40ed82fbbc18ce",
+   "status": "OK"
+  },
+  "dosya-goruntu": {
+   "hash": "0378d96dc36356138d2378f94877b2131138336caad32750d2884b5f002bbf6e",
+   "status": "OK"
+  },
+  "dosya-hucre": {
+   "hash": "69ab9421e92c1f219b7d3c985559803212c140c319dcc230ea4be5dc480f13b9",
+   "status": "OK"
+  },
+  "dosya-ikili": {
+   "hash": "a8bfb4ee98bce784a228c94d79bc6890ded189868f26716cf4559f37ecdd9e93",
+   "status": "OK"
+  },
+  "dosya-json": {
+   "hash": "781cc757ed52e0d90a7bff0228e6721fb30655b0a4d42c95239bf86566f9cb3d",
+   "status": "OK"
+  },
+  "dosya-klasik-csv": {
+   "hash": "28f5c06ef05903983458b4fce2fcc804b2ef52860f5b8a1f9590ecb64ee1b5af",
+   "status": "OK"
+  },
+  "dosya-klasor-islemleri": {
+   "hash": "b721550889b1dbd2c13c3d48bed07d8e673ca8973e6ad2a5a8b7549a0135b576",
+   "status": "OK"
+  },
+  "dosya-mat": {
+   "hash": "7b1a3e92a6a4054fbfa7c149086b229b87129ff1bfba42839888199831590d65",
+   "status": "OK"
+  },
+  "dosya-matris-csv": {
+   "hash": "e4c101196fc1dcdf2ed003bb53655e8f451d533d49cb52a6ae1297116726ac30",
+   "status": "OK"
+  },
+  "dosya-metin-okuma-yazma": {
+   "hash": "bade750bd78cebeab9cb28b4ad2521b13c86d37295c0b5f9ccf5dd3a2ee0f5fc",
+   "status": "OK"
+  },
+  "dosya-satirlar": {
+   "hash": "5084b3c7972214751062d45dc017170dc3801fcbdefef3b5f29c4ef9358bc184",
+   "status": "OK"
+  },
+  "dosya-ses": {
+   "hash": "476769729560093417943f6b253b8a2dbac80be5c9d3933fa62e7080c06833f4",
+   "status": "OK"
+  },
+  "dosya-textscan": {
+   "hash": "168679bf6d91160def5c3dbf3c89c77569d6ec1259449c3b55b2b472df4b5c7e",
+   "status": "OK"
+  },
+  "dosya-yol": {
+   "hash": "1f33b8f4c4673265db99a3b166dca7f0eb26a06a038662c48dd895b0ba14c7cc",
+   "status": "OK"
+  },
+  "dosyay-alinti-oncesi-bosluk": {
+   "hash": "d774d62190f19d30ad01fcf9cf9761681892583026861b11e7482f25a44ee240",
+   "status": "OK"
+  },
+  "dosyay-ayrac-virgul-onceligi": {
+   "hash": "93685cb2f0a964bf65ef3fa072e5a6f0b0fedfd980860a014cbea7b9f8849bcd",
+   "status": "OK"
+  },
+  "dosyay-hucre-15-basamak-mantiksal": {
+   "hash": "e46dfb4540057a1d575c0b332320bd99a3cf807e8aa90884bd40ea0a1bc997f4",
+   "status": "OK"
+  },
+  "dosyay-hucre-alinti": {
+   "hash": "a4f184a203a96a5b4bb21e9a8f3029c69b4722bd3336050232cef948b7f1aadb",
+   "status": "OK"
+  },
+  "dosyay-hucre-alintili-ayrac-algila": {
+   "hash": "82844f175c9e625db4886ac07135c75040d7488afd2a4cff91e797ff31fc33ce",
+   "status": "OK"
+  },
+  "dosyay-hucre-baslik": {
+   "hash": "11d7d2ecf0a7bf6618cdc5a92f3d7180393ca99fa6690e089f7d5a77dafb3754",
+   "status": "OK"
+  },
+  "dosyay-hucre-bom": {
+   "hash": "4d5c61f600ebf02b2e95d4c620525600512d3f427fdad58609fbe54757116105",
+   "status": "OK"
+  },
+  "dosyay-hucre-ekle": {
+   "hash": "fe3464203856501a58bd3c614cefda21813239f7472f8369756aaca3b2abb47a",
+   "status": "OK"
+  },
+  "dosyay-hucre-eksik": {
+   "hash": "876d10f72ff5f347621d73ed50b6656bf1eb41a7cd27e4ad0ae9981ed5db1c09",
+   "status": "OK"
+  },
+  "dosyay-hucre-karisik": {
+   "hash": "c9916fadda57890e8516e301eccc0161c8904533393b6b7c9d50617a0af70ddf",
+   "status": "OK"
+  },
+  "dosyay-hucre-noktali-virgul-algila": {
+   "hash": "ebde6e7a70cc426e18c8cf44e39f7f4c545bbc504caedf33520e8528c70d9578",
+   "status": "OK"
+  },
+  "dosyay-hucre-ozel-ayrac": {
+   "hash": "095012f05556331f8b2acb026efa23bb480d4b09756ebb9462446e58ec40dc40",
+   "status": "OK"
+  },
+  "dosyay-hucre-single-tamsayi": {
+   "hash": "6de82c19a2769abaa3f046b7724b508320c468dfe8403cd5bbe4574d56af903d",
+   "status": "OK"
+  },
+  "dosyay-matris-15-basamak": {
+   "hash": "2f77c43b9c1e1780f2cf95ccc1741e1499d62fb56f8df9f21e5f7a68cd512022",
+   "status": "OK"
+  },
+  "dosyay-matris-baslik": {
+   "hash": "b0a120108e80c6108a7188b2533842bb92c3c7849542055a84873d65fb956b46",
+   "status": "OK"
+  },
+  "dosyay-matris-bom": {
+   "hash": "1c7ee5645036db3949d36aaa6ca4827e95e48e90bda4e5989fe795302db30274",
+   "status": "OK"
+  },
+  "dosyay-matris-ekle": {
+   "hash": "4e3285220c1a25e654e701e3804cc09a0ba745bc1a2391a0a90e5efe3b6c1ed9",
+   "status": "OK"
+  },
+  "dosyay-matris-eksik-metin": {
+   "hash": "8b8dd3247371c4a8c6776be821a3e0968a78a0c7119b6c5ad0800eb11f60586f",
+   "status": "OK"
+  },
+  "dosyay-matris-ozel-ayrac": {
+   "hash": "80c77f6c8e0dc73ad4820f5610f66e96375e24ea98e533d5793c1eda0a30bf79",
+   "status": "OK"
+  },
+  "dosyay-matris-ozel-deger": {
+   "hash": "a4cd39b6426fa818b47b3cc0ab0efee4a965fb69727b9589328c1a7e5d4613e6",
+   "status": "OK"
+  },
+  "dosyay-matris-seyrek-reddet": {
+   "hash": "9b2dd19f02b2e2ab65db06ac295cb51f2e4250d82a78aa96e7deaa97596c5e34",
+   "status": "OK"
+  },
+  "dosyay-matris-single": {
+   "hash": "9fb235fd2ee1d53cdc4cd6dc62c8abe08559c9f7adb67e353f14f5b8b5e65360",
+   "status": "OK"
+  },
+  "dosyay-matris-tab-algila": {
+   "hash": "7069200647b4583aaf5a077baf2aa6849abc41a2e974843fd56b480b18322d1f",
+   "status": "OK"
+  },
+  "dosyay-matris-tamsayi": {
+   "hash": "e0ffc1bb158072813ae302d3503135627194bd3bafee967c26533006ae9567d9",
+   "status": "OK"
+  },
+  "dosyay-matris-toleransli-tur": {
+   "hash": "9aab2f65ab78a3b8a07ca23a1292b9a59a99d856a23d06119d99db58262f7e21",
+   "status": "OK"
+  },
+  "dosyay-matris-uzerine-yaz": {
+   "hash": "282711843c9ac4cf86cffcf20d6ebe17c6735bbf64e1a05e3aaa1cdf4309e142",
+   "status": "OK"
+  },
+  "dosyay-satir-bom": {
+   "hash": "bd4f8684ce754fa0e6b180cf888086dfcff345a5c805b5e4fcc1368211feb99c",
+   "status": "OK"
+  },
+  "dosyay-satir-bos": {
+   "hash": "3637b4b5dc61bdace824337c5118ee6a51980ff2e5d8dedd03c775c02965152c",
+   "status": "OK"
+  },
+  "dosyay-satir-bos-atla": {
+   "hash": "277431b3021c53b11af737b3d9112dd07c7350aeeb24531e514ca257e29fb631",
+   "status": "OK"
+  },
+  "dosyay-satir-bos-dosya": {
+   "hash": "d7319602970eaf54d1d15e3764b38027101761d458aebf2a98004516a7e547f2",
+   "status": "OK"
+  },
+  "dosyay-satir-bos-dosya-atla": {
+   "hash": "1abc3ed6c35f2e4ea7295ffacbadbc6f4981858ddff40ac842075ba1b2d227f8",
+   "status": "OK"
+  },
+  "dosyay-satir-char-matris-reddet": {
+   "hash": "224eb8c6ef5c99865b1a564af392ce9728971016987d87d12737e7599005f68f",
+   "status": "OK"
+  },
+  "dosyay-satir-ekle": {
+   "hash": "ba51756e022a2a5cb3459d57023364d12fd8213a782f1a732161b10dbb18fe3c",
+   "status": "OK"
+  },
+  "dosyay-satir-sonlandirilmamis": {
+   "hash": "2abf0f3454b7a0ba96cd87ab13829226386fafeff385c9571ba1bcbc967b6ee1",
+   "status": "OK"
+  },
+  "dosyay-satir-sonlandirilmis": {
+   "hash": "2924453a6ccfb7bb44072de286f7731832a82cf96addfc5c6b472cdf77a22787",
+   "status": "OK"
+  },
+  "dosyay-satir-uzerine-yaz": {
+   "hash": "0ae44072e5ee4f91a9485552a462986ec2e7eb7bd63f45b833d9a38cfd674356",
+   "status": "OK"
+  },
+  "dosyay-satir-yaz-cellstr": {
+   "hash": "3e16ba19c2215ed8cdbb77424f7e3e305b22a0d4dfaca9608771caa534de2407",
+   "status": "OK"
+  },
+  "dosyay-satir-yaz-char": {
+   "hash": "ed655cfc9d895db7f386e4f77f8411708e6ae918f1fb27994203194b60a1d024",
+   "status": "OK"
+  },
+  "dosyay-satir-yaz-string": {
+   "hash": "0cded2e6605b58a3634ed685911dd1b416b3ee91244d4455c18fe3b67a7c294e",
+   "status": "OK"
+  },
+  "eksik-deger-tipi": {
+   "hash": "0fa4c968dc7bcee102f3e2ed9dbf458f07ac2721f157f19ec5d451f7589f80da",
+   "status": "OK"
+  },
+  "grafik-animatedline": {
+   "hash": "43d2082edeb385c38d5eb9ea5fa2ec47bdf239ddc49346aa288979f46702ff78",
+   "status": "OK"
+  },
+  "grafik-cift-y-ekseni": {
+   "hash": "0047970aeefa6cbb5a0b0b263e9a756f2af227fe44fd6f619856fd9c9dae60e7",
+   "status": "OK"
+  },
+  "grafik-cizgi-nesnesi": {
+   "hash": "2391bf9bfc4a7ebcd48327f43b2eb47553c3755625b6d28b6995cf81642fd27f",
+   "status": "OK"
+  },
+  "grafik-coklu-cizgi-hold": {
+   "hash": "1d75b4b00cce2de9a812aa18948349cdfc5a230a69a9fa6d93908f9aad894d9d",
+   "status": "OK"
+  },
+  "grafik-eksen-sinirlari": {
+   "hash": "3fd78fcdee3b2e2f53a0d1242962b4d9195c9986bfb0a1bb024b36c76912ab67",
+   "status": "OK"
+  },
+  "grafik-etiketler": {
+   "hash": "5b19c8716fe268b9aa61ad81632ba953ea87c4e6733fd4dde609a0f20aa5ff58",
+   "status": "OK"
+  },
+  "grafik-exportgraphics": {
+   "hash": "308da0a47a4cfa879f349651ca6ecf31ef6813fe6f143acb974d54c0f5041e13",
+   "status": "OK"
+  },
+  "grafik-fplot-cizim": {
+   "hash": "0ae4796434af8c7b58a3c464860e0f92d86b03b6dffa37e54ad2a6ba9b55b9ec",
+   "status": "OK"
+  },
+  "grafik-fplot-nesne": {
+   "hash": "0ac1c461dbefb249edf234814ffa96aef23e609b8754cdd9a36954ba518e9b11",
+   "status": "OK"
+  },
+  "grafik-heatmap": {
+   "hash": "5c961081396e807bb401f0a7672119c829bbf3125193c7503c0594c4335fdbd7",
+   "status": "OK"
+  },
+  "grafik-histogram-cizim": {
+   "hash": "97f9109ce187b39692d77dc51d39dd3439038af49d77daeb6f88bfb07aec8b9c",
+   "status": "OK"
+  },
+  "grafik-histogram-nesnesi": {
+   "hash": "b22c278db2810703a80d0ff94cb3eb931fef5474dd9667860c3c918156aeb940",
+   "status": "OK"
+  },
+  "grafik-logaritmik": {
+   "hash": "a3f75a96b9c02b46d6ec5d96161a08614de68b3fad07e99271729a5062487b67",
+   "status": "OK"
+  },
+  "grafik-nokta-gosterimi": {
+   "hash": "86bd439559edeb0dbc40c44151d3c1cf1bc82786aba37ade987498016b24a7b7",
+   "status": "OK"
+  },
+  "grafik-parula": {
+   "hash": "da04a12d710bf428bd5250da85e51a8f8c9a08f31b52cad33b4a846f89c0644d",
+   "status": "OK"
+  },
+  "grafik-patch-ve-doldurma": {
+   "hash": "67aceef2440e20a40d2b887d105f8b43bfbdf29278bf0b29384e94f19c3d9a9e",
+   "status": "OK"
+  },
+  "grafik-polarplot": {
+   "hash": "0cf76020da2234e35d137bcc02ef8979b1da1b37bd5af5247167fca55d9e7ed2",
+   "status": "OK"
+  },
+  "grafik-renk-haritasi": {
+   "hash": "9a202b32645e3f1c2c2288c542070bcb062fbcb6f839cf5d17e997598895810a",
+   "status": "OK"
+  },
+  "grafik-renk-sirasi": {
+   "hash": "eca84c96cd8c0c54b08616158a2dc9ce679429f176de79b39d6beaa704786e08",
+   "status": "OK"
+  },
+  "grafik-sabit-cizgiler": {
+   "hash": "2848a7a9ec9a20462894a98d3e1c50058ad0adf07b1f0ba3e3b2e95f99355432",
+   "status": "OK"
+  },
+  "grafik-subplot": {
+   "hash": "ceb387659c3192009ce7730360c07cfc03a0b783186e560f8e3dbea86b00f479",
+   "status": "OK"
+  },
+  "grafik-temel-turler": {
+   "hash": "e3529b761e7c1950b5c252fac7f8b80631c592633214a39f757b4005412f9194",
+   "status": "OK"
+  },
+  "grafik-tiledlayout": {
+   "hash": "f0e57380c5f12af0551f0be8c17404ddd80b6a7ad33c1de2e1cc43c567d85bf2",
+   "status": "OK"
+  },
+  "grafik-uc-boyut": {
+   "hash": "6e76c0f0feb3e141d1fca3cb6cbb6cbc64b73fa7e946c82de62ea784ea967928",
+   "status": "OK"
+  },
+  "grafik-ust-baslik": {
+   "hash": "aaab2371cf854bc6cff63944d82085e5a042fb10f422cb78cefb1083b144caf0",
+   "status": "OK"
+  },
+  "grafiky-colororder-current": {
+   "hash": "35d31505c1751cb8ac6c207d923977b3ddc540e9d530b3188ecf9e733a0283ef",
+   "status": "OK"
+  },
+  "grafiky-colororder-explicit-color": {
+   "hash": "5f531368c9562868c3f68bef1132917e845277d7e172241fd920aca53bed70ca",
+   "status": "OK"
+  },
+  "grafiky-colororder-implicit-figure": {
+   "hash": "60612c66cc018dfd77286d9f90fd18dbad249879685a186330adbbc22513e8cf",
+   "status": "OK"
+  },
+  "grafiky-colororder-invalid-hex": {
+   "hash": "957d8fa94a44ab571dc7dccb3c7a9ac3483cf622bf5a3fa34d04ba955bcec220",
+   "status": "OK"
+  },
+  "grafiky-colororder-recolor-cycle": {
+   "hash": "e46e0c5cd8282643f9318491fdcb1227afe0c16c3888a4ddbbfc4d51a61804ef",
+   "status": "OK"
+  },
+  "grafiky-exportgraphics-axes": {
+   "hash": "d54216aa35210dd9afad11bab8444a9fa2324c29efa59aeb132cc054324be193",
+   "status": "OK"
+  },
+  "grafiky-exportgraphics-callback": {
+   "hash": "4c030a37135887cb79e38ac08b292f7346581f6e6c6162824876332fca2cb38b",
+   "status": "OK"
+  },
+  "grafiky-exportgraphics-decorations": {
+   "hash": "443c4883f674a38759d51889f17934514670b482e9fbf62223523ae6bbb7569d",
+   "status": "OK"
+  },
+  "grafiky-exportgraphics-figure": {
+   "hash": "571eb77586c01127195e909248d86a17558713dfd45c69f074881c1ac11bc71d",
+   "status": "OK"
+  },
+  "grafiky-exportgraphics-pdf": {
+   "hash": "df378ad071f67a50981602a0fa26a6455c55ec9592e855a2f00b3bd03a141624",
+   "status": "OK"
+  },
+  "grafiky-exportgraphics-preserves-source": {
+   "hash": "6db4e35d59a80407a4826ab8567e04eb3fb1d952cdb10219876ca244e1fae1cf",
+   "status": "OK"
+  },
+  "grafiky-exportgraphics-tiff": {
+   "hash": "f33cbb41a82113955951243db472e0f5826ab2c285656ce94366cc2040ded91f",
+   "status": "OK"
+  },
+  "grafiky-nexttile-current": {
+   "hash": "82e009ac655817556310fc37dfb39fbef18f4e31b8f85bdf8b6640278d1293e2",
+   "status": "OK"
+  },
+  "grafiky-nexttile-deleted-slot": {
+   "hash": "21aff46f4b82577ab922fb617ee593c15e6d1aa5b832ca37d163b6d0fd4ed117",
+   "status": "OK"
+  },
+  "grafiky-nexttile-first-free": {
+   "hash": "4079056bbb8639ee21a2b00d1e61226fd984c8c84e1940d7569e98cc28daac7e",
+   "status": "OK"
+  },
+  "grafiky-nexttile-free-span": {
+   "hash": "266f58dcca9d5088dd76fe77afca87d6ef48372198a1b268a3ea42709a771145",
+   "status": "OK"
+  },
+  "grafiky-nexttile-obsolete-layout": {
+   "hash": "eecbbeb9016e2de5212a3efa2467f9bffa7d9e8abd1540b884df706309437b4c",
+   "status": "OK"
+  },
+  "grafiky-nexttile-reselect": {
+   "hash": "82f55ae1052e47b145689128296ebbc80d090f28ccdbe94c1e74f7354ef141fd",
+   "status": "OK"
+  },
+  "grafiky-nexttile-reuse": {
+   "hash": "8030fef003dbde8ee20480a3209f6d802a5eed2746487eaae231985a70a4db9a",
+   "status": "OK"
+  },
+  "grafiky-parula-boyut": {
+   "hash": "9a1819df31120ad0352f4d45094f45eeab95eea579fa5348c064935197b3edb1",
+   "status": "OK"
+  },
+  "grafiky-parula-figure-size": {
+   "hash": "a491aad8bd381698119806bcf8a2938423f256ab11c70d375a74f76ae4a7eaf7",
+   "status": "OK"
+  },
+  "grafiky-parula-one": {
+   "hash": "8546780ce6ce054d1132217bb05237b27211f3f1fce3a5ed5f1f589ca3fc2aae",
+   "status": "OK"
+  },
+  "grafiky-parula-varsayilan": {
+   "hash": "59aec8d241f10fcdf51c9890e2e8ba1db515ed29f2ca243e515130ae0061d356",
+   "status": "OK"
+  },
+  "grafiky-polarplot-cizgi": {
+   "hash": "4655f98213e1288c0816653cb39ca85ff6450f6004dfa9d57ecdc09d21f1ce7b",
+   "status": "OK"
+  },
+  "grafiky-polarplot-color": {
+   "hash": "29eb4e7801d250c1656bd5156dd8b34f12b67bc6a930aa03272c18e3b313d91f",
+   "status": "OK"
+  },
+  "grafiky-polarplot-property-first": {
+   "hash": "d74b58ba5631cfbd712a98c34cb5fccb626080cfddd85e97a6d4278b736eadf7",
+   "status": "OK"
+  },
+  "grafiky-polarplot-temel": {
+   "hash": "f0aa94dbb14d0ab7980daca5565dbc795538efd0f1f9086d7c6b086b99a9af36",
+   "status": "OK"
+  },
+  "grafiky-renk-sirasi-adlar": {
+   "hash": "172cdd9cc360099eb499899f836885ef3ad9b3edb8f7aea290e57bedc019b687",
+   "status": "OK"
+  },
+  "grafiky-renk-sirasi-axes": {
+   "hash": "af81312eef2108669195dac0e1bb1b1bf755d61437f8791700c76d83227ce3af",
+   "status": "OK"
+  },
+  "grafiky-renk-sirasi-figure": {
+   "hash": "5dba1ad5cada1b9197ba3d369e325ebb75d28d4c8c263123f5f3470e0f184757",
+   "status": "OK"
+  },
+  "grafiky-renk-sirasi-figure-axes": {
+   "hash": "3151c7aaf3bb029e5e2a0945865e99a94326b77a018b9470f9ebf382bf957aa3",
+   "status": "OK"
+  },
+  "grafiky-tiledlayout-grid": {
+   "hash": "6670d48221ab8877991b57b97e7063e3c4f72e390588edccc134f0060f8a71b5",
+   "status": "OK"
+  },
+  "grafiky-tiledlayout-index": {
+   "hash": "e5ae542ae1e1d6bc4fddaf02f2769dfac26c5fe6aa3ef8f6540701b8f4fe9d42",
+   "status": "OK"
+  },
+  "grafiky-tiledlayout-replaces-axes": {
+   "hash": "6fc0c52c0333199633721a167081f9237e768e645ca9d1c16dede520433de7ec",
+   "status": "OK"
+  },
+  "grafiky-tiledlayout-spacing": {
+   "hash": "06f50eb08f3984cb89cdb376e0944a297fe49eae6647e06ff2b5257076b0bc4e",
+   "status": "OK"
+  },
+  "grafiky-tiledlayout-span": {
+   "hash": "614d340bc39e3b9c063b5547984ecb1eead53584436cbf7bd9914a6b2fc7c734",
+   "status": "OK"
+  },
+  "grafiky-yyaxis-cla-reset": {
+   "hash": "c6fe90b14aca68c04e7c09d20d65a08dd8e63d2d1cb8b8159b80f9584d3f49d6",
+   "status": "OK"
+  },
+  "grafiky-yyaxis-left-right": {
+   "hash": "ddc9906207f809c57ea0bd77afbe5784517e41c7f8f853bd463f99048b67b927",
+   "status": "OK"
+  },
+  "grafiky-yyaxis-limitler": {
+   "hash": "26292688a5aa919404e4581f576447db860fa58daae706073a1de43bb7c34825",
+   "status": "OK"
+  },
+  "grafiky-yyaxis-ruler-after-plot": {
+   "hash": "ff0954c8424953dfe864a1d8027a201d97f45e5f4baa0101c65b8e01deb36d79",
+   "status": "OK"
+  },
+  "grafiky-yyaxis-shared-hold": {
+   "hash": "e4c72c85011efdb06995a0a99f39b8f58d2466783fcd884dd041423bc4ca6e41",
+   "status": "OK"
+  },
+  "grafiky-yyaxis-target": {
+   "hash": "3568a90197183e1ef4ddeb3504f61de8d49d24fc52177ec81b4cc5e629316810",
+   "status": "OK"
+  },
+  "kategorik": {
+   "hash": "6a29a64f6260008e5b6eba3aa294241de04f27551f799a62c5e74841d6e24ed9",
+   "status": "OK"
+  },
+  "kontrol-ayriklastirma": {
+   "hash": "5f670b6ccd04d610db7637ebdbfc03abaf8506d04be8d113f59a94193d1602a3",
+   "status": "OK"
+  },
+  "kontrol-baglanti": {
+   "hash": "f589bce22d4f2b1f26296415d5c0348c617f4cd56c4bb093f260a4fcd1424722",
+   "status": "OK"
+  },
+  "kontrol-cizimler": {
+   "hash": "67f9785ac14fde20fb89a9576f219a6385bdb546465aa6350509ca4ce52e4deb",
+   "status": "OK"
+  },
+  "kontrol-donusumler": {
+   "hash": "2bfc5337e6d6fec3a37f2ebf9652364ae2649d54760a0023a51d1d91a771670d",
+   "status": "OK"
+  },
+  "kontrol-durum-uzayi": {
+   "hash": "42ec94f8845249aca18248c07e4a8db52c06ad2e57fb140e6e33a03bf6858c7f",
+   "status": "OK"
+  },
+  "kontrol-frekans-yaniti": {
+   "hash": "864b81c2d2e63f449c0a8c0e3c08d229c8a2ec99b10fe2078d9f38599771e663",
+   "status": "OK"
+  },
+  "kontrol-giris-gecikmesi": {
+   "hash": "3d3316c1960b67dc5a48047b22b323604ad963ea852b6b96f73bb4c182ea5966",
+   "status": "OK"
+  },
+  "kontrol-kararlilik-paylari": {
+   "hash": "778c0597ed0993fc718f5978346c788b85f57bb5cdd25e0f091e446e943aae7c",
+   "status": "OK"
+  },
+  "kontrol-kok-yer-egrisi": {
+   "hash": "c228ef7c0a6f730ee1243e5e106f5a425f8883df4197c6f6769867e4fbbb8fb2",
+   "status": "OK"
+  },
+  "kontrol-lyapunov-riccati": {
+   "hash": "0c9d1693d8a6a27f37f8ff8cdab15efce60cee019078a87b4f6ef00f3a0cda88",
+   "status": "OK"
+  },
+  "kontrol-pade": {
+   "hash": "20046304c811c95099b386487fb17276d5f01131c87f79ba8b1d39598f75121a",
+   "status": "OK"
+  },
+  "kontrol-pid": {
+   "hash": "0f7d9b51ef566539cacb578dcda0c500de13ff8d5f296ba661030b920d35f206",
+   "status": "OK"
+  },
+  "kontrol-sadelestirme": {
+   "hash": "e7054d146445325a3d59c2cd67f77d4d04789cb6720695ca5c4f9c33171c0abf",
+   "status": "OK"
+  },
+  "kontrol-sonumleme": {
+   "hash": "222f170a7761e7bc09402399354d6de5bed5fd138d3e695f74cef3cf47c0cee9",
+   "status": "OK"
+  },
+  "kontrol-stepinfo": {
+   "hash": "e10436b3adc0225267afcc33eaa354a71527df1ac59aff7f2733d0f52e793f80",
+   "status": "OK"
+  },
+  "kontrol-tasarim": {
+   "hash": "384ebec364db18c5e13beb5457644a8ed388119d8c0986aeb36d488fa4568d23",
+   "status": "OK"
+  },
+  "kontrol-tf": {
+   "hash": "ba797989b02dc2aa1747b519f3ae7ec129429f467470702f89d673b562de9565",
+   "status": "OK"
+  },
+  "kontrol-tf-s-degiskeni": {
+   "hash": "d977ab4a19e1a7dfe0371682ebf98c3d9a07110e55f277614c31f4867cb4494a",
+   "status": "OK"
+  },
+  "kontrol-zaman-yaniti": {
+   "hash": "a9d06b61872f71a105e17e6cb90aaad76a0525c9726a07a7a3a8e170e22b08cf",
+   "status": "OK"
+  },
+  "mat-ayristirmalar": {
+   "hash": "e2138aad7fd75c9c8b353cd03fa23d1fda64d8c4866a082c48ba4edf3df947e2",
+   "status": "OK"
+  },
+  "mat-dizi-islemleri": {
+   "hash": "9be8ce7b42a7b882b98099731c7fa70c57f1b4ea90b4519b4b0a82a7d1794309",
+   "status": "OK"
+  },
+  "mat-dogrusal-cozum": {
+   "hash": "9987cdbdc7a0d7944de57257557d7f8dc1a33e9233c72393bde68bd987ebce83",
+   "status": "OK"
+  },
+  "mat-kume-islemleri": {
+   "hash": "22b68bce793299be8ebf54421889696b689e0ad6fdb8b7d9514f119d2232e81f",
+   "status": "OK"
+  },
+  "mat-matris-fonksiyonlari": {
+   "hash": "3804492f1028980d88f74f628a95493acb6a4b299bbd2a44329c758c7a186b5c",
+   "status": "OK"
+  },
+  "mat-nan-atlama": {
+   "hash": "b59d03761750b7032682ca854f7befae05266d095065cae6126079ff7d8bd181",
+   "status": "OK"
+  },
+  "mat-rastgele-matlab-dizisi": {
+   "hash": "0b0a4fbf78b454350d62bfa6ec0486cfb68d40fbcbfc4ff4a75ee6126ff6df8d",
+   "status": "OK"
+  },
+  "mat-rastgele-tohum": {
+   "hash": "10ddfd22ad6290835f2767e6ed7879aaa4d0be791f419468143fbc46194273ba",
+   "status": "OK"
+  },
+  "mat-sayi-kurami": {
+   "hash": "655325e2061317964722e7b3961f7c93612ec092e25ee0db29dbc31647aebb96",
+   "status": "OK"
+  },
+  "mat-seyrek": {
+   "hash": "2c7fa4a365393c0f837afa51ee547296259459d018d6b9615bd413078ae16c50",
+   "status": "OK"
+  },
+  "mat-taban-donusum": {
+   "hash": "d9975cfb8fff525b9c242f90e6a53f3e750ae7c4a0bf801480dac648c8b3fa85",
+   "status": "OK"
+  },
+  "mat-toplam-tum": {
+   "hash": "27fc46111df629dc3d2dd6feedc9049c76215bd48ef5dd61379810d06ca804ea",
+   "status": "OK"
+  },
+  "mat-vecnorm": {
+   "hash": "4edfe2c0ce353727f4dd78021d95eb19cacc00069b886c2d212a55df5995a8dc",
+   "status": "OK"
+  },
+  "mat-vektor-carpimlari": {
+   "hash": "f8d0d25af8f478267fd3095a770aca6769c191b7f02aabee59f007b11c4d64e6",
+   "status": "OK"
+  },
+  "mat-yuvarlama": {
+   "hash": "0ce206f5030e53dc615760c50c6675db31d3ed56c4334b86ae795e315e673f2b",
+   "status": "OK"
+  },
+  "mat-yuvarlama-basamak": {
+   "hash": "b4fb0157d96bd7d315cb5e99ef1f7642d04bafdcc49a6586b24ff6793ad1639d",
+   "status": "OK"
+  },
+  "sayisal-fsolve": {
+   "hash": "e6c5fa6e3406088e4793fd5bc57ff0d8bef6506b25c6a0ae94a7242562998936",
+   "status": "OK"
+  },
+  "sayisal-integral": {
+   "hash": "40ee99bae53b41108c4af5daa2414f632e7e9f39404791b3f29797a0b5d5a94a",
+   "status": "OK"
+  },
+  "sayisal-integral-secenek": {
+   "hash": "756bb47ba33762eb692374d36c7bbb5ea2e8122b48db99fbb99c8056f4d29cb8",
+   "status": "OK"
+  },
+  "sayisal-kok-ve-enkucuk": {
+   "hash": "7a60a6b44b4a948b0e1b96d83dc2e58c24f0a01f1306d51c187baf4d2c0d3b4e",
+   "status": "OK"
+  },
+  "sayisal-lsqnonneg": {
+   "hash": "8f7546964cdab1da471e8bebec06552477020c1181bb0bd89cf742aa52b4504e",
+   "status": "OK"
+  },
+  "sayisal-ode-digerleri": {
+   "hash": "870d37b7f25d587f70b0acb59b241fc1b1ded43e3a3866fe811f7a31b1f05715",
+   "status": "OK"
+  },
+  "sayisal-ode-yapi-ve-deval": {
+   "hash": "eb0a12c3771c63a8007b71b86c81443f69a97b9c889d3f068983e35cd7b590d2",
+   "status": "OK"
+  },
+  "sayisal-ode113": {
+   "hash": "65b13ee35ff26b6caf721f3e137a798a5b6a68aeb3d6e7141eef7af904c35289",
+   "status": "OK"
+  },
+  "sayisal-ode45": {
+   "hash": "b7c7b33e1b81e1c5d4c921b72978eb592946a2d961587cec53d668b2f0116f95",
+   "status": "OK"
+  },
+  "sinyal-bandpower": {
+   "hash": "4a59c99b99999ef0f0ded1924d6ba37c20aac1ff21b2d23422bec6e55e8c51de",
+   "status": "OK"
+  },
+  "sinyal-butter": {
+   "hash": "c03c1ac675951db1f0abb6b529e794df9200ce4bb87f2bd2e9c4d664da39ad62",
+   "status": "OK"
+  },
+  "sinyal-dalga-ureteci": {
+   "hash": "0359f75a3c25436e06390a1414e0714f4786d385b24cf6a30d69cd52519f8948",
+   "status": "OK"
+  },
+  "sinyal-db": {
+   "hash": "53553ad4f6af2b329c6d90d498db38b5b85323b59c4e51de156f19113e91ce2c",
+   "status": "OK"
+  },
+  "sinyal-designfilt": {
+   "hash": "b115b538ce2bb22c00d7e50fa9714b2a11ed6b23404f07ce8d607a8408c744a7",
+   "status": "OK"
+  },
+  "sinyal-diger-iir": {
+   "hash": "ca30540f815979506a8f9761b0dc89b8910275896f025317f246bde002308281",
+   "status": "OK"
+  },
+  "sinyal-donusumler": {
+   "hash": "5252b13ebd5031e1d450082d623873979843c36d2a5ff1ba70163eeb702e4c32",
+   "status": "OK"
+  },
+  "sinyal-filtfilt": {
+   "hash": "2a18d027ac6067ba8d8f585a9242bff12ca127e0a2f08e50350e7f78687a4f46",
+   "status": "OK"
+  },
+  "sinyal-fir": {
+   "hash": "c155cbc31acac2dc5054efdf4558c818631448662dbcb241382b226908231830",
+   "status": "OK"
+  },
+  "sinyal-freqz": {
+   "hash": "0b4191a4167c3abfbe153a16df38905b45ba879932752d39742f4362f9171db3",
+   "status": "OK"
+  },
+  "sinyal-hazir-filtreler": {
+   "hash": "e98de7ec36f62a5ff6365a642f1a71d0f596915c7d96d5687bc23d2e23042cb1",
+   "status": "OK"
+  },
+  "sinyal-hilbert": {
+   "hash": "24de21b5fe23adb4278a0e501c512aa386bfc4e114d7210138c74f7f7eb670fa",
+   "status": "OK"
+  },
+  "sinyal-korelasyon": {
+   "hash": "0e72dba0f6b32d63809e532ec45c4fda0300facbb3eb026f2d45e4f3ca392bbd",
+   "status": "OK"
+  },
+  "sinyal-medyan-filtre": {
+   "hash": "40fb1a5788348ce43173e28587d66fb0c146a0f2695d6c0642045a580b77ee1a",
+   "status": "OK"
+  },
+  "sinyal-ornekleme": {
+   "hash": "5c548b79c924b3a4f4d1f15cce727f68ae880a0b4f4a2747f08d78ada2484441",
+   "status": "OK"
+  },
+  "sinyal-periodogram": {
+   "hash": "fb0a6f91a859a63e0ad92418f207a82318356f008e38a88383f21ec1b67e30b4",
+   "status": "OK"
+  },
+  "sinyal-pwelch-ornek-ortusme": {
+   "hash": "2deb8f7751f5f2bfbad445e2a4e0b80193de399e5a323ad3a7e01108fe0cf86d",
+   "status": "OK"
+  },
+  "sinyal-pwelch-varsayilan": {
+   "hash": "6fa03c0df8683aee2468295344ab504de62c29543a86cc9b891d6265368db885",
+   "status": "OK"
+  },
+  "sinyal-rms": {
+   "hash": "4e75ace459532b35dd072d3bcf7f9421bd83fbbfa5848420b0f61efe64e294c6",
+   "status": "OK"
+  },
+  "sinyal-spektrogram": {
+   "hash": "8eaa8891c95e7da9011f09ff664bc72c2f675c0cfcab4cf9cde25cc27294fb32",
+   "status": "OK"
+  },
+  "sinyal-tepe-bulma": {
+   "hash": "65d846c093585b10d8aa11904b8658f8d7aa50a907f711f2617e5e3dd687da9b",
+   "status": "OK"
+  },
+  "sinyal-zarf": {
+   "hash": "eb5dfdb00e83e581007fda3947fc9dfd661c8955fa98a0d17cadf358c30b70b4",
+   "status": "OK"
+  },
+  "tablo-bas-son": {
+   "hash": "fea609f6f049c8f98465439558cf8cdaf435d6f4267a65f2fbaa0101b445d6e6",
+   "status": "OK"
+  },
+  "tablo-degisken-duzenleme": {
+   "hash": "61826362069f926f3d4b3883322f61acce18a8fc0ed50709daf1224828997018",
+   "status": "OK"
+  },
+  "tablo-donusum": {
+   "hash": "1ecf9d6781e1383a4473141cd26f4cfabba2cf020027e4c05bca420407a5250f",
+   "status": "OK"
+  },
+  "tablo-dosya": {
+   "hash": "28d5fb6e884fe012057861f38e4337a55d744df60cf7d9bcae4cf61d617b4736",
+   "status": "OK"
+  },
+  "tablo-grup-ozeti": {
+   "hash": "e39fed31057c22a298e3e6429b79850b7913135d5bba961756303d8360c4be3d",
+   "status": "OK"
+  },
+  "tablo-indeksleme": {
+   "hash": "317c0ad82dca20b5e37c0cf4e080e75d0903dcd6271310f281e79e7330a5f5c9",
+   "status": "OK"
+  },
+  "tablo-olusturma": {
+   "hash": "ec0ce45f8cfd268f9414f78a27848480772fdd2cbc8d0531c7295b4f9f3fc993",
+   "status": "OK"
+  },
+  "tablo-siralama-birlestirme": {
+   "hash": "8219de9e9ac6ea6d6fd40501d462a4037edc9fcbe9876892fee45eca482f7a20",
+   "status": "OK"
+  },
+  "tablo-varfun": {
+   "hash": "73625c07f67853a33000b1ae89e460a566822b7ab0c925bbb0033e00a5bcbd13",
+   "status": "OK"
+  },
+  "tarih-dateshift": {
+   "hash": "e86413851b7c80d01f12fade97c3f04149dc096cd8a270d32ed5774ddb5badb7",
+   "status": "OK"
+  },
+  "tarih-karsilastirma": {
+   "hash": "84094a34d1dfe81b251864cd0c695ed8fa0d386fa7d64ae604da52e682f6578d",
+   "status": "OK"
+  },
+  "tarih-klasik": {
+   "hash": "dfb2d2717fb2b72762ebd183f7315d39e450a1a245dd77c2578b6e05f1bb1b4c",
+   "status": "OK"
+  },
+  "tarih-metin-bicimi": {
+   "hash": "597dbd91e7a29797679214007bc9a19d8f9b7402f9b38fec7f68f038cedd5095",
+   "status": "OK"
+  },
+  "tarih-nat": {
+   "hash": "05d65cbe9e0a51d93c76d5a32733d0d4f77d6fb7415801f6e344fd807366dd86",
+   "status": "OK"
+  },
+  "tarih-olusturma": {
+   "hash": "31d2e0d09eb4187983338f3eefa793dcf67793a4f55bec2b5e7dd75e701d5d9a",
+   "status": "OK"
+  },
+  "tarih-sure-aritmetigi": {
+   "hash": "5e578cf6362751967f1b98172aef7de15f0a49c311acff4add4f02450b3cdc62",
+   "status": "OK"
+  },
+  "tarih-takvim-aritmetigi": {
+   "hash": "79d74316bc5d2cb3ef81ade61e19217fdab0536bd22a66ee33219615d9961547",
+   "status": "OK"
+  },
+  "tip-donusum": {
+   "hash": "a2bfebb0c7d62a6ffd6e061849bc62c0ab76e9b1e8ff40a183276195b0e95ecd",
+   "status": "OK"
+  },
+  "tip-hucre": {
+   "hash": "24cc488abcf4aae75fb90fcb15abaa3925895c567c1dfaafa075c9a29e41f8e7",
+   "status": "OK"
+  },
+  "tip-tamsayi-doygunluk": {
+   "hash": "cf7c8b146bd7737510461f35abfe4a2c87bd30938adcf20264fb3546811f9cd4",
+   "status": "OK"
+  },
+  "tip-yapi": {
+   "hash": "3ff21f35f7c64e0e5d61457082f0ed5271f5a7bfb88dc1e3e448da6f9853432d",
+   "status": "OK"
+  },
+  "veri-accumarray": {
+   "hash": "c829b10895024543cfc2a59fce75af848a1804d99cc060baa1353a255f389cae",
+   "status": "OK"
+  },
+  "veri-aykiri": {
+   "hash": "abff4586f48184a46c7ac7c1267f55b8d086ba568abe2371ebbd4b26bc7d6760",
+   "status": "OK"
+  },
+  "veri-eksik-deger": {
+   "hash": "3140735cd8befef4354dc597c0a7d27287e2096ef92ccd45bf4f77958cf0d2ed",
+   "status": "OK"
+  },
+  "veri-fft": {
+   "hash": "273a4fb45af885d13681f1ac4b2b042260052f8a71e68aa4be6b363885d5708c",
+   "status": "OK"
+  },
+  "veri-filtre": {
+   "hash": "250637e9e39df41fee0215a24b51fb820cbd1c01433d6f59d0d1b7d7af1b07f2",
+   "status": "OK"
+  },
+  "veri-hareketli": {
+   "hash": "d859f56230bc9b6e0af26a7376e7379d3db4c7f0e36e99d77191686169d109f7",
+   "status": "OK"
+  },
+  "veri-histcounts": {
+   "hash": "401fb4ddb26fd306bfac7b9e2092f14880627f21e7a4e23ff6f2f50753d40e46",
+   "status": "OK"
+  },
+  "veri-interpolasyon": {
+   "hash": "f9602df94e47b361121e6f256d8b19796423131a5736dbf6327156d47cf3cc24",
+   "status": "OK"
+  },
+  "veri-kovaryans": {
+   "hash": "6685f412b92fe1febb71a189a4eb84e655ea31f2d876f3761b591bcdcecb6265",
+   "status": "OK"
+  },
+  "veri-olcekleme": {
+   "hash": "397d7d6c1561557f0d76ee6c35894e7dd55d0f47c2e09aa144ca4e6ed7947f75",
+   "status": "OK"
+  },
+  "veri-ozet-istatistik": {
+   "hash": "a11d8493ebf9e0cdbcc44f5cf1902a448f651d54d07ce637c720e17d45400989",
+   "status": "OK"
+  },
+  "veri-polinom": {
+   "hash": "cc7ec7a85177de035f3d1cd0e60305dd8ac24265b74e9c174fad469b4305d5c0",
+   "status": "OK"
+  },
+  "veri-sinirlar": {
+   "hash": "cb161eeff23fed52d429484994d4e1934c203baadbf080c3166215c8f019ea0e",
+   "status": "OK"
+  },
+  "veri-turev-integral": {
+   "hash": "e7b6bb61c246bbb7c6e560cc9e70b9ef9982bef589b0a522d25b4be4806515e5",
+   "status": "OK"
+  },
+  "veri-yuzdelik": {
+   "hash": "605c9efa7b93cda9e0018835f56e765ec400d4302e9c6e7a106373fb7fdd96d8",
+   "status": "OK"
+  }
+ },
+ "iletiler": {},
+ "matlab": "25.2.0.2998904 (R2025b)",
+ "schema": 2
+}
