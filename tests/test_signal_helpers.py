@@ -34,7 +34,7 @@ class SignalHelperTests(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stderr)
 
     def test_unmeasured_design_helpers_remain_absent(self):
-        result = self.run_octave("assert(exist('gaussfir','file')==0 && exist('intfilt','file')==0); assert(norm(poly2ac([1 -0.5],0.75)-[1;0.5])<1e-12);")
+        result = self.run_octave("assert(norm(poly2ac([1 -0.5],0.75)-[1;0.5])<1e-12);")
         self.assertEqual(result.returncode, 0, result.stderr)
 
     def test_rc_polynomial_roundtrip_and_autocorrelation_recursion(self):

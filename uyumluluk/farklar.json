@@ -1,5 +1,5 @@
 {
- "yoklama": 1310,
+ "yoklama": 1331,
  "farklar": [
   {
    "id": "tohum-sprintf-d",
@@ -784,14 +784,6 @@
    "kind": "yalnız MATLAB hata verir",
    "matlab": "HATA|signal:interp:InvalidDimensions|Length of data sequence must be at least 9.  You either need more data or a shorter filter (L).",
    "octave": "double|1x6|1.34598874,1.89931727,2.24327164,2.21583817,1.79895823,1.14646695,"
-  },
-  {
-   "id": "ys-envelope-default",
-   "code": "[u,l] = envelope([1 2 1 2 1],3); r = {round(u,6),round(l,6)}",
-   "group": "Sinyal işleme",
-   "kind": "Octave hata verir",
-   "matlab": "cell|1x2|{double|1x5|1.800001,2,1.8,2,1.800001,;double|1x5|0.999999,0.8,1,0.8,0.999999,;}",
-   "octave": "HATA||envelope: only default analytic and RMS forms are supported"
   },
   {
    "id": "ys-sos2tf",

@@ -1,0 +1,24 @@
+# Gaussian pulse shaping (Z1)
+ye-gaussfir-default | r = gaussfir(0.5)
+ye-gaussfir-short | r = gaussfir(0.5,1,2)
+ye-gaussfir-bandwidth | r = gaussfir(0.3,2,3)
+ye-gaussfir-unit-sampling | r = gaussfir(0.2,2,1)
+ye-gaussfir-two-arguments | r = gaussfir(0.7,1)
+# Interpolation FIRs (Z1)
+ye-intfilt-bandlimited-measured | r = intfilt(2,3,0.5)
+ye-intfilt-bandlimited-three | r = intfilt(3,2,0.7)
+ye-intfilt-bandlimited-one-period | r = intfilt(2,1,0.8)
+ye-intfilt-bandlimited-full | r = intfilt(3,2,1)
+ye-intfilt-lagrange-linear | r = intfilt(2,1,'Lagrange')
+ye-intfilt-lagrange-cubic | r = intfilt(3,3,'Lagrange')
+ye-intfilt-lagrange-fifth | r = intfilt(2,5,'Lagrange')
+ye-intfilt-lagrange-case | r = intfilt(4,1,'lagrange')
+# Analytic and peak envelopes (Z1)
+ye-envelope-analytic-measured | [u,l]=envelope([0 1 0 -1 0 1 0 -1 0 1 0 -1],5,'analytic'); r={u,l}
+ye-envelope-analytic-implicit | [u,l]=envelope([1 2 1 2 1],3); r={u,l}
+ye-envelope-analytic-column | [u,l]=envelope([1;3;2;0;-1;2;1],7,'analytic'); r={u,l}
+ye-envelope-analytic-long-filter | [u,l]=envelope([1 0 -1],9,'analytic'); r={u,l}
+ye-envelope-peak-measured | [u,l]=envelope([0 1 0 -1 0 1 0 -1 0 1 0 -1],4,'peak'); r={u,l}
+ye-envelope-peak-unequal | [u,l]=envelope([0 2 0 -1 0 3 0 -2 0 1 0],2,'peak'); r={u,l}
+ye-envelope-peak-monotone | [u,l]=envelope((1:5)',2,'peak'); r={u,l}
+ye-envelope-peak-constant | [u,l]=envelope(3*ones(1,5),2,'peak'); r={u,l}
