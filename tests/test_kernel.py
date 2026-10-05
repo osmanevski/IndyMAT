@@ -226,6 +226,18 @@ class KernelTests(unittest.TestCase):
   types={m.group(1):m.group(2) for m in re.finditer(r'pid = (\d+) .*?type="(\w+)"',listing) if m.group(1) in group}
   self.assertNotIn('Foreground',types.values(),types)
 
+ def test_30_detached_session_does_not_inherit_the_launcher_bundle_identity(self):
+  import os,sys
+  from backend.kernel import _Detached
+  code='import os;print(os.environ.get("__CFBundleIdentifier"),os.environ.get("KEEP"))'
+  for env in ({**os.environ,'__CFBundleIdentifier':'com.example.launcher','KEEP':'1'},None):
+   old=os.environ.get('__CFBundleIdentifier');os.environ['__CFBundleIdentifier']='com.example.launcher';os.environ['KEEP']='1'
+   try:proc=_Detached([sys.executable,'-c',code],os.getcwd(),env);out=proc.stdout.read().decode().strip()
+   finally:
+    if old is None:os.environ.pop('__CFBundleIdentifier',None)
+    else:os.environ['__CFBundleIdentifier']=old
+   self.assertEqual(out,'None 1')
+
 def setUpModule():
  from backend.i18n import set_language
  set_language('tr')

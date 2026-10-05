@@ -1,0 +1,11 @@
+--- a/besself.m
++++ b/besself.m
+@@ -114,6 +114,8 @@
+   if (nargout == 2)
+     a = real (gain * poly (zero));
+     b = real (poly (pole));
++    ## IndyMAT: coefficient outputs have equal polynomial length.
++    a = [zeros(1, numel(b)-numel(a)), a];
+   elseif (nargout == 3)
+     a = zero;
+     b = pole;

@@ -1,0 +1,15 @@
+--- a/buttord.m
++++ b/buttord.m
+@@ -214,6 +214,12 @@
+     Wc_s = atan (Wcw_s .* (T / 2)) .* (T / pi);
+   endif
+ 
++  ## IndyMAT: MATLAB's scalar-edge form selects the stopband-matching
++  ## cutoff. Preserve the package's three-output extension and band forms.
++  if (isscalar (Wp) && isscalar (Ws) && nargout <= 2)
++    Wc_p = Wc_s;
++  endif
++
+ endfunction
+ 
+ %!demo

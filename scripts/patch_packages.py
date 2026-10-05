@@ -195,8 +195,16 @@ def patch_package(project, folder, *, check=False, revert=False):
     registry_name = STATE + '/registry.json'
     registry = inside(package, registry_name)
     registry_data = (json.dumps(manifest, indent=2) + '\n').encode('utf-8')
+    previous = None
     if registry.exists() and registry.read_bytes() != registry_data:
-        raise PatchError(f'Registry does not match this patch set: {registry}')
+        # A registry written by an earlier patch set of the same package is an upgrade, never a mismatch.
+        try:
+            previous = json.loads(registry.read_text(encoding='utf-8'))
+            if previous.get('schema') != 1 or previous.get('package') != manifest['package']:
+                raise ValueError
+            old_patched = {f['path']: f['patched_sha256'] for f in previous['files']}
+        except (ValueError, KeyError, TypeError, AttributeError):
+            raise PatchError(f'Registry does not match this patch set: {registry}')
 
     # Validate EVERY target and saved original before preparing a single write.
     expected = {registry_name: registry.read_bytes() if registry.exists() else None}
@@ -216,6 +224,8 @@ def patch_package(project, folder, *, check=False, revert=False):
             pristine[name] = data
         elif sha == item['patched_sha256']:
             states[name] = 'patched'
+        elif previous is not None and sha == old_patched.get(name):
+            states[name] = 'outdated'
         else:
             raise PatchError(f'Refusing modified or unsupported target: {target} (SHA-256 {sha}); nothing changed')
         backup_name = STATE + '/pristine/' + name
@@ -226,9 +236,9 @@ def patch_package(project, folder, *, check=False, revert=False):
             if digest(saved) != item['pristine_sha256']:
                 raise PatchError(f'Refusing modified pristine backup: {backup}; nothing changed')
             pristine[name] = saved
-        elif states[name] == 'patched' and revert:
+        elif states[name] in ('patched', 'outdated') and (revert or states[name] == 'outdated'):
             raise PatchError(f'Patched target has no verified pristine backup: {backup}; nothing changed')
-        if revert and states[name] == 'patched':
+        if revert and states[name] in ('patched', 'outdated'):
             changes[name] = pristine[name]
         elif not revert and states[name] == 'pristine':
             changes[backup_name] = data
@@ -247,13 +257,16 @@ def patch_package(project, folder, *, check=False, revert=False):
         name = item['path']
         if name in patched and digest(patched[name]) != item['patched_sha256']:
             raise PatchError(f'Patched hash does not match manifest: {name}; nothing changed')
-        if not revert and states[name] == 'pristine':
+        if not revert and states[name] in ('pristine', 'outdated'):
             changes[name] = patched[name]
+    if previous is not None and not revert and not check:
+        changes[registry_name] = registry_data
     if not check and changes:
         changes[registry_name] = registry_data
         transaction(package, changes, expected)
     for name, state in states.items():
-        action = 'check' if check else ('reverted' if revert and state == 'patched' else
+        action = 'check' if check else ('reverted' if revert and state in ('patched', 'outdated') else
+                 'upgraded' if not revert and state == 'outdated' else
                  'applied' if not revert and state == 'pristine' else 'skipped')
         print(f"{manifest['package']}/{name}: {state} ({action})")
     return states

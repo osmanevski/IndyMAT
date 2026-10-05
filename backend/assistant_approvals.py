@@ -252,8 +252,14 @@ class ApprovalService:
             key = ('codex-command', hashlib.sha256(raw.encode('utf-8', 'replace')).hexdigest()) if raw else None
         else:
             paths = [item.get('path', '') for item in payload.get('paths', [])[:256] if isinstance(item, dict)]
-            summary = ', '.join(str(path) for path in paths)
-            text = str(payload.get('reason') or '') + '\n' + '\n'.join(str(path) for path in paths) + '\n' + str(payload.get('diff') or '')
+            folder = Path(self.assistants.sessions[identity]['folder']).resolve() if identity in self.assistants.sessions else None
+            def shown_path(raw):
+                # Same rule as Claude's cards: relative inside the current folder, absolute (and visible) outside it.
+                try: return str(Path(raw).resolve().relative_to(folder)) if folder and Path(raw).is_absolute() else str(raw)
+                except ValueError: return str(raw)
+            shown = [shown_path(path) for path in paths]
+            summary = ', '.join(shown)
+            text = str(payload.get('reason') or '') + '\n' + '\n'.join(shown) + '\n' + str(payload.get('diff') or '')
             tool = 'Edit'
             key = ('codex-file', hashlib.sha256(json.dumps(paths, ensure_ascii=False).encode('utf-8', 'replace')).hexdigest()) if paths else None
         summary, _ = bounded(self.assistants._clean(summary), 4096)

@@ -1,0 +1,12 @@
+--- a/margin.m
++++ b/margin.m
+@@ -426,7 +426,8 @@
+     [mag_all, pha_all, w_all] = bode (tf(num,den,tsam));   # get complete response
+ 
+     # get real phase and fix the phase computed above (only between -180 and +180)
+-    pha_real = interp1(w_all,pha_all,w_phi);
++    ## IndyMAT: bode coefficient outputs are 1-by-1-by-N arrays.
++    pha_real = interp1 (w_all, pha_all(:), w_phi);
+     while (pha_real < pha - 179)
+       pha = pha - 360;   # fix the phase
+     endwhile

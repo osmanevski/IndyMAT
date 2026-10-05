@@ -1,0 +1,43 @@
+--- a/fir1.m
++++ b/fir1.m
+@@ -62,6 +62,9 @@
+   if nargin < 2 || nargin > 5
+     print_usage;
+   endif
++
++  ## IndyMAT: retain floating half-sample centers for integer orders.
++  n = double (n);
+ 
+   ## Assign default window, filter type and scale.
+   ## If single band edge, the first band defaults to a pass band to
+@@ -114,8 +117,28 @@
+     endif
+   endif
+ 
+-  ## compute the filter
+-  b = fir2(n, f, m, [], 2, window);
++  ## IndyMAT: use the exact ideal band integrals (windowed sinc), rather
++  ## than fir2's sampled frequency grid.  Retain option parsing and scaling.
++  if (! isscalar (n) || n < 0 || n != fix (n))
++    error ("fir1: n must be a nonnegative integer");
++  endif
++  if (! isreal (w) || ! isvector (w) || any (w <= 0 | w >= 1) || any (diff (w) <= 0))
++    error ("fir1: frequencies must be strictly increasing in (0,1)");
++  endif
++  if (isempty (window)), window = hamming (n+1); endif
++  if (! isreal (window) || ischar (window)), window = feval (window, n+1); endif
++  if (! isvector (window) || numel (window) != n+1)
++    error ("fir1: window must be of length n+1");
++  endif
++  tau = (0:n) - n/2;
++  b = zeros (1, n+1);
++  for k = 1:bands
++    if (m(2*k) == 1)
++      lo = f(2*k-1); hi = f(2*k);
++      b += hi * sinc (hi*tau) - lo * sinc (lo*tau);
++    endif
++  endfor
++  b = b .* window(:).';
+ 
+   ## normalize filter magnitude
+   if scale == 1

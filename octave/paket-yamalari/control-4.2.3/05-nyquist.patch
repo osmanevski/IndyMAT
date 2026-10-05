@@ -1,0 +1,16 @@
+--- a/nyquist.m
++++ b/nyquist.m
+@@ -112,9 +112,10 @@
+   else
+ 
+     ## no plotting, assign values to the output parameters
+-    re_r = re{1};
+-    im_r = im{1};
+-    w_r = w{1};
++    ## IndyMAT: MATLAB SISO output dimensions are 1-by-1-by-N.
++    re_r = reshape (re{1}, 1, 1, []);
++    im_r = reshape (im{1}, 1, 1, []);
++    w_r = w{1}(:);
+ 
+   endif
+ 

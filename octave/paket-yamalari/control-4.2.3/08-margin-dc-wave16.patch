@@ -1,0 +1,26 @@
+--- a/margin.m
++++ b/margin.m
+@@ -406,7 +406,7 @@
+ 
+ function [phi, w_phi] = pm_filter (w, num, den, tsam, tol, continuous)
+ 
+-  idx = find ((abs (imag (w)) < tol) & (real (w) > 0));  # find frequencies in R+
++  idx = find ((abs (imag (w)) < tol) & (real (w) >= 0));  # find frequencies in R+
+ 
+   if (length (idx) > 0)                                  # if frequencies in R+ exist
+     w_pm = real (w(idx));
+@@ -422,6 +422,14 @@
+ 
+     [pha, idx] = min (pha);
+     w_phi = w_pm(idx);
++
++    ## IndyMAT: unity DC gain is a valid gain crossover. Its phase margin
++    ## uses the principal signed angle; avoid interpolation on a log grid
++    ## at zero frequency, which the package intentionally does not sample.
++    if (w_phi == 0)
++      phi = mod (pha + 360, 360) - 180;
++      return;
++    endif
+ 
+     [mag_all, pha_all, w_all] = bode (tf(num,den,tsam));   # get complete response
+ 

@@ -1,0 +1,12 @@
+--- a/findpeaks.m
++++ b/findpeaks.m
+@@ -197,7 +197,8 @@
+     ## Process candidates from highest to lowest.  Since idx is sorted by
+     ## position, the candidates neighboring idx(j) form a contiguous range.
+     [~, order] = sort (data(idx), "descend");
+-    radius = ceil (minD) - 1;
++    ## IndyMAT: MATLAB excludes peaks at the distance boundary too.
++    radius = floor (minD);
+     left   = lookup (idx, idx - radius - 1) + 1;
+     right  = lookup (idx, idx + radius);
+ 

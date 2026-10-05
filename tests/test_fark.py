@@ -38,6 +38,14 @@ class FarkTests(unittest.TestCase):
         self.assertEqual(fark.kind('char|1x2|u97,98,', 'char|1x2|u97,99,'), 'değer farklı')
         self.assertEqual(fark.kind('char|1x1|u97,', 'char|1x1|u97.0000000001,'), 'değer farklı')
 
+    def test_recorded_matlab_results_cover_the_probes(self):
+        probes = fark.load(fark.BASE / 'yoklamalar')
+        values = fark.recorded(probes)
+        self.assertEqual(len(values), len(probes))
+        self.assertLess(sum(value == 'CALISMADI' for value in values), 20, 'rerun scripts/fark.py with MATLAB after editing probes')
+        changed = dict(probes[0], code=probes[0]['code'] + ' ')
+        self.assertEqual(fark.recorded([changed]), ['CALISMADI'])
+
     def test_octave_round_trip(self):
         probes = [{'id': 'a', 'code': 'r = int8(100) + int8(100);'}, {'id': 'b', 'code': "r = {'x', [1 2; 3 4]};"},
                   {'id': 'c', 'code': 'x = 1:3; r = x(5);'}, {'id': 'd', 'code': 'r = )'}]

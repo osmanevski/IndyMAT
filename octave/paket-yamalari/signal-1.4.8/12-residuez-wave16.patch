@@ -1,0 +1,15 @@
+--- a/residuez.m
++++ b/residuez.m
+@@ -77,6 +77,12 @@
+   p = 1 ./ p;
+   r = r .* ((-p) .^m);
+   f = fliplr(f);
++  ## IndyMAT: real simple poles are returned in descending magnitude order.
++  ## Repeated and complex pole ordering retains the package convention.
++  if (isreal (p) && all (m == 1))
++    [~, order] = sort (abs (p), 'descend');
++    p = p(order); r = r(order); m = m(order);
++  endif
+ 
+ endfunction
+ 

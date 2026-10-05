@@ -1,0 +1,18 @@
+--- a/findpeaks.m
++++ b/findpeaks.m
+@@ -92,6 +92,15 @@
+ ## @end deftypefn
+ 
+ function [pks idx varargout] = findpeaks (data, varargin)
++
++  ## IndyMAT: add MATLAB prominence filtering and four numeric outputs.
++  ## Existing two/three-output forms without prominence retain wave 15.
++  if (nargin >= 1 && (nargout >= 4 || any (cellfun (@(v) ischar(v) && strcmpi(v, 'MinPeakProminence'), varargin))))
++    [pks, idx, width, prominence] = __mf_findpeaks__ (data, varargin{:});
++    if (nargout >= 3), varargout{1} = width; endif
++    if (nargout >= 4), varargout{2} = prominence; endif
++    return;
++  endif
+ 
+   if (nargin < 1)
+     print_usage ();

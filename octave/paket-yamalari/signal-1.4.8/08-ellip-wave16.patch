@@ -1,0 +1,25 @@
+--- a/ellip.m
++++ b/ellip.m
+@@ -112,7 +112,21 @@
+   endif
+ 
+   ## Generate s-plane poles, zeros and gain
+-  [zero, pole, gain] = ncauer (rp, rs, n);
++  ## IndyMAT: evaluate the elliptic degree equation and Jacobi prototype
++  ## directly instead of the package's approximate nome/ripple construction.
++  ep2 = expm1 (log (10) * rp / 10);
++  m1 = ep2 / expm1 (log (10) * rs / 10);
++  accurate = rp > 0 && rs > rp && isfinite (ep2) && m1 >= eps && m1 <= 1-eps;
++  if (accurate)
++    kk = ellipke ([m1; 1-m1]); target = n * kk(1)/kk(2);
++    accurate = target > ellipke(eps)/ellipke(1-eps) ...
++               && target < ellipke(1-eps)/ellipke(eps);
++  endif
++  if (accurate)
++    [zero, pole, gain] = __mf_ellip_prototype__ (n, rp, rs);
++  else
++    [zero, pole, gain] = ncauer (rp, rs, n);
++  endif
+ 
+   ## splane frequency transform
+   [zero, pole, gain] = sftrans (zero, pole, gain, w, stop);

@@ -241,7 +241,6 @@ class BridgeService:
                             if not isinstance(code, str) or not code.strip() or len(code.encode('utf-8')) > CODE_BYTES: raise ValueError(tr('Bridge code must be nonempty and at most 16 KB.'))
                             job = kernel.submit(code, 'code')
                             self._track(grant, job, kernel.generation, code)
-            if name == 'run_code': self.app.assistants.bridge_activity(grant['identity'], code)
             result = self._wait(grant, job, 0 if name == 'job_result' else WAIT_SECONDS)
             return result
         except (ValueError, TypeError, KeyError, OSError, UnicodeError) as error:

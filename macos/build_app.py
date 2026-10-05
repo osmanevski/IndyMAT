@@ -38,10 +38,17 @@ with tempfile.TemporaryDirectory(prefix='indymat-native-') as temp:
                            check=True, stdout=subprocess.DEVNULL)
     subprocess.run(['/usr/bin/iconutil', '-c', 'icns', str(icons),
                     '-o', str(resources / 'IndyMAT.icns')], check=True)
+    # macOS 26 icon with light and dark appearances (Icon Composer document); the .icns stays as the
+    # fallback for older systems. actool writes Assets.car, CFBundleIconName selects the icon in it.
+    plist = temp / 'icon-partial.plist'
+    subprocess.run(['/usr/bin/xcrun', 'actool', '--compile', str(resources), '--platform', 'macosx',
+                    '--minimum-deployment-target', '12.0', '--app-icon', 'IndyMAT',
+                    '--output-partial-info-plist', str(plist), str(ROOT / 'macos' / 'IndyMAT.icon')],
+                   check=True, stdout=subprocess.DEVNULL)
     info = dict(CFBundleName='IndyMAT', CFBundleDisplayName='IndyMAT',
                 CFBundleIdentifier='local.indymat.launcher',
                 CFBundleExecutable='IndyMAT', CFBundlePackageType='APPL',
-                CFBundleIconFile='IndyMAT.icns',
+                CFBundleIconFile='IndyMAT.icns', CFBundleIconName='IndyMAT',
                 CFBundleShortVersionString='0.1.1', CFBundleVersion='2',
                 LSMinimumSystemVersion='12.0', NSHighResolutionCapable=True,
                 NSPrincipalClass='NSApplication',

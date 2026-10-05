@@ -1,0 +1,17 @@
+--- a/@tf/__get__.m
++++ b/@tf/__get__.m
+@@ -26,11 +26,12 @@
+ 
+   switch (key)   # {<internal name>, <user name>}
+ 
+-    case {"num","den"}
++    ## IndyMAT: MATLAB property aliases use the existing padded coefficients.
++    case {"num", "den", "numerator", "denominator"}
+       ## Give numerator and denominator of a tf component the same length
+       [num, den] = __make_tf_polys_equally_long__ (sys);
+       ## Get the coefficients of the polys with normalized length
+-      if key == "num"
++      if (strcmp (key, "num") || strcmp (key, "numerator"))
+         val = cellfun (@get, num, "uniformoutput", false);
+       else
+         val = cellfun (@get, den, "uniformoutput", false);

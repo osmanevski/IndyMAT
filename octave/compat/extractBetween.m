@@ -25,6 +25,8 @@ function out = extractBetween (str, start, stop, varargin)
     endif
   endfor
   out = cellstr (extractBetween (string (str), start, stop, varargin{:}));
+  % A scalar character vector's multiple matches form a column in MATLAB.
+  if (ischar (str)), out = out(:); endif
 endfunction
 
 function check_text (x)

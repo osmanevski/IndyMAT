@@ -282,6 +282,13 @@ class ServiceTests(unittest.TestCase):
         worker.join(2)
         self.assertEqual(output, ['cancel'])
         self.assertFalse(self.service.waiters)
+        inside, outside = str(self.folder / 'sub' / 'y.m'), '/etc/hosts'
+        worker, output = begin('file', {'request_id': 'codex-paths', 'paths': [{'path': inside}, {'path': outside}], 'diff': '+new\n'})
+        entry = self.service.pending('one')[0]
+        self.assertEqual(entry['summary'], 'sub/y.m, /etc/hosts')
+        self.assertNotIn(str(self.folder), entry['detail']['text'])
+        self.service.cancel('one', 'stopped')
+        worker.join(2)
         for kind in ('nope', None):
             with self.assertRaises(ValueError): self.service.request_prepared('one', 'turn-one', kind, {})
 

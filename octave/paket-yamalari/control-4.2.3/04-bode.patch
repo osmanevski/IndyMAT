@@ -1,0 +1,16 @@
+--- a/bode.m
++++ b/bode.m
+@@ -224,9 +224,10 @@
+   else
+ 
+     ## no plotting, assign values to the output parameters
+-    mag_r = mag{1};
+-    pha_r = pha{1};
+-    w_r = w{1};
++    ## IndyMAT: MATLAB SISO output dimensions are 1-by-1-by-N.
++    mag_r = reshape (mag{1}, 1, 1, []);
++    pha_r = reshape (pha{1}, 1, 1, []);
++    w_r = w{1}(:);
+ 
+   endif
+ 

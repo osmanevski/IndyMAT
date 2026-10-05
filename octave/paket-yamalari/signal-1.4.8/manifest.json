@@ -1,0 +1,82 @@
+{
+  "schema": 1,
+  "package": "signal-1.4.8",
+  "patches": [
+    "01-fir1.patch",
+    "02-besself.patch",
+    "03-tf2ss.patch",
+    "04-resample.patch",
+    "05-pwelch.patch",
+    "06-hann.patch",
+    "07-findpeaks.patch",
+    "08-ellip-wave16.patch",
+    "09-fir2-wave16.patch",
+    "10-buttord-wave16.patch",
+    "11-cheb2ord-wave16.patch",
+    "12-residuez-wave16.patch",
+    "13-findpeaks-wave16.patch",
+    "14-pwelch-wave16.patch"
+  ],
+  "files": [
+    {
+      "path": "fir1.m",
+      "pristine_sha256": "3f87946ccb74c7d7d2703c6dee1bf6f2a7c50506649daf33224eb3a2c957268c",
+      "patched_sha256": "3a974fe116614d0f5b1445d780ce7b625f01671c3d11624ab06ec4894d3cf94e"
+    },
+    {
+      "path": "besself.m",
+      "pristine_sha256": "4a5910bfbf026e1d2ed256053dfb0d49e7b090c69dd81fc75057970ce29eee3a",
+      "patched_sha256": "358751c5fd010ebcf2fb9c8d845830b671801842e0532534435cb5ec68a5c05a"
+    },
+    {
+      "path": "tf2ss.m",
+      "pristine_sha256": "fa0acdf24d79cc562e0030497778e5d0a56287667e65847ad2eab02b2a637682",
+      "patched_sha256": "b9472fa91d8572455dc42354723314122e765d5c1fbf5453ede4ac09aee35b7e"
+    },
+    {
+      "path": "resample.m",
+      "pristine_sha256": "5bcb17be95195a48b10360d1a43ff844566931292a91a7a4c5360fad0d0f0046",
+      "patched_sha256": "a2b3a0f1feef7a2bfd35a65158a1f5c0da66082ade7556b3f52cc7d1e07164ec"
+    },
+    {
+      "path": "pwelch.m",
+      "pristine_sha256": "7849f80bad5804779cb35c804d098cf3dc62e4557d8e0ffaeda735d538405f44",
+      "patched_sha256": "e02faa80040a7f9bcae0d787393f5a8a89e5dcaa26518257f61ff21cb6d861d1"
+    },
+    {
+      "path": "hann.m",
+      "pristine_sha256": "eefbce088b836e5fb9223578268900a512e882c4058785cfa1dcdfdc6ecff821",
+      "patched_sha256": "19a5b17d4cbd9b8a71fc7dce1af8ff70a1bb1118651208dfb5b1a96930f0847a"
+    },
+    {
+      "path": "findpeaks.m",
+      "pristine_sha256": "565c5006254c17ea17b2d6380beb788ff12bc4e6d47525df20a5496ea4f49252",
+      "patched_sha256": "9b54f25b9a4de53dacdb43420de586bfc49197adc5f50025d2dbdbd7f166e420"
+    },
+    {
+      "path": "ellip.m",
+      "pristine_sha256": "abe0b4371e0d75339d8377b5cc1bf66df669d534f420a38a76971ea306bc8ab2",
+      "patched_sha256": "d44b0ba315710442e2b7b70cd1adc2473aeac62f609940b006087c0c678a6a52"
+    },
+    {
+      "path": "fir2.m",
+      "pristine_sha256": "84df33d72b81abcc453628e7461bd5c95823ed5bab7ac32fe83dd5c1e88dc33a",
+      "patched_sha256": "1c617f9407891cfd5605fa730e53cff6f82e5e6334ec8a203392ed20973e7cf8"
+    },
+    {
+      "path": "buttord.m",
+      "pristine_sha256": "87228727d82c3350fe2cb1dc3f96a73a924f70910de09970faa6ae9de0d71d54",
+      "patched_sha256": "b010b9fd4977f5d701b3fb7855f06b8a9df35e3672fed6d1d1b09744afb068b7"
+    },
+    {
+      "path": "cheb2ord.m",
+      "pristine_sha256": "e3c5f16bda797a4cb56e2dd628600c04846a81f8063fc81b0dce969c17c3a7a3",
+      "patched_sha256": "b6639c95b32e156918aa811529b1f216968b31d97e8c6a74aac3f5a95dfbb6ee"
+    },
+    {
+      "path": "residuez.m",
+      "pristine_sha256": "6d7df03a3034d43f5c6603870afe802a1d12caf79f022cd1af5a0c35cf080cfc",
+      "patched_sha256": "79ed65f955c813fa45abbec2a7c8d816efd28d2f5eac4e74c3a665c0c69fb160"
+    }
+  ]
+}

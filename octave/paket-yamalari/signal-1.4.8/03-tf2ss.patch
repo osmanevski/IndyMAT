@@ -1,0 +1,39 @@
+--- a/tf2ss.m
++++ b/tf2ss.m
+@@ -59,6 +59,35 @@
+     print_usage ();
+   endif
+ 
+-  [a, b, c, d, e] = dssdata (tf (varargin{:}), []);
++  ## IndyMAT: proper numeric polynomial inputs use controllable companion
++  ## form, preserving cancelled modes. Other package forms are unchanged.
++  if (nargin == 2 && isnumeric (varargin{1}) && isnumeric (varargin{2})
++      && ismatrix (varargin{1}) && isvector (varargin{2}) && nargout <= 4)
++    num = double (varargin{1}); den = double (varargin{2}(:).');
++    first = find (den != 0, 1);
++    if (isempty (first)), error ("tf2ss: denominator must be nonzero"); endif
++    den = den(first:end);
++    if (isvector (num)), num = num(:).'; endif
++    first = find (any (num != 0, 1), 1);
++    if (isempty (first)), num = zeros (rows (num), 1);
++    else, num = num(:,first:end); endif
++    if (columns (num) > numel (den))
++      error ("tf2ss: transfer function must be proper");
++    endif
++    num /= den(1); den /= den(1);
++    num = [zeros(rows(num), numel(den)-columns(num)), num];
++    n = numel (den)-1;
++    d = num(:,1);
++    c = num(:,2:end) - d * den(2:end);
++    if (n == 0)
++      a = []; b = zeros (0,1);
++    else
++      a = [-den(2:end); eye(n-1), zeros(n-1,1)];
++      b = [1; zeros(n-1,1)];
++    endif
++    e = eye (n);
++  else
++    [a, b, c, d, e] = dssdata (tf (varargin{:}), []);
++  endif
+ 
+ endfunction

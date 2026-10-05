@@ -1,0 +1,51 @@
+{
+  "schema": 1,
+  "package": "control-4.2.3",
+  "patches": [
+    "01-sys_keys.patch",
+    "02-get.patch",
+    "03-set.patch",
+    "04-bode.patch",
+    "05-nyquist.patch",
+    "06-minreal.patch",
+    "07-margin.patch",
+    "08-margin-dc-wave16.patch"
+  ],
+  "files": [
+    {
+      "path": "@tf/__sys_keys__.m",
+      "pristine_sha256": "fefbb9ed108a4caf87b92061ba9de60af0fdd5a548afcd3ee2962b2c089a6684",
+      "patched_sha256": "9d56780695b58d4dfbd8ea05848e73987a7e8c2839d51f7302ad6065be09416c"
+    },
+    {
+      "path": "@tf/__get__.m",
+      "pristine_sha256": "da806de75ba3ed772ccf10f42e9dfa8ee825eee4a7898faf016eca1494c882dc",
+      "patched_sha256": "125bbbf7a807af7a7905560a60a9a1dbf726352279e14363029d0d1fa04e5870"
+    },
+    {
+      "path": "@tf/__set__.m",
+      "pristine_sha256": "961b1b63b14781eb3054f75412642968940a0eb5f67f195ba57f42860cc90aed",
+      "patched_sha256": "21162d329e14e4bf662afec1fdd865ed9df12bc19418a142c37ff42bf50c0153"
+    },
+    {
+      "path": "bode.m",
+      "pristine_sha256": "e25f35db79224b300766df9060cf8e06f05cfa6424b231683f4dc5e765be993c",
+      "patched_sha256": "939adc9e6d1d4276a375bb3caa67387b5a6d13648efe7463081e857bfee20ad2"
+    },
+    {
+      "path": "nyquist.m",
+      "pristine_sha256": "c765022d54628242fa619b0f52e6b52f0453ba2552b95ab39bc8446ee5da2386",
+      "patched_sha256": "a7d47636618e60749bf3b32e975cb96dd994a1875cf2e8a9eef009a19ca6877a"
+    },
+    {
+      "path": "@tf/__minreal__.m",
+      "pristine_sha256": "38748e53105c3f1b447c2960611db7c146b1c4a13d14b6f065197ce4cef4fbf5",
+      "patched_sha256": "5d047b32c9b2433bf3b17419456d749a104d2b9c82959904b84f4e7c296e46c3"
+    },
+    {
+      "path": "margin.m",
+      "pristine_sha256": "2b106f2655d8d678f70678a6ff4a28a4a0653e6d49e9cebd439817c469b8b42c",
+      "patched_sha256": "5fc3d27b2d215c8316d5288ee759f4c2dd99cdda339c7bc012c1dca1f92a278f"
+    }
+  ]
+}

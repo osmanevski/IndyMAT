@@ -1,0 +1,12 @@
+--- a/pwelch.m
++++ b/pwelch.m
+@@ -345,7 +345,8 @@
+   if ( isempty(compatib) || compatib<=0 || compatib>4 )
+     ## legal values are 1, 2, 3, 4
+ 
+-    compatib = 1;
++    ## IndyMAT: default to the package's MATLAB sample-overlap convention.
++    compatib = 3;
+   endif
+   if ( nargin <= 0 )
+     error( 'pwelch: Need at least 1 arg. Use "help pwelch".' );

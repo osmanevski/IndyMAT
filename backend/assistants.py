@@ -537,11 +537,6 @@ class Assistants(CodexConversations):
         elif proc: self._kill(proc)
         return {'ok': True}
 
-    def bridge_activity(self, identity, code):
-        with self.lock:
-            session = self.sessions.get(identity)
-            if session: self._emit(session, {'type': 'tool', 'name': 'indymat · run_code', 'text': code})
-
     def remove(self, identity):
         self.stop(identity)
         with self.lock: session = self.sessions.pop(identity, None)

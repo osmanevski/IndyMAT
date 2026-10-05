@@ -1,0 +1,11 @@
+--- a/@tf/__sys_keys__.m
++++ b/@tf/__sys_keys__.m
+@@ -40,7 +40,7 @@
+           "logical (true for negative powers of TF variable)"};
+ 
+   if (aliases)
+-    ka = {"variable"};
++    ka = {"variable"; "numerator"; "denominator"};
+     keys = [keys; ka];
+   endif
+ 

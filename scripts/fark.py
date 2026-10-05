@@ -8,10 +8,12 @@ other, so a wrong belief about MATLAB cannot enter the list.
 
   python3 scripts/fark.py            run both engines, write uyumluluk/farklar.json and docs/Farklar.md
   python3 scripts/fark.py --only ID-PREFIX   limit to probes whose id starts with the prefix
+  python3 scripts/fark.py --octave-only      run Octave alone and compare with the recorded MATLAB results
+                                             (uyumluluk/yoklama-matlab.json); for work without MATLAB at hand
 Short-lived helper processes only; the user's session is never touched.
 """
 from __future__ import annotations
-import argparse, json, re, sys, tempfile
+import argparse, hashlib, json, re, sys, tempfile
 from pathlib import Path
 root=Path(__file__).resolve().parents[1]
 sys.path.insert(0,str(root))
@@ -113,16 +115,28 @@ def report(rows,path):
         lines.append('')
     Path(path).write_text('\n'.join(lines),encoding='utf-8')
 
+RECORD=BASE/'yoklama-matlab.json'
+
+def code_hash(probe):return hashlib.sha256(probe['code'].encode('utf-8')).hexdigest()[:16]
+
+def recorded(probes):
+    """MATLAB summaries recorded by the last full run; a probe whose code changed since has no record."""
+    data=json.loads(RECORD.read_text(encoding='utf-8')) if RECORD.exists() else {}
+    return [data[probe['id']]['matlab'] if data.get(probe['id'],{}).get('hash')==code_hash(probe) else 'CALISMADI' for probe in probes]
+
 def main():
     parser=argparse.ArgumentParser(description=__doc__.split('\n')[0])
     parser.add_argument('--only',default='',metavar='ÖNEK')
+    parser.add_argument('--octave-only',action='store_true',help='MATLAB yerine kayıtlı MATLAB sonuçlarını kullan')
     arguments=parser.parse_args()
     probes=load(BASE/'yoklamalar',arguments.only)
     if not probes:print('Yoklama yok.');return 0
-    matlab=run(probes,'matlab');octave=run(probes,'octave')
+    matlab=recorded(probes) if arguments.octave_only else run(probes,'matlab')
+    octave=run(probes,'octave')
     rows=[{**probe,'matlab':m,'octave':o,'kind':kind(m,o)} for probe,m,o in zip(probes,matlab,octave)]
     different=[row for row in rows if row['kind'] not in ('aynı','ikisi de hata')]
-    if not arguments.only:
+    if not arguments.only and not arguments.octave_only:
+        RECORD.write_text(json.dumps({probe['id']:{'hash':code_hash(probe),'matlab':value} for probe,value in zip(probes,matlab)},ensure_ascii=False,indent=0,sort_keys=True)+'\n',encoding='utf-8')
         (BASE/'farklar.json').write_text(json.dumps({'yoklama':len(rows),'farklar':[{key:row[key] for key in ('id','code','group','kind','matlab','octave')} for row in different]},ensure_ascii=False,indent=1)+'\n',encoding='utf-8')
         (root/'docs').mkdir(exist_ok=True);report(rows,root/'docs'/'Farklar.md')
     print(f'{len(rows)} yoklama, {len(different)} fark')

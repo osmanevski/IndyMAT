@@ -1,0 +1,33 @@
+--- a/fir2.m
++++ b/fir2.m
+@@ -109,6 +109,8 @@
+ 
+   if isempty (ramp_n), ramp_n = fix (grid_n / 25); endif
+ 
++  matlab_grid = nargin == 3 && all (diff (f) > 0);
++
+   ## Apply ramps to discontinuities
+   if (ramp_n > 0)
+     ## remember original frequency points prior to applying ramps
+@@ -133,7 +135,20 @@
+   endif
+ 
+   ## interpolate between grid points
+-  grid = interp1(f,m,linspace(0,1,grid_n+1)');
++  ## IndyMAT: MATLAB's default grid assigns band edges to integer bins of
++  ## the npt-1 grid, then repeats the Nyquist endpoint for the inverse FFT.
++  ## Explicit grid/window/ramp forms and unresolved duplicate bins retain
++  ## the package implementation.
++  bins = fix (f * (grid_n-1)) + 1;
++  if (matlab_grid && all (diff (bins) > 0))
++    grid = zeros (grid_n+1, 1);
++    for j = 1:numel (f)-1
++      grid(bins(j):bins(j+1)) = linspace (m(j), m(j+1), bins(j+1)-bins(j)+1);
++    endfor
++    grid(end) = grid(end-1);
++  else
++    grid = interp1(f,m,linspace(0,1,grid_n+1)');
++  endif
+   ## hold on; plot(linspace(0,1,grid_n+1),grid,'-+g;grid;'); hold off; pause;
+ 
+   ## Transform frequency response into time response and

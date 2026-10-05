@@ -1,0 +1,110 @@
+--- a/string.m
++++ b/string.m
+@@ -610,6 +610,11 @@
+     ##
+     ## @end deftypefn
+     function out = count (this, pattern, varargin)
++      ## IndyMAT: scalar ASCII pattern support; literal calls keep their path.
++      if (nargin >= 2 && isa (pattern, 'pattern'))
++        out = __mf_pattern_apply__ ('count', this, pattern, varargin{:});
++        return;
++      endif
+       ## IndyMAT: later string arguments must not change the input/result type.
+       if (! isa (this, 'string'))
+         args = indymat_text_args ({pattern, varargin{:}}, 'count');
+@@ -746,6 +751,11 @@
+     ##
+     ## @end deftypefn
+     function TF = contains (this, pattern, varargin)
++      ## IndyMAT: scalar ASCII pattern support; literal calls keep their path.
++      if (nargin >= 2 && isa (pattern, 'pattern'))
++        TF = __mf_pattern_apply__ ('contains', this, pattern, varargin{:});
++        return;
++      endif
+       ## IndyMAT: later string arguments must not change the input/result type.
+       if (! isa (this, 'string'))
+         args = indymat_text_args ({pattern, varargin{:}}, 'contains');
+@@ -829,6 +839,11 @@
+     ##
+     ## @end deftypefn
+     function TF = endsWith (this, pattern, varargin)
++      ## IndyMAT: scalar ASCII pattern support; literal calls keep their path.
++      if (nargin >= 2 && isa (pattern, 'pattern'))
++        TF = __mf_pattern_apply__ ('endsWith', this, pattern, varargin{:});
++        return;
++      endif
+       ## Check pattern
+       if (nargin < 2)
+         error ("string.endsWith: PATTERN is required.");
+@@ -897,6 +912,11 @@
+     ##
+     ## @end deftypefn
+     function TF = startsWith (this, pattern, varargin)
++      ## IndyMAT: scalar ASCII pattern support; literal calls keep their path.
++      if (nargin >= 2 && isa (pattern, 'pattern'))
++        TF = __mf_pattern_apply__ ('startsWith', this, pattern, varargin{:});
++        return;
++      endif
+       ## Check pattern
+       if (nargin < 2)
+         error ("string.startsWith: PATTERN is required.");
+@@ -2537,6 +2557,11 @@
+     ##
+     ## @end deftypefn
+     function out = extract (this, pat)
++      ## IndyMAT: scalar ASCII pattern support; literal calls keep their path.
++      if (nargin >= 2 && isa (pat, 'pattern'))
++        out = __mf_pattern_apply__ ('extract', this, pat);
++        return;
++      endif
+       if (nargin < 2)
+         error ("string.extract: not enough input arguments.");
+       endif
+@@ -2867,6 +2892,11 @@
+     ##
+     ## @end deftypefn
+     function out = insertAfter (this, pat, new)
++      ## IndyMAT: scalar ASCII pattern support; literal calls keep their path.
++      if (nargin >= 3 && isa (pat, 'pattern'))
++        out = __mf_pattern_apply__ ('insertAfter', this, pat, new);
++        return;
++      endif
+       if (nargin < 3)
+         error ("string.insertAfter: not enough input arguments.");
+       endif
+@@ -2907,6 +2937,11 @@
+     ##
+     ## @end deftypefn
+     function out = insertBefore (this, pat, new)
++      ## IndyMAT: scalar ASCII pattern support; literal calls keep their path.
++      if (nargin >= 3 && isa (pat, 'pattern'))
++        out = __mf_pattern_apply__ ('insertBefore', this, pat, new);
++        return;
++      endif
+       if (nargin < 3)
+         error ("string.insertBefore: not enough input arguments.");
+       endif
+@@ -2942,6 +2977,11 @@
+     ##
+     ## @end deftypefn
+     function out = replace (this, old, new)
++      ## IndyMAT: scalar ASCII pattern support; literal calls keep their path.
++      if (nargin >= 3 && isa (old, 'pattern'))
++        out = __mf_pattern_apply__ ('replace', this, old, new);
++        return;
++      endif
+       ## IndyMAT: later string arguments must not change the input/result type.
+       if (! isa (this, 'string'))
+         args = indymat_text_args ({old, new}, 'replace');
+@@ -4019,6 +4059,11 @@
+     ##
+     ## @end deftypefn
+     function out = plus (str1, str2)
++      ## IndyMAT: composing scalar text with a pattern produces a pattern.
++      if (nargin == 2 && (isa (str1, 'pattern') || isa (str2, 'pattern')))
++        out = plus (pattern (str1), pattern (str2));
++        return;
++      endif
+       ## IndyMAT: supported text concatenation subset; retain string/string path.
+       args = {str1, str2};
+       for k = 1:2

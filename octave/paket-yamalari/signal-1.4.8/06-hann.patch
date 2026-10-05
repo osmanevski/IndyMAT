@@ -1,0 +1,19 @@
+--- a/hann.m
++++ b/hann.m
+@@ -37,7 +37,15 @@
+     print_usage ();
+   endif
+ 
+-  w = hanning (varargin{:});
++  ## IndyMAT: MATLAB permits an empty column window.
++  if (isnumeric (varargin{1}) && isscalar (varargin{1}) && varargin{1} == 0)
++    if (nargin == 2 && ! any (strcmpi (varargin{2}, {'periodic', 'symmetric'})))
++      error ('hann: option must be periodic or symmetric');
++    endif
++    w = zeros (0,1);
++  else
++    w = hanning (varargin{:});
++  endif
+ 
+ endfunction
+ 

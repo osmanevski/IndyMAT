@@ -127,6 +127,29 @@ class PackagePatchTests(unittest.TestCase):
         self.assertEqual(self.cli().returncode, 1)
         self.assertEqual(snapshot(self.package), before)
 
+    def test_older_patch_set_is_upgraded_in_one_step(self):
+        self.apply()
+        item = self.manifest['files'][0]
+        target = self.package / item['path']
+        older = target.read_bytes() + b'\n% from an earlier patch set\n'
+        target.write_bytes(older)
+        previous = json.loads(json.dumps(self.manifest))
+        previous['files'][0]['patched_sha256'] = patcher.digest(older)
+        registry = self.package / patcher.STATE / 'registry.json'
+        registry.write_text(json.dumps(previous, indent=2) + '\n')
+        self.assertEqual(self.cli('--check').returncode, 0)
+        self.assertEqual(target.read_bytes(), older)
+        self.assertIn('outdated (upgraded)', self.apply())
+        self.assertEqual(patcher.digest(target.read_bytes()), item['patched_sha256'])
+        self.assertEqual(registry.read_text(), json.dumps(self.manifest, indent=2) + '\n')
+        self.assertIn('patched (skipped)', self.apply())
+        # An unknown edit is still refused, even under a different registry.
+        target.write_bytes(older + b'user edit\n')
+        registry.write_text(json.dumps(previous, indent=2) + '\n')
+        before = snapshot(self.package)
+        self.assertEqual(self.cli().returncode, 1)
+        self.assertEqual(snapshot(self.package), before)
+
     def test_symlink_target_cannot_escape(self):
         outside = Path(self.temp.name) / 'outside.m'
         outside.write_bytes(self.before['string.m'])

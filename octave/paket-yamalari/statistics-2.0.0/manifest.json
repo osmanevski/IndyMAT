@@ -1,0 +1,20 @@
+{
+  "schema": 1,
+  "package": "statistics-2.0.0",
+  "patches": [
+    "01-poisspdf.patch",
+    "02-grpstats.patch"
+  ],
+  "files": [
+    {
+      "path": "Distribution_Functions/poisspdf.m",
+      "pristine_sha256": "ce9e30eaac4ef6f2e050d4c4fdf5daced1dc431c437825e9f6c5ff3b741ac2c0",
+      "patched_sha256": "6b8dfe4cc73ca0b8fa25bcb883bf3de7e8e7de7ab2d0afc4bb4a36de307d9a56"
+    },
+    {
+      "path": "Descriptive_Statistics/grpstats.m",
+      "pristine_sha256": "00309b7cb44eef9fad5615f50cff93d79606625f6a39d1d293fed246ac99cdcd",
+      "patched_sha256": "238b067e6a3bb681c13a4d18dad4d713b968ae2abab5e0dc8b42631b2c4ef109"
+    }
+  ]
+}

@@ -1,0 +1,17 @@
+--- a/@tf/__minreal__.m
++++ b/@tf/__minreal__.m
+@@ -38,11 +38,9 @@
+         [~, idx] = min (abs (zer(k) - pol));    # find best match
+ 
+         if (strcmpi (tol, "def"))
+-          if (abs (zer(k)) < sqrt_eps)          # catch case zer(k) = 0
+-            t = 1000 * eps;
+-          else
+-            t = 1000 * abs (zer(k)) * sqrt_eps;
+-          endif
++          ## IndyMAT: MATLAB default cancellation tolerance is sqrt(eps),
++          ## without the package's 1000-fold relaxed relative threshold.
++          t = sqrt_eps;
+         else
+           t = tol;
+         endif

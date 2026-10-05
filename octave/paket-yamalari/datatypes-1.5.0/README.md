@@ -12,6 +12,7 @@ file, not a claim that every installation named 1.5.0 has identical bytes.
 | `02-contains-empty.patch` | `contains(string('abc'), '')` and `contains(string(''), '')` return true, also with IgnoreCase. Missing source elements remain false; missing string patterns retain their prior nonmatching behaviour. | `strfind` returned no positions for an empty pattern, producing false. |
 | `03-count-nonoverlapping.patch` | Single-pattern literal matches are non-overlapping: `count(string('aaaa'), 'aa')` is 2; `count(string('banana'), 'ana')` is 1. | The method counted every `strfind` position, including overlaps. |
 | `04-plus-coercion.patch` | String + char and char + string concatenate, preserving spaces; string arrays retain scalar expansion. Numeric concatenation is limited to finite real integer numeric scalars from -9999 through 9999, e.g. `string('x') + 3` is `string('x3')`. | `plus` rejected every operand that was not already a string. |
+| `05-pattern-dispatch.patch` | Explicit strings accept scalar ASCII patterns in `contains`, `startsWith`, `endsWith`, `count`, `extract`, `replace`, `insertBefore` and `insertAfter`. Scalar string + pattern composes a pattern. | String-first dispatch rejected pattern objects before the compat pattern class could process them. Literal calls retain their previous paths. |
 
 The existing mixed-argument, empty-pattern and count cases were already measured
 against MATLAB R2025b. The 22 new cases, including numeric concatenation and
@@ -75,13 +76,14 @@ string object remains when it redispatches, so it cannot loop back into the
 class. `split` and `join` subsequently invoke the existing string-first method
 through the helper, where the guard does not run.
 
-Existing helper restrictions continue to raise their English errors:
+Existing wave 15 literal helper restrictions continue to raise their English
+errors on literal paths; patch 05 adds the separate pattern subset below:
 
 - `contains`/mixed `count`: literal patterns; optional logical scalar
   `IgnoreCase`; non-ASCII IgnoreCase is unsupported. Mixed `count` rejects empty
   patterns. String-first count's existing empty-pattern result remains unchanged.
 - `replace`/`erase`: nonempty literal patterns; scalar or same-shaped replacement
-  text. No new regex or pattern-object support.
+  text. These literal paths do not interpret regular expressions or patterns.
 - Mixed `compose`: real 2-D numeric/logical data, char rows, and later scalar
   strings. Non-scalar string data become cellstr and receive the helper's
   `compose: data must be real 2-D numeric/logical arrays or char row vectors`
@@ -97,10 +99,47 @@ Existing helper restrictions continue to raise their English errors:
   `string.plus: non-string operands must be char vectors or finite integer numeric scalars between -9999 and 9999.`
 
 String-first methods keep their existing code paths except for empty-pattern
-contains, non-overlap count, and the newly accepted plus operands. In particular,
+contains, non-overlap count, the newly accepted plus operands, and the guarded
+pattern bridge described below. In particular,
 count still sums per-pattern counts; interactions between overlapping *different*
 patterns have not been measured here. Existing package limitations are not
 claims of full MATLAB compatibility.
+
+## Wave 16 ASCII patterns
+
+Patch 05 calls `octave/compat/__mf_pattern_apply__.m` only when the search
+operand is a `pattern` object. `plus` similarly delegates only when one operand
+is a pattern. No compat shadow of a package function is installed. Existing
+wave 15 patches remain in order and the original file hash remains pinned.
+
+The new compat constructors support greedy ASCII digits, letters,
+alphanumerics and whitespace runs, positive exact/ranged character counts,
+scalar literal patterns, concatenation, ordered alternatives and optional
+parts. Finite count bounds are limited to 65535; maximum counts may be Inf.
+Queries accept logical scalar IgnoreCase. Editing accepts scalar literal
+replacement/insertion text, including empty text; replacement characters such
+as `$1` are not interpreted as regular expression substitutions. Extraction
+extends the first singleton source dimension and requires equal match counts
+for array sources. Char extraction returns cellstr; explicit string extraction
+returns string. Character/cellstr editing retains its input type.
+
+Non-ASCII text/classes, missing sources, pattern arrays, count bounds of zero,
+nullable extraction/editing/counting, capture features, and further pattern
+options are rejected explicitly. Optional components inside a mandatory
+pattern work. Double-quoted source literals still parse as Octave char arrays;
+these patches do not turn them into strings or recover concatenation boundaries.
+
+The private worktree was upgraded by reverting with the wave 15 manifest,
+verifying the pristine hash, archiving/removing the old registry, then applying
+the extended manifest with `scripts/patch_packages.py`. This is necessary
+because the patch script deliberately refuses an existing registry from a
+different patch set. It was not changed. Do not merely update a registry on an
+already patched target. New/pristine installs apply the full five-patch set.
+
+See [the Y3 report](../../compat/WAVE16-Y3.md) for initial summaries, every
+slice outcome, measured overhead and verification, including the remaining
+parser/storage differences. Explicit string/char-neighbor tests establish
+implementation consistency; they are not new measurements against MATLAB.
 
 No helper change is required for the existing six mixed-argument failures.
 To support mixed compose with non-scalar string data, the exact future helper

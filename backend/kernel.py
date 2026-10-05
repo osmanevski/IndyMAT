@@ -23,6 +23,9 @@ class _Detached:
     """Popen-like handle for an Octave process reparented to launchd; same pipes, session and process group."""
     _HELPER="import os,sys\nif os.fork():os._exit(0)\nos.execvp(sys.argv[1],sys.argv[1:])"
     def __init__(self,argv,cwd,env=None):
+        # macOS gives a GUI process the identity named by __CFBundleIdentifier, which a terminal or app sets
+        # for its children; Octave would then appear in the Dock under the launcher's icon (Ghostty).
+        env={k:v for k,v in (os.environ if env is None else env).items() if k!='__CFBundleIdentifier'}
         helper=subprocess.Popen([sys.executable,'-c',self._HELPER,*argv],stdin=subprocess.PIPE,stdout=subprocess.PIPE,stderr=subprocess.STDOUT,cwd=cwd,env=env,start_new_session=True,bufsize=0)
         helper.wait();self.stdin,self.stdout,self.pid=helper.stdin,helper.stdout,helper.pid
     def poll(self):

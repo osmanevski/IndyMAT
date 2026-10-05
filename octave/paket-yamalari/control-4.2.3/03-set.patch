@@ -1,0 +1,21 @@
+--- a/@tf/__set__.m
++++ b/@tf/__set__.m
+@@ -25,7 +25,8 @@
+ function sys = __set__ (sys, key, val)
+ 
+   switch (key)   # {<internal name>, <user name>}
+-    case "num"
++    ## IndyMAT: aliases retain the package's validation and setter semantics.
++    case {"num", "numerator"}
+       if (isstaticgain (sys))
+         error (["tf: set: tinkering with numerators of static gains is disabled on purpose.  " ...
+                 "to avoid this error, set the sampling time of your LTI model first."]);
+@@ -38,7 +39,7 @@
+       __tf_dim__ (num, sys.den);
+       sys.num = num;
+ 
+-    case "den"
++    case {"den", "denominator"}
+       if (isstaticgain (sys))
+         error (["tf: set: tinkering with denominators of static gains is disabled on purpose.  " ...
+                 "to avoid this error, set the sampling time of your LTI model first."]);
