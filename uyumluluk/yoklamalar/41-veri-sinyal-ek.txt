@@ -1,0 +1,12 @@
+# Wave 18 Z4: automatic histogram inputs from olcum/olc_sinyal2.m.
+# MATLAB results for these new probes must be recorded by the orchestrator.
+yf-histcounts2-auto-integers | x=[0 1 1 2 3 3 4 5]; y=[1 0 2 2 4 3 5 4]; [n,xe,ye]=histcounts2(x,y); r={n,xe,ye};
+yf-histcounts2-auto-wide | x=[-1000 -100 -1 0 1 10 100 1000]; y=[0 1 5 20 80 300 900 2000]; [n,xe,ye]=histcounts2(x,y); r={n,xe,ye};
+yf-histcounts2-auto-constant | x=0:7; y=3*ones(1,8); [n,xe,ye]=histcounts2(x,y); r={n,xe,ye};
+yf-histcounts2-auto-negative | x=[-9 -8 -7 -5 -4 -3 -2 -1]; y=[-12 -10 -8 -8 -6 -4 -2 -1]; [n,xe,ye]=histcounts2(x,y); r={n,xe,ye};
+yf-histcounts2-auto-formula100 | x=mod(7*(1:100),23)/3; y=mod(11*(1:100),31)/5-3; [n,xe,ye]=histcounts2(x,y); r={n,xe,ye};
+yf-designfilt-fir-norm | d=designfilt('lowpassfir','PassbandFrequency',.2,'StopbandFrequency',.65,'PassbandRipple',1,'StopbandAttenuation',40); r={class(d),filtord(d),d.DesignMethod,d.Numerator,d.Denominator};
+yf-designfilt-fir-fs1000 | d=designfilt('lowpassfir','PassbandFrequency',100,'StopbandFrequency',325,'PassbandRipple',1,'StopbandAttenuation',40,'SampleRate',1000); r={class(d),filtord(d),d.SampleRate,d.PassbandFrequency,d.StopbandFrequency,d.Numerator};
+yf-designfilt-fir-filter | d=designfilt('lowpassfir','PassbandFrequency',.2,'StopbandFrequency',.65,'PassbandRipple',1,'StopbandAttenuation',40); r=filter(d,[1 0 -1 2 0 1 -2 0 3 1 0 -1 2 0 1 -2 0 1 0 2 -1 0 1 0]);
+yf-designfilt-fir-freqz | d=designfilt('lowpassfir','PassbandFrequency',.2,'StopbandFrequency',.65,'PassbandRipple',1,'StopbandAttenuation',40); [h,w]=freqz(d,8); r={h,w};
+yf-designfilt-fir-filtfilt-short | d=designfilt('lowpassfir','PassbandFrequency',.2,'StopbandFrequency',.65,'PassbandRipple',1,'StopbandAttenuation',40); try,r=filtfilt(d,[1 0 -1 2 0 1 -2 0 3 1 0 -1 2 0 1 -2 0 1 0 2 -1 0 1 0]);catch e,r=e.identifier;end;

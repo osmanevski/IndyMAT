@@ -1,22 +1,28 @@
 function [n, xedges, yedges, binx, biny] = histcounts2 (x, y, varargin)
-% HISTCOUNTS2 Two-dimensional counts with EXPLICIT finite increasing edges.
+% HISTCOUNTS2 Automatic bins or explicit finite increasing edges.
 % Supports count, countdensity, probability, percentage, pdf, cumcount, cdf.
 % Probability/pdf/cdf divide by numel(X), including missing/outside points.
 % Bins are left-closed/right-open except the final bin includes its endpoint.
 % Bin indices are zero in BOTH axes when either coordinate is outside/NaN.
-% Edge and data shapes are preserved. Automatic rules and numeric NBINS
-% require MATLAB binpicker measurement and currently raise an explicit error.
+% Automatic bins use integer bins for integer-valued axes spanning <=50,
+% otherwise Scott's 2-D rule (n^(-1/4)), with rounded, aligned widths.
+% Automatic axes needing >1024 bins or unrepresentable edges are rejected.
+% Explicit edge and data shapes are preserved.
+% Numeric NBINS and bin-selection name/value options remain unsupported.
 % Floating-point/logical data only; no integer classes or infinite/duplicate edges.
   if (nargin<2), error ('histcounts2: X and Y are required'); endif
   if (!(isfloat(x) || islogical(x)) || !(isfloat(y) || islogical(y)) || ...
       !isreal(x) || !isreal(y) || !isequal(size(x),size(y)))
     error ('histcounts2: X and Y must be real floating-point or logical arrays of the same size');
   endif
-  if (numel(varargin)<2 || !isnumeric(varargin{1}) || !isnumeric(varargin{2}))
-    error ('histcounts2: explicit Xedges and Yedges are required; automatic bins and NBINS are unsupported');
+  if (isempty(varargin) || ischar(varargin{1}))
+    xedges=auto_edges(x); yedges=auto_edges(y); args=varargin;
+  elseif (numel(varargin)>=2 && isnumeric(varargin{1}) && isnumeric(varargin{2}))
+    xedges=varargin{1}; yedges=varargin{2}; args=varargin(3:end);
+  else
+    error ('histcounts2: numeric NBINS is unsupported; provide two edge vectors');
   endif
-  xedges=varargin{1}; yedges=varargin{2}; check_edges(xedges); check_edges(yedges);
-  args=varargin(3:end); mode='count';
+  check_edges(xedges); check_edges(yedges); mode='count';
   if (mod(numel(args),2)), error ('histcounts2: options must be name/value pairs'); endif
   for k=1:2:numel(args)
     if (!ischar(args{k}) || !strcmpi(args{k},'Normalization') || !ischar(args{k+1}))
@@ -44,6 +50,37 @@ function [n, xedges, yedges, binx, biny] = histcounts2 (x, y, varargin)
     case 'cumcount', n=cumsum(cumsum(n,1),2);
     case 'cdf', n=cumsum(cumsum(n/numel(x),1),2);
   endswitch
+endfunction
+
+function edges = auto_edges (x)
+  values=double(full(x(:))); values=values(isfinite(values));
+  if (isempty(values)), edges=[0 1];
+  else
+    lo=min(values); hi=max(values);
+    if (all(values==fix(values)) && hi-lo<=50)
+      edges=(lo:hi+1)-0.5;
+    elseif (lo==hi)
+      edges=[lo-0.5 hi+0.5];
+    else
+      width=3.5*std(values)*numel(values)^(-1/4);
+      % Same decimal width ladder as the numeric histcounts bin picker.
+      scale=10^floor(log10(width)); relative=width/scale;
+      if (relative<1.5), width=scale;
+      elseif (relative<2.5), width=2*scale;
+      elseif (relative<4), width=3*scale;
+      elseif (relative<7.5), width=5*scale;
+      else, width=10*scale; endif
+      left=width*floor(lo/width); count=max(1,ceil((hi-left)/width));
+      if (count>1024)
+        error ('histcounts2: automatic bin count above 1024 is unsupported');
+      endif
+      edges=left+(0:count)*width;
+    endif
+  endif
+  if (isa(x,'single')), edges=single(edges); endif
+  if (any(!isfinite(edges)) || any(diff(edges)<=0))
+    error ('histcounts2: automatic bins at this floating-point scale are unsupported');
+  endif
 endfunction
 
 function check_edges (e)

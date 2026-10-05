@@ -10,14 +10,18 @@ other, so a wrong belief about MATLAB cannot enter the list.
   python3 scripts/fark.py --only ID-PREFIX   limit to probes whose id starts with the prefix
   python3 scripts/fark.py --octave-only      run Octave alone and compare with the recorded MATLAB results
                                              (uyumluluk/yoklama-matlab.json); for work without MATLAB at hand
+  python3 scripts/fark.py --octave-only --adapted  also measure adapted bodies; write only farklar-uyarlanmis.json
+  Add --output /tmp/measurement.json to keep adapted measurements outside the repository.
 Short-lived helper processes only; the user's session is never touched.
 """
 from __future__ import annotations
-import argparse, hashlib, json, re, sys, tempfile
+import argparse, hashlib, json, re, shutil, sys, tempfile
 from pathlib import Path
 root=Path(__file__).resolve().parents[1]
 sys.path.insert(0,str(root))
 from scripts import compat
+from backend.source_adapter import ADAPTER_VERSION, AdapterProfile, adapt_source, verify_package
+from backend.kernel import cli_executable
 
 BASE=root/'uyumluluk'
 LINE=re.compile(r'^([a-z0-9][a-z0-9-]*)\s*\|\s*(.+)$')
@@ -124,15 +128,88 @@ def recorded(probes):
     data=json.loads(RECORD.read_text(encoding='utf-8')) if RECORD.exists() else {}
     return [data[probe['id']]['matlab'] if data.get(probe['id'],{}).get('hash')==code_hash(probe) else 'CALISMADI' for probe in probes]
 
+MATCH_KINDS = ('aynı', 'ikisi de hata')
+
+def adapted_profile():
+    executable = cli_executable(shutil.which('octave-cli') or '/opt/homebrew/bin/octave-cli')
+    support = verify_package(root/'.packages/datatypes-1.5.0/string.m', executable=executable,
+                             setup=compat.setup(), cwd=root)
+    return AdapterProfile(enabled=True, package=support)
+
+
+def adapt_probes(probes, profile):
+    """Only bodies are adapted. Runner/summary helpers always remain native."""
+    adaptations = [adapt_source(probe['code'], None, profile) for probe in probes]
+    return [dict(probe, code=a.generated_text) for probe, a in zip(probes, adaptations)], adaptations
+
+
+def adapted_measurement(probes, matlab, raw, adapted, adaptations):
+    if len({len(probes), len(matlab), len(raw), len(adapted), len(adaptations)}) != 1:
+        raise ValueError('Adapted measurement result counts do not match probe count.')
+    rows = []
+    for probe, m, o, a, adaptation in zip(probes, matlab, raw, adapted, adaptations):
+        raw_kind, adapted_kind = kind(m, o), kind(m, a)
+        rows.append({**probe, 'matlab': m, 'octave_raw': o, 'octave_adapted': a,
+                     'raw_kind': raw_kind, 'adapted_kind': adapted_kind,
+                     'original_hash': code_hash(probe),
+                     'generated_hash': code_hash({'code': adaptation.generated_text}),
+                     'adaptation': adaptation.metadata()})
+    # A fallback executed the original unit. Second-run noise is recorded in
+    # the row but cannot be credited/blamed as an adapter gain/regression.
+    gained = [r for r in rows if r['adaptation']['status'] != 'fallback'
+              and r['raw_kind'] not in MATCH_KINDS and r['adapted_kind'] in MATCH_KINDS]
+    regressions = [r for r in rows if r['adaptation']['status'] != 'fallback'
+                   and r['raw_kind'] in MATCH_KINDS and r['adapted_kind'] not in MATCH_KINDS]
+    for row in regressions:
+        names = sorted({d['message'].split(':', 1)[0] for d in row['adaptation']['diagnostics'] if d['code'] == 'semantic-limit'})
+        row['regression_reason'] = ('String object behavior differs in ' + ', '.join(names) + '. '
+                                    if names else 'String object dispatch differs. ') + row['octave_adapted']
+        row['suggested_action'] = 'Verify the lexical callee/argument rule or use whole-unit fallback for unsupported object semantics; never coerce an expression or string array to char.'
+    remaining = [r for r in rows if r['adapted_kind'] not in MATCH_KINDS]
+    fallbacks = [r for r in rows if r['adaptation']['status'] == 'fallback']
+    return {'adapter_version': ADAPTER_VERSION, 'probes': len(rows),
+            'gained': len(gained), 'gained_successful': sum(r['adapted_kind'] == 'aynı' for r in gained),
+            'gained_expected_error': sum(r['adapted_kind'] == 'ikisi de hata' for r in gained),
+            'successful_matches': sum(r['adapted_kind'] == 'aynı' for r in rows),
+            'expected_error_matches': sum(r['adapted_kind'] == 'ikisi de hata' for r in rows),
+            'remaining': len(remaining), 'regressions': len(regressions), 'fallbacks': len(fallbacks),
+            'regression_ids': [r['id'] for r in regressions], 'rows': rows}
+
+
+def print_adapted(measurement):
+    print(f"{measurement['probes']} probes: gained {measurement['gained']} "
+          f"(successful {measurement['gained_successful']}, both-error {measurement['gained_expected_error']}), "
+          f"remaining {measurement['remaining']}, NEW regressions {measurement['regressions']}, "
+          f"fallbacks {measurement['fallbacks']}")
+    print(f"Matches: successful {measurement['successful_matches']}, both-error {measurement['expected_error_matches']}")
+    for row in measurement['rows']:
+        if row['id'] in measurement['regression_ids']:
+            print(f"REGRESSION {row['id']}: {row['adapted_kind']}; M: {row['matlab']}; "
+                  f"raw: {row['octave_raw']}; adapted: {row['octave_adapted']}; action: {row['suggested_action']}")
+        elif row['adapted_kind'] not in MATCH_KINDS:
+            print(f"REMAINING {row['id']}: {row['adapted_kind']}; M: {row['matlab']}; adapted: {row['octave_adapted']}")
+        if row['adaptation']['status'] == 'fallback':
+            print(f"FALLBACK {row['id']}: " + '; '.join(d['message'] for d in row['adaptation']['diagnostics']))
+
+
 def main():
     parser=argparse.ArgumentParser(description=__doc__.split('\n')[0])
     parser.add_argument('--only',default='',metavar='ÖNEK')
+    parser.add_argument('--adapted', action='store_true', help='compare opt-in adapted probe bodies and raw Octave separately')
+    parser.add_argument('--output', type=Path, help='adapted measurement JSON destination (default: uyumluluk/farklar-uyarlanmis.json)')
     parser.add_argument('--octave-only',action='store_true',help='MATLAB yerine kayıtlı MATLAB sonuçlarını kullan')
     arguments=parser.parse_args()
     probes=load(BASE/'yoklamalar',arguments.only)
     if not probes:print('Yoklama yok.');return 0
     matlab=recorded(probes) if arguments.octave_only else run(probes,'matlab')
     octave=run(probes,'octave')
+    if arguments.adapted:
+        generated, adaptations = adapt_probes(probes, adapted_profile())
+        adapted = run(generated, 'octave')
+        measurement = adapted_measurement(probes, matlab, octave, adapted, adaptations)
+        (arguments.output or BASE/'farklar-uyarlanmis.json').write_text(json.dumps(measurement, ensure_ascii=False, indent=1)+'\n', encoding='utf-8')
+        print_adapted(measurement)
+        return 0
     rows=[{**probe,'matlab':m,'octave':o,'kind':kind(m,o)} for probe,m,o in zip(probes,matlab,octave)]
     different=[row for row in rows if row['kind'] not in ('aynı','ikisi de hata')]
     if not arguments.only and not arguments.octave_only:
