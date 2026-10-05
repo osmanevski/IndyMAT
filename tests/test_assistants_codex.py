@@ -111,7 +111,7 @@ class CodexPanel(unittest.TestCase):
         real = CodexAppServer
         def delayed(*args, **kwargs):
             return real(*args, **kwargs, config_overrides=('fake_hang_initialize=true',))
-        with patch('backend.assistant_codex.CodexAppServer', side_effect=delayed):
+        with patch('backend.assistant_codex.SelectedCodexAppServer', side_effect=delayed):
             identity = self.start()['session']
             self.poll(identity, lambda value: bool(self.manager.sessions[identity].get('codex_client')))
             client = self.manager.sessions[identity]['codex_client']

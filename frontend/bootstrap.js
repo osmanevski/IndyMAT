@@ -2,19 +2,43 @@ import shared from "./state.js";
 import registry from "./registry.js";
 import "./editor_commands.js";
 import { t } from "./i18n.js";
+import layoutUtils from "./layout_utils.cjs";
 
-function divider(id, axis, fn) {
+function divider(id, axis, fn, options = {}) {
   const n = registry.$(id);
+  n.setAttribute("aria-orientation", axis === "x" ? "vertical" : "horizontal");
   n.onpointerdown = (e) => {
+    if (e.button !== 0) return;
+    e.preventDefault();
     n.setPointerCapture(e.pointerId);
     n.classList.add("dragging");
+    document.body.classList.add(axis === "x" ? "resizing-columns" : "resizing-rows");
+    options.begin?.();
     const start = axis === "x" ? e.clientX : e.clientY;
-    n.onpointermove = (ev) => fn((axis === "x" ? ev.clientX : ev.clientY) - start, true, ev);
-    n.onpointerup = () => {
+    let active = true, snapped = false;
+    n.onpointermove = (ev) => {
+      const size = fn((axis === "x" ? ev.clientX : ev.clientY) - start, true, ev);
+      snapped = options.snap && layoutUtils.shouldSnap(options.area, size);
+      if (options.snap) document.body.classList.toggle(`layout-snap-${options.area}`, !!snapped);
+    };
+    const finish = (cancelled) => {
+      if (!active) return;
+      active = false;
       n.onpointermove = null;
       n.classList.remove("dragging");
-      registry.persistLayout();
+      document.body.classList.remove("resizing-columns", "resizing-rows", `layout-snap-${options.area}`);
+      if (n.hasPointerCapture(e.pointerId)) n.releasePointerCapture(e.pointerId);
+      if (cancelled) registry.applyLayout();
+      else if (snapped) registry.setLayoutPanel(options.area, false);
+      else registry.persistLayout();
     };
+    n.onpointerup = () => finish(false);
+    n.onpointercancel = () => finish(true);
+    n.onlostpointercapture = () => finish(true);
+  };
+  if (options.area) n.ondblclick = (e) => {
+    e.preventDefault();
+    registry.resetLayoutSize(options.area);
   };
   n.onkeydown = (e) => {
     if (["ArrowLeft", "ArrowUp", "ArrowRight", "ArrowDown"].includes(e.key)) {
@@ -149,24 +173,40 @@ registry.bootstrap = () => {
   });
   registry.on("#rotate-left", () => registry.rotate(-15));
   registry.on("#rotate-right", () => registry.rotate(15));
-  registry.on("#toggle-files", () => registry.$("#left-panel").classList.toggle("visible"));
-  registry.on("#toggle-workspace", () => registry.$("#right-panel").classList.toggle("visible"));
+  registry.on("#toggle-files", () => {
+    if (!shared.settings.panels.files) registry.setLayoutPanel("left", true);
+    registry.$("#left-panel").classList.toggle("visible");
+  });
+  registry.on("#toggle-workspace", () => {
+    if (!layoutUtils.panelVisible(shared.settings.panels, "right")) registry.setLayoutPanel("right", true);
+    registry.$("#right-panel").classList.toggle("visible");
+  });
   window.addEventListener("beforeunload", (e) => {
     if (shared.tabs.some((t) => t.dirty)) {
       e.preventDefault();
       e.returnValue = "";
     }
   });
-  divider("#left-divider", "x", (delta, drag, e) => document.documentElement.style.setProperty("--left", Math.max(140, Math.min(360, drag ? e.clientX - 6 : registry.$("#left-panel").clientWidth + delta)) + "px"));
-  divider("#right-divider", "x", (delta, drag, e) => document.documentElement.style.setProperty("--right", Math.max(190, Math.min(500, drag ? innerWidth - e.clientX - 6 : registry.$("#right-panel").clientWidth - delta)) + "px"));
+  divider("#left-divider", "x", (delta, drag, e) => {
+    const size = drag ? e.clientX - parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--gap")) : registry.$("#left-panel").clientWidth + delta;
+    document.documentElement.style.setProperty("--left", Math.max(140, Math.min(360, size)) + "px");
+    return size;
+  }, { area: "left", snap: true });
+  let rightEdge = 0;
+  divider("#right-divider", "x", (delta, drag, e) => {
+    const size = drag ? rightEdge - e.clientX : registry.$("#right-panel").clientWidth - delta;
+    document.documentElement.style.setProperty("--right", Math.max(190, Math.min(500, size)) + "px");
+    return size;
+  }, { area: "right", snap: true, begin: () => { rightEdge = registry.$("#right-panel").getBoundingClientRect().right; } });
   divider("#editor-divider", "y", (delta, drag, e) => {
     let r = registry.$(".center").getBoundingClientRect(), v = drag ? (e.clientY - r.top) / r.height * 100 : registry.$(".editor-panel").clientHeight / r.height * 100 + delta / 5;
     document.documentElement.style.setProperty("--editor-height", Math.max(20, Math.min(78, v)) + "%");
-  });
+    return drag ? r.bottom - e.clientY - parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--gap")) : Infinity;
+  }, { area: "bottom", snap: true });
   divider("#plot-divider", "x", (delta, drag, e) => {
     let r = registry.$(".bottom-panels").getBoundingClientRect(), width = drag ? e.clientX - r.left : registry.$(".console-panel").clientWidth + delta;
     registry.$(".console-panel").style.flex = `0 0 ${Math.max(20, Math.min(80, width / r.width * 100))}%`;
-  });
+  }, { area: "plot" });
 
   registry.safe(init);
 };

@@ -22,9 +22,9 @@ const translations = Object.assign({}, ...localeFiles.map(locale));
 const turkish = /[çğıöşüİÇĞÖŞÜ]|\\x(?:[0-9a-f]{2})|\\u(?:[0-9a-f]{4})/i;
 const allowedTurkish = new Map([
   // These two event.key literals detect Turkish keyboard layouts; they are input values, not UI copy.
-  ["frontend/shortcut_registry_utils.cjs", new Set([65])],
+  ["frontend/shortcut_registry_utils.cjs", new Set(['  if (event.key === "ı" || event.key === "İ") return "KeyI";'])],
   // The language name "Türkçe" is shown in its own language and is never translated.
-  ["frontend/settings.js", new Set([6])]
+  ["frontend/settings.js", new Set(["const LANGUAGE_NAME_TR = \"T\\u00FCrk\\u00E7e\";"])]
 ]);
 
 for (const file of owned) {
@@ -41,7 +41,8 @@ for (const file of owned) {
   }
   for (const [index, line] of source.split(/\r?\n/).entries()) {
     if (!turkish.test(line)) continue;
-    assert.ok(allowedTurkish.get(file)?.has(index + 1), `${file}:${index + 1} contains Turkish-specific text outside comments`);
+    // Allowed lines are named by their text, not their number: the files grow.
+    assert.ok(allowedTurkish.get(file)?.has(line), `${file}:${index + 1} contains Turkish-specific text outside comments`);
   }
 }
 

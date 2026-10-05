@@ -1,0 +1,465 @@
+# Karakter dizileri ve hücre metinleri
+ys-strcat-trailing | r = strcat('ab  ', 'cd  ')
+ys-strcat-cell-row | r = strcat({'a ', 'bc'}, {'x', ' y'})
+ys-strcat-cell-scalar | r = strcat({'a', 'b'}, '!')
+ys-strcat-empty | r = strcat('', 'x', '')
+ys-strvcat-pad | r = strvcat('a', 'long')
+ys-char-pad | r = char('a', 'long')
+ys-char-cell | r = char({'a', 'long'})
+ys-char-empty | r = char('', 'x')
+ys-strtrim-spaces | r = strtrim('  a b  ')
+ys-strtrim-char-matrix | r = strtrim(char(' a ', 'b  '))
+ys-deblank-char-matrix | r = deblank(char('a  ', ' b'))
+ys-blanks-zero | r = blanks(0)
+ys-blanks-row | r = blanks(5)
+ys-upper-ascii | r = upper('Abc z')
+ys-lower-ascii | r = lower('AbC Z')
+ys-upper-unicode | r = upper('é ñ ü ß')
+ys-lower-unicode | r = lower('É Ñ Ü İ')
+ys-fliplr-char | r = fliplr('abc  ')
+ys-fliplr-char-matrix | r = fliplr(char('ab ', 'xyz'))
+ys-strcmp-cells | r = strcmp({'a','B'}, {'a','b'})
+ys-strcmp-cell-char | r = strcmp({'a','b'}, 'a')
+ys-strcmp-char-cell | r = strcmp('a', {'a','b'})
+ys-strcmp-mixed-string | r = strcmp(["a","b"], {'a','b'})
+ys-strcmpi-cells | r = strcmpi({'A','b'}, {'a','B'})
+ys-strncmp-cells | r = strncmp({'abc','ax'}, {'abd','ay'}, 2)
+ys-strncmpi-cells | r = strncmpi({'Abc','XY'}, {'aBd','xy'}, [2 1])
+ys-strncmp-zero | r = strncmp('abc', 'xyz', 0)
+ys-strfind-char | r = strfind('abracadabra', 'abra')
+ys-strfind-overlap | r = strfind('aaaa', 'aa')
+ys-strfind-cell | r = strfind({'abcabc','bbb'}, 'bc')
+ys-strfind-pattern-cell | r = strfind('abc', {'a','bc','z'})
+ys-strrep-char | r = strrep('abcabc', 'b', 'XY')
+ys-strrep-cell | r = strrep({'abc','bbb'}, 'b', '_')
+ys-strrep-empty-pattern | r = strrep('abc', '', '_')
+ys-strtok-default | [a,b] = strtok('  alpha beta'); r = {a,b}
+ys-strtok-delims | [a,b] = strtok('a,b;c', ',;'); r = {a,b}
+ys-strtok-cell | [a,b] = strtok({'a b','c d'}); r = {a,b}
+ys-strsplit-default | r = strsplit('a,,b,')
+ys-strsplit-collapse | r = strsplit('a,,b,', ',', 'CollapseDelimiters', true)
+ys-strsplit-preserve | r = strsplit('a,,b,', ',', 'CollapseDelimiters', false)
+ys-strsplit-limits | r = strsplit('a-b-c-d', '-', 'CollapseDelimiters', false)
+ys-strsplit-multiple | r = strsplit('a;b,c', {',',';'})
+ys-strjoin-cell | r = strjoin({'a','b','c'}, '|')
+ys-strjoin-matrix | r = strjoin(cellstr(char('a','bb','c')), ',')
+ys-strjoin-cell-matrix | r = strjoin({'a','b';'c','d'}, ',', 2)
+ys-num2str-scalar | r = num2str(pi)
+ys-num2str-precision | r = num2str([1/3 pi], 5)
+ys-num2str-format | r = num2str([1.25 -2.5], '%8.2f')
+ys-num2str-logical | r = num2str([true false])
+ys-str2num-expression | r = str2num('[1 2; 3 4]')
+ys-str2num-exponent | r = str2num('1.2e-3')
+ys-str2num-invalid | r = str2num('not a number')
+ys-str2double-vector | r = str2double({'1.2','NaN','bad'})
+ys-sscanf-width | r = sscanf('123456 7.5', '%3d %4f')
+ys-sscanf-skip | r = sscanf('1,2,3', '%d,%*d,%d')
+ys-sscanf-repeat | r = sscanf('1 2 3 4', '%d %d')
+ys-sprintf-g | r = sprintf('%g|%.3g|%#.0g', [1200 1.2345 2])
+ys-sprintf-width-exp | r = sprintf('%8.2e|%12.4E', [0.00123 98765])
+ys-sprintf-string-numeric | r = sprintf('%s', 123)
+ys-sprintf-char-vector | r = sprintf('%c-%c-%c', [65 66 67])
+ys-sprintf-escape | r = sprintf('a\tb\n')
+ys-sprintf-array-cycle | r = sprintf('%d,%d;', [1 2 3;4 5 6])
+ys-sprintf-multiple-args | r = sprintf('%d %.1f %s', 4, 2.5, 'ok')
+ys-textscan-basic | r = textscan('1,a;2,b', '%f%s', 'Delimiter', ',', 'CollectOutput', false)
+ys-textscan-width | r = textscan('12345 abcdef', '%3d%4c')
+ys-textscan-skip | r = textscan('1 2 3', '%f%*f%f')
+ys-textscan-empty | r = textscan('', '%f%s')
+ys-textscan-repeats | r = textscan('1,2;3,4', '%f%f', 'Delimiter', {',',';'})
+# Regexp çıktıları ve metin API
+ys-regexp-match | r = regexp('a12b345', '\d+')
+ys-regexp-once | r = regexp('a12b345', '\d+', 'once')
+ys-regexp-match-selector | r = regexp('a12b345', '\d+', 'match')
+ys-regexp-tokens | r = regexp('x=12;y=34', '(\w+)=(\d+)', 'tokens')
+ys-regexp-names | r = regexp('x=12', '(?<key>\w+)=(?<val>\d+)', 'names')
+ys-regexp-start-end | [a,b] = regexp('ab12cd34', '\d+', 'start', 'end'); r = {a,b}
+ys-regexp-tokenextents | r = regexp('abc123', '([a-z]+)(\d+)', 'tokenExtents')
+ys-regexp-split | r = regexp('a,b;;c', '[,;]+', 'split')
+ys-regexp-once-match | r = regexp('a1b2', '\d', 'match', 'once')
+ys-regexp-ignorecase | r = regexp('Abcabc', 'abc', 'ignorecase')
+ys-regexp-lineanchors | r = regexp(sprintf('a\nb\n'), '^b$', 'lineanchors')
+ys-regexp-dotexceptnewline | r = regexp(sprintf('a\nb'), 'a.*b', 'dotexceptnewline')
+ys-regexp-lookahead | r = regexp('foo1 bar2', '\w+(?=\d)', 'match')
+ys-regexp-lookbehind | r = regexp('xfoo yfoo', '(?<=x)foo', 'match')
+ys-regexp-named-token | r = regexp('id=abc', 'id=(?<name>[a-z]+)', 'tokens')
+ys-regexp-lazy | r = regexp('<a>x</a><b>y</b>', '<.*?>', 'match')
+ys-regexpprep-named | r = regexprep('2025-10-05', '(?<y>\d{4})-(?<m>\d+)-(?<d>\d+)', '$3/$2/$1')
+ys-regexpprep-once | r = regexprep('a1b2c3', '\d', 'X', 'once')
+ys-regexpi-tokens | r = regexpi('AbC12', '([a-z]+)(\d+)', 'tokens')
+ys-regexp-empty | r = regexp('abc', 'x', 'match')
+ys-contains-char | r = contains('abcabc', 'bc')
+ys-contains-cell | r = contains({'abc','def'}, 'a')
+ys-contains-ignorecase | r = contains({'ABC','abc'}, 'a', 'IgnoreCase', true)
+ys-contains-string | r = contains(["abc","def"], "a")
+ys-startswith-cell | r = startsWith({'abc','def'}, {'a','d'})
+ys-startswith-ignorecase | r = startsWith('Abc', 'a', 'IgnoreCase', true)
+ys-endswith-char-matrix | r = endsWith(char('abc','xyc'), 'c')
+ys-endswith-string-cell | r = endsWith(["abc","def"], {'c','x'})
+ys-count-char | r = count('aaaa', 'aa')
+ys-count-overlap | r = count('aaaa', 'aa', 'Overlaps', true)
+ys-count-cell | r = count({'banana','bandana'}, 'ana')
+ys-replace-char | r = replace('abcabc', 'b', 'X')
+ys-replace-cell | r = replace({'abc','def'}, {'a','e'}, '_')
+ys-erase-char | r = erase('a-b-c', '-')
+ys-strip-default | r = strip('  a b  ')
+ys-strip-left | r = strip('--abc--', 'left', '-')
+ys-pad-char | r = pad('abc', 6, 'right', '-')
+ys-pad-cell | r = pad({'a','long'}, 5, 'left', '0')
+ys-extractbefore-index | r = extractBefore('abcdef', 4)
+ys-extractbefore-pattern | r = extractBefore('abc-def', '-')
+ys-extractafter-index | r = extractAfter('abcdef', 3)
+ys-extractafter-pattern | r = extractAfter('abc-def', '-')
+ys-extractbetween-char | r = extractBetween('[one][two]', '[', ']')
+ys-extractbetween-numeric | r = extractBetween('abcdef', 2, 4)
+ys-split-string | r = split("a,b,,c", "," )
+ys-split-cellstr | r = split({'a-b','c-d'}, '-')
+ys-join-string | r = join(["a","b","c"], "|")
+ys-splitlines-char | r = splitlines(sprintf('a\nb\r\nc'))
+ys-compose-numeric | r = compose('x=%04d', [2 10])
+ys-compose-mixed | r = compose('%s:%.1f', ["a","b"], [1.25 2.75])
+ys-reverse-char | r = reverse('stressed')
+ys-strlength-char | r = strlength(char('abc','xy'))
+ys-strlength-string | r = strlength(["abc","é"])
+ys-insertbefore-char | r = insertBefore('abcde', 3, 'X')
+ys-insertafter-char | r = insertAfter('abcde', 'c', 'X')
+ys-lower-string-cell | r = lower(["ABC","DEF"])
+ys-upper-cellstr | r = upper({'abc','def'})
+ys-numel-string | r = numel(["a","bb"])
+ys-string-char-cell-mix | r = string({'a','b'}) + "!"
+ys-string-missing | r = ismissing(["a",missing,"b"])
+ys-string-join-mixed | r = join(["a","b"], '-')
+ys-string-reshape | r = reshape(string(1:6), 2, 3)
+ys-strtrim-string | r = strtrim(string(' a '))
+ys-deblank-cell | r = deblank({'a  ','b '})
+ys-char-unicode-width | r = double(char('é','x'))
+ys-unicode-native | r = unicode2native('éñ', 'UTF-8')
+ys-native-unicode | r = native2unicode(uint8([195 169]), 'UTF-8')
+ys-unicode-length-char | r = [length('é'), numel('é'), strlength("é")]
+ys-digitspattern-basic | p = digitsPattern(1,3); r = extract("a12 b1234", p)
+ys-letterspattern-basic | p = lettersPattern(2); r = extract("ab cde", p)
+ys-alphanumericspattern | r = contains("a1-b", alphanumericsPattern(3))
+ys-whitespacepattern | r = extract("a  b", whitespacePattern(1,2))
+ys-optionalpattern | p = digitsPattern + optionalPattern("kg"); r = extract(["12kg","7"], p)
+ys-pattern-replace | r = replace("a12b3", digitsPattern, "#")
+ys-pattern-contains | r = contains(["abc","123"], lettersPattern(2))
+# JSON ve tablo temelleri
+ys-json-nested | r = jsonencode(struct('a', 1, 'b', struct('c', [2 3])))
+ys-json-struct-array | r = jsonencode(struct('x', {1,2}, 'y', {'a','b'}))
+ys-json-empty | r = jsonencode([])
+ys-json-logical | r = jsonencode([true false; false true])
+ys-json-nan | r = jsonencode([NaN Inf -Inf])
+ys-json-pretty | r = contains(jsonencode(struct('a', 1, 'b', [2 3]), 'PrettyPrint', true), sprintf('\n'))
+ys-jsondecode-object | r = jsondecode('{"a":1,"b":[2,3]}')
+ys-jsondecode-array | r = jsondecode('[{"x":1},{"x":2}]')
+ys-jsondecode-empty | r = jsondecode('[]')
+ys-json-roundtrip-logical | r = jsondecode(jsonencode([true false]))
+ys-table-construction | T = table([1;2], {'a';'b'}, 'VariableNames', {'N','S'}); r = [height(T), width(T), size(T)]
+ys-table-dot-access | T = table([1;2], [3;4], 'VariableNames', {'A','B'}); r = T.A
+ys-table-brace-column | T = table([1;2], [3;4], 'VariableNames', {'A','B'}); r = T{:,1}
+ys-table-paren-row | T = table([1;2], [3;4], 'VariableNames', {'A','B'}); r = T(1,:)
+ys-table-brace-multi | T = table([1;2], [3;4], 'VariableNames', {'A','B'}); r = T{:,1:2}
+ys-table-addvars | T = table([1;2], 'VariableNames', {'A'}); T = addvars(T, [3;4], 'NewVariableNames','B'); r = T
+ys-table-removevars | T = table([1;2], [3;4], 'VariableNames', {'A','B'}); r = removevars(T,'A')
+ys-table-renamevars | T = table([1;2], 'VariableNames', {'A'}); r = renamevars(T,'A','X')
+ys-table-sortrows | T = table([3;1;2], [8;9;7], 'VariableNames', {'A','B'}); r = sortrows(T,'A')
+ys-table2array | T = table([1;2], [3;4], 'VariableNames', {'A','B'}); r = table2array(T)
+ys-array2table | r = array2table([1 2;3 4], 'VariableNames', {'A','B'})
+ys-struct2table | r = struct2table(struct('a', {1;2}, 'b', {3;4}))
+ys-table2struct | T = table([1;2], [3;4], 'VariableNames', {'A','B'}); r = table2struct(T)
+ys-table-join | A = table([1;2], [10;20], 'VariableNames', {'Key','X'}); B = table([1;3], [30;40], 'VariableNames', {'Key','Y'}); r = join(A,B)
+ys-table-innerjoin | A = table([1;2], [10;20], 'VariableNames', {'Key','X'}); B = table([1;3], [30;40], 'VariableNames', {'Key','Y'}); r = innerjoin(A,B)
+ys-table-groupsummary | T = table([1;1;2], [2;4;8], 'VariableNames', {'G','X'}); r = groupsummary(T,'G','mean','X')
+ys-table-varfun | T = table([1;2], [3;4], 'VariableNames', {'A','B'}); r = varfun(@mean,T)
+ys-table-rowfun | T = table([1;2], [3;4], 'VariableNames', {'A','B'}); r = rowfun(@sum,T)
+ys-table-missing | T = table([1;NaN;3], 'VariableNames', {'X'}); r = ismissing(T)
+ys-table-rmmissing | T = table([1;NaN;3], 'VariableNames', {'X'}); r = rmmissing(T)
+ys-table-fillmissing | T = table([1;NaN;3], 'VariableNames', {'X'}); r = fillmissing(T,'constant',0)
+ys-table-standardizemissing | T = table([1;-99;3], 'VariableNames', {'X'}); r = standardizeMissing(T,-99)
+ys-table-categorical | T = table(categorical({'a';'b'}), [1;2], 'VariableNames', {'G','X'}); r = T.G
+ys-table-empty | T = table(); r = [height(T), width(T), size(T)]
+ys-table-row-names | T = table([1;2], 'RowNames', {'r1';'r2'}); r = T.Properties.RowNames
+ys-categorical-basic | c = categorical({'low','high','low'}); r = double(c)
+ys-categorical-categories | c = categorical({'b','a','b'}); r = categories(c)
+ys-categorical-countcats | c = categorical({'b','a','b'}); r = countcats(c)
+ys-categorical-reorder | c = categorical({'b','a','b'}); c = reordercats(c,{'b','a'}); r = categories(c)
+ys-categorical-merge | c = categorical({'a','b','c'}); c = mergecats(c,{'a','b'},'ab'); r = categories(c)
+ys-categorical-undefined | c = categorical({'a','b'},{'a'}); r = isundefined(c)
+# Kontrol sistemleri
+ys-tf-siso | sys = tf([1 2],[1 3 2]); r = {class(sys), size(sys)}
+ys-tf-static | sys = tf(3); r = {class(sys), size(sys)}
+ys-tf-mimo | sys = tf({[1 1],[2]}, {[1 2],[1 3]}); r = size(sys)
+ys-tf-properties | sys = tf([1],[1 2 1]); r = {sys.Numerator, sys.Denominator}
+ys-tfdata-one | sys = tf([1 2],[1 3]); r = tfdata(sys)
+ys-tfdata-two | sys = tf([1 2],[1 3]); [n,d] = tfdata(sys); r = {n,d}
+ys-tfdata-vector | sys = tf([1 2],[1 3]); [n,d] = tfdata(sys,'v'); r = {n,d}
+ys-zpk-construction | sys = zpk([-1 -2],[-3 -4],2); r = {class(sys), size(sys)}
+ys-zpkdata-outputs | sys = zpk([-1 -2],[-3 -4],2); [z,p,k] = zpkdata(sys); r = {z,p,k}
+ys-ss-construction | sys = ss([0 1;-2 -3],[0;1],[1 0],0); r = {class(sys), size(sys)}
+ys-ssdata-outputs | sys = ss([0 1;-2 -3],[0;1],[1 0],0); [a,b,c,d] = ssdata(sys); r = {a,b,c,d}
+ys-pole-zero-dcgain | sys = tf([1 2],[1 3 2]); r = {round(pole(sys),6),round(zero(sys),6),dcgain(sys)}
+ys-bandwidth | sys = tf(1,[1 1]); r = round(bandwidth(sys),6)
+ys-series | a = tf(1,[1 1]); b = tf(2,[1 2]); r = tfdata(series(a,b),'v')
+ys-parallel | a = tf(1,[1 1]); b = tf(2,[1 2]); r = tfdata(parallel(a,b),'v')
+ys-feedback-default | a = tf(1,[1 1]); b = tf(1); r = tfdata(feedback(a,b),'v')
+ys-feedback-positive | a = tf(1,[1 1]); b = tf(1); r = tfdata(feedback(a,b,1),'v')
+ys-minreal | sys = tf([1 3 2],[1 4 5 2]); r = tfdata(minreal(sys),'v')
+ys-c2d-zoh | sys = c2d(tf(1,[1 1]),0.1); r = {class(sys), round(tfdata(sys,'v'),6)}
+ys-c2d-tustin | sys = c2d(tf(1,[1 1]),0.1,'tustin'); r = round(tfdata(sys,'v'),6)
+ys-d2c-tustin | sys = d2c(c2d(tf(1,[1 1]),0.1,'tustin'),'tustin'); r = round(tfdata(sys,'v'),6)
+ys-step-output | [y,t] = step(tf(1,[1 1]),[0 0.5 1]); r = {size(y),round(y,6),t}
+ys-impulse-output | [y,t] = impulse(tf(1,[1 1]),[0 0.5 1]); r = {size(y),round(y,6)}
+ys-lsim-output | [y,t] = lsim(tf(1,[1 1]),[0;1;0],[0;1;2]); r = {size(y),round(y,6)}
+ys-bode-output | [m,p,w] = bode(tf(1,[1 1]),[0.1 1 10]); r = {size(m),round(m(:),6),round(p(:),6),w}
+ys-nyquist-output | [re,im,w] = nyquist(tf(1,[1 1]),[0.1 1 10]); r = {size(re),round(re(:),6),round(im(:),6)}
+ys-stepinfo-fields | s = stepinfo(tf(1,[1 1])); r = round([s.RiseTime,s.SettlingTime,s.Overshoot,s.Peak],6)
+ys-pid-class | r = {class(pid(2,3,4)), class(pidtune(tf(1,[1 1]),'PID'))}
+ys-ctrb | r = round(ctrb([0 1;-2 -3],[0;1]),6)
+ys-obsv | r = round(obsv([0 1;-2 -3],[1 0]),6)
+ys-place | r = round(place([0 1;-2 -3],[0;1],[-4 -5]),6)
+ys-acker | r = round(acker([0 1;-2 -3],[0;1],[-4 -5]),6)
+ys-lqr | r = round(lqr([0 1;-2 -3],[0;1],eye(2),1),6)
+ys-isstable-order | sys = tf(1,[1 3 2]); r = [isstable(sys), order(sys)]
+ys-damp-outputs | [wn,zeta,p] = damp(tf(1,[1 3 2])); r = {round(wn,6),round(zeta,6),round(p,6)}
+ys-margin-outputs | [gm,pm,wcg,wcp] = margin(tf(1,[1 1])); r = round([gm,pm,wcg,wcp],6)
+ys-tf-zpk-ss-convert | sys = tf([1 2],[1 3 2]); r = {class(zpk(sys)),class(ss(sys))}
+ys-ss-series | a = ss(-1,1,1,0); b = ss(-2,1,1,0); r = size(series(a,b))
+ys-ss-feedback | sys = feedback(ss(-1,1,1,0),1); [a,b,c,d] = ssdata(sys); r = {a,b,c,d}
+# Sinyal işleme
+ys-butter-coeff | [b,a] = butter(2,0.4); r = round([b,a],8)
+ys-butter-zpk | [z,p,k] = butter(2,0.4); r = {round(z,8),round(p,8),round(k,8)}
+ys-butter-sos | [sos,g] = butter(3,0.4,'sos'); r = {size(sos),round(sos(:),8),round(g,8)}
+ys-cheby1-coeff | [b,a] = cheby1(2,1,0.4); r = round([b,a],8)
+ys-cheby2-coeff | [b,a] = cheby2(2,20,0.4); r = round([b,a],8)
+ys-ellip-coeff | [b,a] = ellip(2,1,20,0.4); r = round([b,a],8)
+ys-besself-coeff | [b,a] = besself(2,2); r = round([b,a],8)
+ys-fir1-default | r = round(fir1(4,0.4),8)
+ys-fir1-window | r = round(fir1(4,0.4,hamming(5)),8)
+ys-fir2-basic | r = round(fir2(4,[0 0.3 0.5 1],[1 1 0 0]),8)
+ys-firpm-basic | r = round(firpm(4,[0 0.3 0.5 1],[1 1 0 0]),8)
+ys-freqz-default | [h,w] = freqz([1 1],[1 -0.5],8); r = {size(h),round(h,8),round(w,8)}
+ys-freqz-frequencies | [h,w] = freqz([1 1],[1 -0.5],[0 pi/2 pi]); r = {size(h),round(h,8),w}
+ys-freqz-whole | [h,w] = freqz([1 1],[1 -0.5],8,'whole'); r = {size(h),round(w,8)}
+ys-grpdelay-output | [gd,w] = grpdelay([1 1],[1 -0.5],8); r = {size(gd),round(gd,8)}
+ys-impz-output | [h,t] = impz([1 1],[1 -0.5],6); r = {size(h),round(h,8),t}
+ys-filtfilt-short | r = round(filtfilt([0.5 0.5],1,[1 2 3 4 5 6]),8)
+ys-hamming-symmetric | r = round(hamming(5),8)
+ys-hamming-periodic | r = round(hamming(5,'periodic'),8)
+ys-hann-periodic | r = round(hann(6,'periodic'),8)
+ys-blackman-periodic | r = round(blackman(5,'periodic'),8)
+ys-kaiser-beta | r = round(kaiser(5,3),8)
+ys-rectwin | r = rectwin(4)
+ys-bartlett | r = round(bartlett(5),8)
+ys-xcorr-default | r = xcorr([1 2 3])
+ys-xcorr-lags | [c,l] = xcorr([1 2 3],[2 1],2); r = {c,l}
+ys-xcorr-normalized | r = xcorr([1 2 3],'coeff')
+ys-xcov-default | r = xcov([1 2 3])
+ys-xcov-lags | [c,l] = xcov([1 2 3],[2 1],2,'biased'); r = {c,l}
+ys-pwelch-size | [p,f] = pwelch(1:16,8,4,8,2); r = {size(p),round(f,8)}
+ys-periodogram-size | [p,f] = periodogram(1:8,[],8,4); r = {size(p),round(f,8)}
+ys-resample-values | r = round(resample([1 2 3],2,1),8)
+ys-decimate-values | r = round(decimate(1:12,2),8)
+ys-interp-values | r = round(interp([1 2 3],2),8)
+ys-upsample-values | r = upsample([1 2 3],2)
+ys-downsample-values | r = downsample(1:8,3)
+ys-findpeaks-default | [p,l] = findpeaks([0 1 0 2 0]); r = {p,l}
+ys-findpeaks-height | [p,l,w,h] = findpeaks([0 1 0 3 0],'MinPeakHeight',1.5); r = {p,l,round(w,6),round(h,6)}
+ys-hilbert-values | r = round(hilbert([1 2 3 4]),8)
+ys-envelope-default | [u,l] = envelope([1 2 1 2 1],3); r = {round(u,6),round(l,6)}
+ys-db-values | r = [db(0.5),db2mag(-6),mag2db(0.5),pow2db(0.25)]
+ys-tf2zp | [z,p,k] = tf2zp([1 2],[1 3 2]); r = {round(z,8),round(p,8),round(k,8)}
+ys-zp2tf | [b,a] = zp2tf(-2,[-1 -3],1); r = round([b,a],8)
+ys-tf2ss | [a,b,c,d] = tf2ss([1 2],[1 3 2]); r = {a,b,c,d}
+ys-ss2tf | [num,den] = ss2tf([0 1;-2 -3],[0;1],[1 0],0); r = round([num;den],8)
+ys-sos2tf | [b,a] = sos2tf([1 0 0 1 -0.5 0.1;1 0 0 1 -0.2 0.05]); r = round([b,a],8)
+ys-residue | [rv,p,k] = residue([1 2],[1 3 2]); r = {round(rv,8),round(p,8),k}
+ys-residuez | [rv,p,k] = residuez([1 2],[1 -0.5 -0.25]); r = {round(rv,8),round(p,8),k}
+ys-buttord | [n,w] = buttord(0.2,0.3,1,20); r = {n,round(w,8)}
+ys-cheb1ord | [n,w] = cheb1ord(0.2,0.3,1,20); r = {n,round(w,8)}
+ys-cheb2ord | [n,w] = cheb2ord(0.2,0.3,1,20); r = {n,round(w,8)}
+ys-ellipord | [n,w] = ellipord(0.2,0.3,1,20); r = {n,round(w,8)}
+ys-filter-integer | r = filter([1 1],1,int16([1 2 3]))
+ys-filter-column | r = filter([1 1],[1 -0.5],[1;2;3])
+ys-window-zero | r = {hamming(0),hann(0),blackman(0)}
+ys-window-one | r = [hamming(1),hann(1),blackman(1),bartlett(1)]
+ys-xcorr-matrix | r = xcorr([1 2;3 4])
+ys-pwelch-default-size | [p,f] = pwelch(1:8); r = {size(p),size(f)}
+ys-periodogram-default | [p,f] = periodogram(1:8); r = {size(p),size(f)}
+ys-envelope-rms | r = envelope([1 2 1 2 1],3,'rms')
+ys-resample-column | r = size(resample([1;2;3;4],3,2))
+# İstatistik ve veri özetleri
+ys-normpdf | r = normpdf([-1 0 1],0,2)
+ys-normcdf | r = normcdf([-1 0 1],0,2)
+ys-norminv | r = norminv([0.1 0.5 0.9],2,3)
+ys-tpdf | r = tpdf([-2 0 2],5)
+ys-tcdf | r = tcdf([-2 0 2],5)
+ys-tinv | r = tinv([0.1 0.5 0.9],5)
+ys-chi2pdf | r = chi2pdf([0 1 4],3)
+ys-chi2cdf | r = chi2cdf([0 1 4],3)
+ys-binopdf | r = binopdf([0 1 3],3,0.25)
+ys-poisspdf | r = poisspdf([0 1 3],2)
+ys-makedist-class | r = {class(makedist('Normal')), class(makedist('Uniform'))}
+ys-zscore-default | r = round(zscore([1 2 3]),8)
+ys-zscore-dim | r = round(zscore([1 2;3 4],0,1),8)
+ys-skewness-default | r = skewness([1 2 3 4])
+ys-skewness-bias | r = skewness([1 2 3 4],0,2)
+ys-kurtosis-default | r = kurtosis([1 2 3 4])
+ys-kurtosis-bias | r = kurtosis([1 2 3 4],0,2)
+ys-prctile-default | r = prctile([1 2 3 4 5],[0 25 50 75 100])
+ys-prctile-dim | r = prctile([1 4;2 5;3 6],50,1)
+ys-quantile-default | r = quantile([1 2 3 4 5],[0 0.25 0.5 0.75 1])
+ys-quantile-dim | r = quantile([1 4;2 5;3 6],0.5,1)
+ys-iqr | r = iqr([1 2 3 4 5 6])
+ys-mad-default | r = mad([1 2 3 4 5])
+ys-mad-mean | r = mad([1 2 3 4 5],1)
+ys-mean-integer | r = mean(int16([1 2 4]))
+ys-mean-omitnan | r = mean([1 NaN 3],'omitnan')
+ys-var-default | r = var([1 2 3 4])
+ys-var-normalized | r = var([1 2 3 4],1,2)
+ys-var-omitnan | r = var([1 NaN 3],0,'omitnan')
+ys-corr-default | r = corr([1 2 3;2 4 6]')
+ys-corr-spearman | r = corr([1 2 3;3 1 2]','Type','Spearman')
+ys-corr-kendall | r = corr([1 2 3;3 1 2]','Type','Kendall')
+ys-corr-pairwise | r = corr([1 NaN 3;2 4 6]','Rows','pairwise')
+ys-tabulate-output | r = tabulate([1 1 2 3 3 3])
+ys-tabulate-categorical | r = tabulate(categorical({'a','b','a'}))
+ys-crosstab-output | r = crosstab([1 1 2 2],[1 2 1 2])
+ys-crosstab-categorical | r = crosstab(categorical({'a','a','b'}),categorical({'x','y','x'}))
+ys-grpstats-output | r = grpstats([1 1 2 2],[2 4 6 8],{'mean','sum'})
+ys-grpstats-multiple | [m,s] = grpstats([2 4 6 8],[1 1 2 2],{'mean','std'}); r = {m,s}
+ys-normpdf-single-param | r = normpdf(0)
+ys-normcdf-tail | r = normcdf([-2 0 2],'upper')
+ys-binopdf-scalar-expand | r = binopdf(0:4,4,0.5)
+ys-poisspdf-zero | r = poisspdf(0:4,0)
+ys-zscore-row | r = round(zscore([1;2;3],0,1),8)
+ys-prctile-integer | r = prctile(int16([1 2 3 4]),[25 50 75])
+ys-quantile-matrix | r = quantile([1 10;2 20;3 30],[0.25 0.75])
+ys-mad-dim | r = mad([1 2;3 4;5 8],0,1)
+ys-corr-constant | r = corr([1 1 1;1 2 3]')
+ys-ranksum-small | r = ranksum([1 2 3],[4 5 6])
+ys-ttest-output | [h,p,ci,s] = ttest([1 2 3 4]); r = {h,round(p,8),round(ci,8),s.df}
+ys-ttest2-output | [h,p] = ttest2([1 2 3],[4 5 6]); r = {h,round(p,8)}
+ys-anova1-output | [p,tbl,stats] = anova1([1 2 3 4 5 6],[1 1 1 2 2 2],'off'); r = {round(p,8),size(tbl),class(stats)}
+ys-ecdf-size | [f,x] = ecdf([1 2 2 3]); r = {f,x}
+ys-histcounts | [n,e] = histcounts([1 1 2 3 4],0:5); r = {n,e}
+ys-discretize | r = discretize([0 1 2 3 4],[0 2 4])
+ys-isoutlier-default | r = isoutlier([1 2 2 3 100])
+# Ek metin biçimleri ve seçenekler
+ys-strcat-cell-trailing | r = strcat({'a  ','b '}, {' x',' y'})
+ys-strvcat-empty | r = strvcat('','a','')
+ys-char-numeric | r = char(uint8([65 66;67 68]))
+ys-strtrim-tabs | r = strtrim(sprintf('\t abc \t'))
+ys-deblank-leading | r = deblank('  abc  ')
+ys-upper-cell | r = upper({'ab','Cd'})
+ys-lower-char-matrix | r = lower(char('ABC','XYZ'))
+ys-strncmpi-cell-char | r = strncmpi({'Abc','XYZ'}, 'a', 1)
+ys-strfind-empty | r = strfind('abc','')
+ys-strfind-string | r = strfind("ababa","aba")
+ys-strrep-char-matrix | r = strrep(char('aba','bab'),'a','XY')
+ys-strtok-empty | [a,b] = strtok(''); r = {a,b}
+ys-strjoin-empty | r = strjoin({},',')
+ys-sscanf-suppression | r = sscanf('10 20 30','%*d %d %d')
+ys-sscanf-string-conversion | r = sscanf('abc 12','%s %d')
+ys-sprintf-precision-star | r = sprintf('%.*f', 3, pi)
+ys-sprintf-char-string | r = sprintf('%s:%c','id',65)
+ys-textscan-collect | r = textscan('1 2 3 4','%f%f','CollectOutput',true)
+ys-textscan-empty-repeated | r = textscan('1,,3', '%f%f%f', 'Delimiter', ',')
+ys-regexp-start | r = regexp('a1b2','\d+','start')
+ys-regexp-end | r = regexp('a1b2','\d+','end')
+ys-regexp-tokens-start-end | [a,b,c] = regexp('ab12','([a-z]+)(\d+)','start','end','tokens'); r = {a,b,c}
+ys-regexp-names-output | [a,b] = regexp('x=12','(?<key>\w+)=(?<val>\d+)','names','match'); r = {a,b}
+ys-regexp-match-tokenextents | [a,b] = regexp('ab12','([a-z]+)(\d+)','match','tokenExtents'); r = {a,b}
+ys-regexp-dotall | r = regexp(sprintf('a\nb'),'a.*b','dotall','match')
+ys-regexpi-ignorecase | r = regexpi('AbCabc','abc','match')
+ys-regexprep-cell | r = regexprep({'a1','b2'},'\d','X')
+ys-regexprep-lookaround | r = regexprep('foo1 foo2','foo(?=\d)','bar')
+ys-regexprep-lazy | r = regexprep('<a>x</a>','<.*?>','X')
+ys-contains-string-pattern | r = contains(["a1","ab"], digitsPattern)
+ys-startswith-string-pattern | r = startsWith(["abc","123"], lettersPattern(1))
+ys-endswith-cell-ignorecase | r = endsWith({'abc','DEF'},{'C','f'},'IgnoreCase',true)
+ys-count-string-pattern | r = count("a1b22", digitsPattern)
+ys-replace-string-pattern | r = replace(["a1","b2"], digitsPattern, "N")
+ys-erase-cell | r = erase({'a-b','c-d'},'-')
+ys-strip-both-char-set | r = strip('xxabcyy','both',{'x','y'})
+ys-pad-string-left | r = pad("abc",6,'left',"0")
+ys-extractbefore-string | r = extractBefore("abcdef",4)
+ys-extractafter-string | r = extractAfter("abcdef",3)
+ys-extractbetween-string | r = extractBetween(["<a>","<b>"],'<','>')
+ys-splitlines-string | r = splitlines("a"+newline+"b")
+ys-compose-cell | r = compose('%s-%d',{'x','y'},[1 2])
+ys-reverse-string | r = reverse(["abc","xyz"])
+ys-insertbefore-string | r = insertBefore("abcd",2,"!")
+ys-insertafter-string | r = insertAfter("abcd",2,"!")
+ys-insertbefore-pattern | r = insertBefore("a1b2",digitsPattern,"_")
+ys-insertafter-pattern | r = insertAfter("a1b2",digitsPattern,"_")
+ys-strlength-cellstr | r = strlength({'abc','é'})
+ys-native2unicode-empty | r = native2unicode(uint8([]),'UTF-8')
+ys-unicode2native-ascii | r = unicode2native('ABC','UTF-8')
+ys-string-mixed-numeric | r = string([1 2.5 NaN])
+ys-string-mixed-contains | r = contains(["Alpha","beta"],'a','IgnoreCase',true)
+ys-pattern-optional | p = optionalPattern(digitsPattern); r = extract(["x12","x"],"x"+p)
+# JSON, tablo ve kategorik ek biçimler
+ys-json-nested-array | r = jsondecode(jsonencode({1,[2 3],struct('x',4)}))
+ys-json-empty-struct | r = jsonencode(struct([]))
+ys-json-cell-strings | r = jsonencode({'a','b'})
+ys-jsondecode-null | r = jsondecode('{"x":null,"y":true}')
+ys-table-variable-index | T = table([1;2],[3;4],'VariableNames',{'A','B'}); r = T(:,{'B','A'})
+ys-table-addvars-position | T = table([1;2],'VariableNames',{'A'}); r = addvars(T,[3;4],'Before','A','NewVariableNames','B')
+ys-table-renamevars-multiple | T = table([1;2],[3;4],'VariableNames',{'A','B'}); r = renamevars(T,{'A','B'},{'X','Y'})
+ys-table-sortrows-desc | T = table([2;1;3],'VariableNames',{'A'}); r = sortrows(T,'A','descend')
+ys-table-fillmissing-linear | T = table([1;NaN;3],'VariableNames',{'X'}); r = fillmissing(T,'linear')
+ys-table-struct2table-scalar | r = struct2table(struct('a',1,'b',2))
+ys-table2struct-scalar | T = table([1;2],[3;4],'VariableNames',{'A','B'}); r = table2struct(T,'ToScalar',true)
+ys-categorical-ordinal | c = categorical({'b','a','b'},{'a','b'},'Ordinal',true); r = {isordinal(c),categories(c)}
+ys-categorical-countcats-dim | c = categorical({'b','a';'b','b'}); r = countcats(c,1)
+ys-categorical-missing | c = categorical({'a','','b'}); r = ismissing(c)
+# Kontrol ve sinyal ek biçimler
+ys-tf-discrete | sys = tf([1 2],[1 -0.5],0.1); r = {class(sys),sys.Ts,tfdata(sys,'v')}
+ys-tfdata-three | sys = tf([1 2],[1 3]); [n,d,ts] = tfdata(sys); r = {n,d,ts}
+ys-zpk-static | sys = zpk([],[],3); r = {class(sys),zpkdata(sys)}
+ys-ss-discrete | sys = ss(0.5,1,1,0,0.1); r = {class(sys),sys.Ts}
+ys-zero-pole-multiplicity | sys = tf([1 0],[1 2 1]); r = {round(zero(sys),6),round(pole(sys),6)}
+ys-c2d-matched | sys = c2d(tf(1,[1 2 1]),0.2,'matched'); r = round(tfdata(sys,'v'),6)
+ys-stepinfo-extra | s = stepinfo(tf(1,[1 1])); r = round([s.SettlingMin,s.SettlingMax,s.PeakTime],6)
+ys-ctrb-rank | r = rank(ctrb([0 1;-2 -3],[0;1]))
+ys-obsv-rank | r = rank(obsv([0 1;-2 -3],[1 0]))
+ys-lqr-scalar | r = round(lqr(-1,1,2,3),6)
+ys-isstable-discrete | r = isstable(tf([1],[1 -0.5],1))
+ys-butter-highpass | [b,a] = butter(2,0.4,'high'); r = round([b,a],8)
+ys-butter-bandpass | [b,a] = butter(2,[0.2 0.6]); r = round([b,a],8)
+ys-ellip-zpk | [z,p,k] = ellip(2,1,20,0.4); r = {round(z,8),round(p,8),round(k,8)}
+ys-fir1-highpass | r = round(fir1(4,0.4,'high'),8)
+ys-fir1-bandpass | r = round(fir1(4,[0.2 0.6]),8)
+ys-impz-default | [h,t] = impz([1 1],[1 -0.5]); r = {size(h),size(t)}
+ys-xcorr-unbiased | r = xcorr([1 2 3],'unbiased')
+ys-xcov-coeff | r = xcov([1 2 3],'coeff')
+ys-pwelch-frequency-vector | [p,f] = pwelch(1:16,8,4,[0 0.5 1],4); r = {size(p),f}
+ys-periodogram-frequency-vector | [p,f] = periodogram(1:8,[],[0 1 2],4); r = {size(p),f}
+ys-findpeaks-distance | [p,l] = findpeaks([0 1 0 2 0 3 0],'MinPeakDistance',2); r = {p,l}
+ys-findpeaks-prominence | [p,l] = findpeaks([0 1 0 3 0],'MinPeakProminence',1); r = {p,l}
+ys-envelope-analytic | r = size(envelope(1:10,'analytic'))
+ys-db-reference | r = [db(1),db(1,'power'),db2mag(0),pow2db(1)]
+ys-residue-repeated-pole | [rv,p,k] = residue([1 2],[1 2 1]); r = {round(rv,8),round(p,8),k}
+ys-decimate-fir | r = round(decimate(1:24,3,'fir'),8)
+# İstatistik ek biçimler
+ys-normcdf-logtail | r = normcdf([-10 0 10],0,1,'upper')
+ys-norminv-logtail | r = norminv([0.1 0.5 0.9],0,1,'upper')
+ys-tcdf-upper | r = tcdf([-2 0 2],5,'upper')
+ys-tinv-upper | r = tinv([0.1 0.5 0.9],5,'upper')
+ys-chi2cdf-upper | r = chi2cdf([0 1 4],3,'upper')
+ys-binopdf-invalid-trials | r = binopdf([-1 0 3 4],3,0.5)
+ys-poisspdf-vector-rate | r = poisspdf([0 1 2],[1 2 3])
+ys-makedist-parameters | d = makedist('Normal','mu',2,'sigma',3); r = {class(d),d.mu,d.sigma}
+ys-zscore-nan-propagation | r = zscore([1 NaN 3],0,1)
+ys-skewness-dim | r = skewness([1 2;3 4;5 8],0,1)
+ys-kurtosis-dim | r = kurtosis([1 2;3 4;5 8],0,1)
+ys-prctile-method | r = prctile([1 2 3 4],50,'Method','midpoint')
+ys-quantile-method | r = quantile([1 2 3 4],0.5,'Method','midpoint')
+ys-iqr-matrix | r = iqr([1 2;3 4;5 8],1)
+ys-mad-nan-propagation | r = mad([1 NaN 3 4],0)
+ys-corr-partial | r = corr([1 2 3;2 4 5;3 1 4]','Type','Pearson','Rows','complete')
+ys-crosstab-threeway | r = crosstab([1 1 2 2],[1 2 1 2],[1 2 2 1])
+ys-grpstats-size | r = size(grpstats([1 1 2 2],[2 4 6 8],{'mean','std'}))
+ys-histcounts-integer | [n,e] = histcounts(int16([1 1 2 3]),'BinMethod','integers'); r = {n,e}
+ys-isoutlier-method | r = isoutlier([1 2 3 4 100],'median')
+ys-isoutlier-rows | r = isoutlier([1 2;2 3;3 4;100 5],'quartiles',1)

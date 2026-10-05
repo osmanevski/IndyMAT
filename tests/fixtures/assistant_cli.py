@@ -17,6 +17,11 @@ if 'app-server' in sys.argv:
 if '--version' in sys.argv:
     print('fixture 1.0')
     sys.exit(0)
+if sys.argv[1:] == ['models']:
+    print('Fetching available models...')
+    print('gemini-3.8-flash-high\tGemini 3.8 Flash (High)')
+    print('claude-opus-5-5-high\tClaude Opus 5.5 (High)')
+    sys.exit(0)
 provider = 'claude' if '--permission-mode' in sys.argv else 'agy'
 attached = [value for value in sys.argv if value.startswith('-p=')]
 prompt = attached[0][3:] if attached else sys.stdin.read()
@@ -27,6 +32,10 @@ if prompt.strip() == 'echo-context':
     print(json.dumps({'type': 'assistant', 'message': {'content': [{'type': 'text', 'text': full_prompt}]}}), flush=True)
 def emit(value):
     print(json.dumps(value), flush=True)
+
+if prompt.strip() == 'config':
+    choices = {flag[2:]: sys.argv[sys.argv.index(flag) + 1] if flag in sys.argv else '' for flag in ('--model', '--effort')}
+    emit({'type': 'assistant', 'message': {'content': [{'type': 'text', 'text': json.dumps({**choices, 'argv': sys.argv[1:], 'env': dict(os.environ)})}]}})
 
 if provider == 'claude': emit({'type': 'system', 'subtype': 'init', 'session_id': 'fixture-session'})
 else: emit({'type': 'conversation', 'conversation_id': 'fixture-agy'})

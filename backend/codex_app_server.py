@@ -14,6 +14,7 @@ import re
 import signal
 import subprocess
 import threading
+import time
 
 
 class CodexAppServerError(RuntimeError):
@@ -443,6 +444,32 @@ class CodexAppServer:
         except (KeyError, TypeError, ValueError) as exc:
             self._fatal('Codex app-server protocol error: ' + str(exc))
             raise CodexAppServerError('Invalid ' + method + ' response.') from exc
+
+    def list_models(self):
+        """Discovery only: at most 200 entries and 20 seconds across all pages."""
+        entries = []
+        params = {}
+        cursors = set()
+        deadline = time.monotonic() + 20
+        timeout = self.CALL_TIMEOUT
+        try:
+            for _ in range(20):
+                self.CALL_TIMEOUT = min(timeout, max(0, deadline - time.monotonic()))
+                if self.CALL_TIMEOUT <= 0: raise TimeoutError('Model discovery timed out.')
+                result = self._call('model/list', params)
+                data = result.get('data')
+                if not isinstance(data, list) or not all(isinstance(item, dict) for item in data):
+                    raise CodexAppServerError('Invalid model list.')
+                entries.extend(data[:200 - len(entries)])
+                cursor = result.get('nextCursor')
+                if len(entries) >= 200 or cursor is None: break
+                if not isinstance(cursor, str) or not cursor or len(cursor) > 4096 or cursor in cursors:
+                    raise CodexAppServerError('Invalid model cursor.')
+                cursors.add(cursor)
+                params = {'cursor': cursor}
+            return [entry for entry in entries if not entry.get('hidden')]
+        finally:
+            self.CALL_TIMEOUT = timeout
 
     def start_thread(self, sandbox, approval_policy, developer_instructions, mcp_servers=None):
         if sandbox not in ('read-only', 'workspace-write') or approval_policy not in ('on-request', 'untrusted', 'never'):

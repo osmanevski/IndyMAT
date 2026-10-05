@@ -16,6 +16,7 @@ import threading
 import uuid
 from backend.i18n import tr
 from backend.assistant_codex import CodexConversations
+from backend.assistant_models import ModelCatalog, valid_choice
 from backend.assistant_approvals import ApprovalService
 from backend.assistant_bridge_service import LEVELS, INSPECT_TOOLS, RUN_TOOLS
 
@@ -48,7 +49,7 @@ def child_environment(source=None, secret=''):
             and '.matlab-free' not in value and (not secret or secret not in value)}
 
 
-def command(provider, mode, executable, folder, conversation=None, prompt='', session_access='none', bridge=None):
+def command(provider, mode, executable, folder, conversation=None, prompt='', session_access='none', bridge=None, model='', effort=''):
     if provider not in ('claude', 'agy') or mode not in MODES:
         raise ValueError(tr('Invalid assistant provider or access mode.'))
     if mode == 'ask' and provider == 'agy': raise ValueError(tr('Approvals for this program arrive in a later step'))
@@ -57,6 +58,8 @@ def command(provider, mode, executable, folder, conversation=None, prompt='', se
         raise ValueError(tr('Invalid assistant conversation.'))
     if session_access not in LEVELS or (session_access != 'none' and (provider == 'agy' or not bridge)):
         raise ValueError(tr('Invalid assistant session access.'))
+    if not valid_choice(model) or not valid_choice(effort) or provider == 'agy' and effort:
+        raise ValueError(tr('Invalid assistant model or effort.'))
     if provider == 'claude':
         argv = [executable, '-p', '--output-format', 'stream-json', '--verbose', '--permission-mode', 'plan' if mode == 'read-only' else 'default' if mode == 'ask' else 'acceptEdits']
         if session_access != 'none' or mode == 'ask':
@@ -73,6 +76,8 @@ def command(provider, mode, executable, folder, conversation=None, prompt='', se
         # stdin is not read). One argv element in the attached form, so prompt text can never be read as a flag.
         argv = [executable, '-p=' + prompt, '--output-format', 'stream-json', '--mode', 'plan' if mode == 'read-only' else 'accept-edits', '--sandbox']
         if conversation: argv += ['--conversation', conversation]
+    if model: argv += ['--model', model]
+    if effort: argv += ['--effort', effort]
     return argv
 
 
@@ -162,7 +167,10 @@ def blocks(content):
 
 def parse_claude(event):
     kind = event.get('type')
-    if kind == 'system' and event.get('subtype') == 'init': return [{'type': 'conversation', 'conversation': event.get('session_id')}]
+    if kind == 'system' and event.get('subtype') == 'init':
+        # The program names the model it really runs (measured: alias haiku -> claude-haiku-4-5-...); models misreport themselves.
+        named = event.get('model')
+        return [{'type': 'conversation', 'conversation': event.get('session_id')}] + ([{'type': 'model', 'text': named[:80]}] if isinstance(named, str) and re.fullmatch(r'[A-Za-z0-9._:\-\[\]]{1,80}', named) else [])
     if kind == 'assistant' and isinstance(event.get('message'), dict): return blocks(event['message'].get('content'))
     if kind == 'result':
         result = [{'type': 'conversation', 'conversation': event.get('session_id')}]
@@ -223,6 +231,8 @@ class Assistants(CodexConversations):
         self.sessions = {}
         self.versions = {}
         self.probes = set()
+        self.model_clients = set()
+        self.model_catalog = ModelCatalog(self)
         self.closed = False
         self._approvals = None
 
@@ -236,6 +246,9 @@ class Assistants(CodexConversations):
     def executable(self, provider):
         override = os.environ.get('INDYMAT_ASSISTANT_' + provider.upper())
         return shutil.which(override or provider, path=search_path())
+
+    def models(self, provider):
+        return self.model_catalog.models(provider)
 
     def providers(self):
         result = []
@@ -334,7 +347,7 @@ class Assistants(CodexConversations):
         return self._clean(result)
 
     def start(self, request, facts=None):
-        if not isinstance(request, dict) or set(request) - {'provider', 'mode', 'prompt', 'context', 'conversation', 'session_access', 'ide'}:
+        if not isinstance(request, dict) or set(request) - {'provider', 'mode', 'prompt', 'context', 'conversation', 'session_access', 'ide', 'model', 'effort'}:
             raise ValueError(tr('Invalid assistant request.'))
         provider = request.get('provider')
         # A follow-up turn that names no mode or access level continues with the conversation's own.
@@ -347,6 +360,9 @@ class Assistants(CodexConversations):
         if (level != 'none' or mode == 'ask' and provider == 'claude') and self.bridge is None: raise ValueError(tr('Session bridge is not available.'))
         if not isinstance(provider, str) or provider not in PROVIDERS or mode not in MODES:
             raise ValueError(tr('Invalid assistant provider or access mode.'))
+        model = request.get('model', earlier.get('model', '') if earlier else '')
+        effort = request.get('effort', earlier.get('effort', '') if earlier else '')
+        self.model_catalog.validate(provider, model, effort)
         with self.lock:
             if self.closed: raise ValueError(tr('Assistants are closed.'))
             folder = self.workspace.folder(self.workspace.current)
@@ -357,7 +373,11 @@ class Assistants(CodexConversations):
             if identity is not None and session is None: raise ValueError(tr('Invalid assistant conversation.'))
             if session and (session['provider'] != provider or session['mode'] != mode or session.get('session_access', 'none') != level or session['folder'] != str(folder)):
                 raise ValueError(tr('Start a new conversation when changing provider, mode, or folder.'))
+            if session and (session.get('model', '') != model or provider != 'codex' and session.get('effort', '') != effort):
+                raise ValueError(tr('Start a new conversation when changing provider, mode, or folder.'))
             steering = bool(session and session['running'] and provider == 'codex')
+            if steering and session.get('effort', '') != effort:
+                raise ValueError(tr('Change effort after the current turn ends.'))
             if steering and session['stopped']: raise ValueError(tr('The assistant turn is no longer running.'))
             if session and session['running'] and not steering: raise ValueError(tr('This assistant conversation is already running.'))
             if not steering and sum(s['running'] for s in self.sessions.values()) >= self.MAX_RUNNING: raise ValueError(tr('Too many assistant turns are running.'))
@@ -385,16 +405,17 @@ class Assistants(CodexConversations):
             created = session is None
             if created:
                 identity = uuid.uuid4().hex
-                session = {'provider': provider, 'mode': mode, 'session_access': level, 'folder': str(folder), 'conversation': None, 'events': collections.deque(maxlen=BUFFER_LIMIT), 'seq': 0, 'bytes': 0}
+                session = {'provider': provider, 'mode': mode, 'session_access': level, 'model': model, 'effort': effort, 'folder': str(folder), 'conversation': None, 'events': collections.deque(maxlen=BUFFER_LIMIT), 'seq': 0, 'bytes': 0}
                 if level != 'none' or mode == 'ask' and provider == 'claude': session['bridge'] = self.bridge.create(identity, provider, level, approvals=mode == 'ask' and provider == 'claude')
             if provider == 'codex':
+                session['effort'] = effort
                 if created:
                     session.update(identity=identity, developer_instructions=self._clean(note), codex_rpc_lock=threading.Lock(), codex_client=None, codex_generation=None)
                     self.sessions[identity] = session
                 if not steering: session.update(turn=uuid.uuid4().hex, running=True, stopped=False, failed=False, codex_turn=None)
                 self._codex_launch(identity, session, executable, prompt, steering)
                 return {'session': identity, 'turn': session['turn'], 'steered': steering}
-            argv = command(provider, mode, executable, folder, session['conversation'], prompt if provider == 'agy' else '', level, session.get('bridge'))
+            argv = command(provider, mode, executable, folder, session['conversation'], prompt if provider == 'agy' else '', level, session.get('bridge'), model, effort)
             try:
                 proc = subprocess.Popen(argv, cwd=folder, env=child_environment(secret=self.secret), stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, start_new_session=True, bufsize=0)
             except Exception:
@@ -534,6 +555,8 @@ class Assistants(CodexConversations):
             self.closed = True
             identities = list(self.sessions)
             probes = list(self.probes)
+            model_clients = list(self.model_clients)
+        for client in model_clients: client.close()
         for proc in probes: self._kill(proc)
         for identity in identities:
             self.stop(identity)

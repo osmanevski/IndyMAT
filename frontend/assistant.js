@@ -2,15 +2,59 @@ import shared from "./state.js";
 import registry from "./registry.js";
 import { t, onLanguageChange } from "./i18n.js";
 import utils from "./assistant_utils.cjs";
+import modelUtils from "./assistant_models_utils.cjs";
 
 shared.assistant = { conversations: [], active: null, providers: [], loaded: false };
 const model = shared.assistant;
+const catalogs = new Map();
+const catalogRequests = new Map();
 let controls;
 let lifecycleInstalled = false;
 const sessionJobs = new Map();
 const $ = (selector) => registry.$(selector);
 const el = (tag, cls, text) => registry.el(tag, cls, text);
 
+const ICONS = {
+  plus: "M8 3v10M3 8h10",
+  history: "M2.5 8a5.5 5.5 0 1 0 1.7-4M2.5 3v2.6h2.6M8 5v3.2l2 1.3",
+  trash: "M3.5 4.5h9M6.5 4.5V3h3v1.5M5 4.5l.5 8h5l.5-8",
+  close: "M4 4l8 8M12 4l-8 8",
+  send: "M8 12.5V3.5M4 7.5l4-4 4 4",
+  stop: "M5 5h6v6H5z",
+  file: "M4.5 2.5h4.5l2.5 2.5v8.5h-7zM9 2.5V5h2.5"
+};
+function icon(name) {
+  const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+  svg.setAttribute("viewBox", "0 0 16 16");
+  svg.setAttribute("aria-hidden", "true");
+  const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+  path.setAttribute("d", ICONS[name]);
+  svg.append(path);
+  return svg;
+}
+function iconButton(name, label) {
+  const button = el("button", "assistant-icon");
+  button.type = "button";
+  button.title = label;
+  button.setAttribute("aria-label", label);
+  button.append(icon(name));
+  return button;
+}
+function prose(text) {
+  // Light formatting from tokens; everything is a text node, nothing from the model becomes markup.
+  const wrap = el("div", "assistant-prose");
+  const inline = (parent, value) => {
+    for (const token of utils.inlineTokens(value)) parent.append(token.type === "text" ? document.createTextNode(token.text) : el(token.type === "code" ? "code" : "strong", "", token.text));
+  };
+  for (const block of utils.proseBlocks(text)) {
+    if (block.type === "list") {
+      const list = el("ul");
+      for (const item of block.items) inline(list.appendChild(el("li")), item);
+      wrap.append(list);
+    } else inline(wrap.appendChild(el(block.type === "heading" ? "h4" : "p")), block.text);
+  }
+  return wrap;
+}
 function applyAssistantLayout() {
   const settings = shared.settings?.assistant;
   if (!settings) return;
@@ -18,6 +62,7 @@ function applyAssistantLayout() {
   $("#assistant-divider").hidden = !settings.open;
   $("#assistant-panel").style.width = settings.width + "px";
   $("#toggle-assistant").setAttribute("aria-expanded", String(settings.open));
+  document.body.classList.toggle("assistant-open", !!settings.open);
 }
 function toggleAssistant() {
   shared.settings.assistant.open = !shared.settings.assistant.open;
@@ -41,10 +86,74 @@ async function loadProviders() {
   model.loaded = true;
   renderProviderOptions();
 }
+function effortLabel(effort) {
+  return { low: t("Low"), medium: t("Medium"), high: t("High"), xhigh: t("Extra high"), max: t("Maximum"), ultra: t("Ultra") }[effort] || effort;
+}
+function renderModelOptions() {
+  const provider = controls.provider.value;
+  const catalog = catalogs.get(provider);
+  const conversation = model.active;
+  const stored = shared.settings.assistant.models?.[provider] || { model: "", effort: "" };
+  const choice = conversation?.provider === provider && conversation.model !== undefined ? { model: conversation.model, effort: conversation.effort } : stored;
+  const available = catalog || { models: [{ id: "", label: "Default", efforts: [] }], efforts_separate: provider !== "agy" };
+  const selected = modelUtils.modelChoice(available, choice.model, choice.effort);
+  controls.model.replaceChildren();
+  for (const item of available.models) {
+    const option = el("option", "", item.id ? item.label : t("Model: default"));
+    option.value = item.id;
+    controls.model.append(option);
+  }
+  // Keep the fixed label visible if a language rebuild happens during discovery.
+  if (conversation?.id && choice.model && !available.models.some((item) => item.id === choice.model)) {
+    const option = el("option", "", conversation.modelLabel || choice.model);
+    option.value = choice.model;
+    controls.model.append(option);
+    selected.model = choice.model;
+  }
+  controls.model.value = selected.model;
+  controls.model.title = catalog?.note || (catalog ? controls.model.selectedOptions[0]?.textContent : t("Loading models…"));
+  controls.model.setAttribute("aria-busy", String(!catalog));
+  controls.effort.replaceChildren(el("option", "", t("Effort: default")));
+  controls.effort.options[0].value = "";
+  for (const effort of available.models.find((item) => item.id === selected.model)?.efforts || []) {
+    const option = el("option", "", effortLabel(effort));
+    option.value = effort;
+    controls.effort.append(option);
+  }
+  controls.effort.value = selected.effort;
+  controls.effort.hidden = !available.efforts_separate;
+  controls.effort.title = catalog?.note || t("Reasoning effort");
+  const running = !!conversation?.running;
+  controls.model.disabled = !catalog || running || !!conversation?.id;
+  controls.effort.disabled = !catalog || running || !!conversation?.id && provider !== "codex";
+}
+async function loadModels() {
+  const provider = controls.provider.value;
+  if (!catalogs.has(provider)) {
+    if (!catalogRequests.has(provider)) catalogRequests.set(provider, registry.api("assistant/models?provider=" + encodeURIComponent(provider)).catch(() => ({ models: [{ id: "", label: "Default", efforts: [] }], efforts_separate: provider !== "agy", note: t("Could not load models from the local program. Default uses its own setting; try again after ten minutes.") })));
+    const catalog = await catalogRequests.get(provider);
+    catalogs.set(provider, catalog);
+  }
+  if (controls.provider.value === provider) {
+    renderRunning();
+    renderList();
+  }
+}
+function saveModelChoice() {
+  const provider = controls.provider.value;
+  const choice = { model: controls.model.value, effort: controls.effort.hidden ? "" : controls.effort.value };
+  shared.settings.assistant.models ||= {};
+  shared.settings.assistant.models[provider] = choice;
+  if (model.active) Object.assign(model.active, choice);
+  registry.saveSettings();
+  renderModelOptions();
+  renderList();
+}
 function newConversation() {
   if (model.conversations.length >= 24) return registry.toast(t("Assistant conversation limit reached for this app run."));
   if (model.active) model.active.draft = controls.input.value;
-  const conversation = { id: null, provider: model.providers.find((item) => item.available)?.id || "claude", mode: shared.settings.assistant.mode || "ask", sessionAccess: shared.settings.assistant.sessionAccess || "none", messages: [], after: 0, running: false, draft: "" };
+  const provider = model.providers.find((item) => item.available && item.id === controls.provider.value)?.id || model.providers.find((item) => item.available)?.id || "claude";
+  const conversation = { id: null, provider, mode: shared.settings.assistant.mode || "ask", sessionAccess: shared.settings.assistant.sessionAccess || "none", messages: [], after: 0, running: false, draft: "" };
   model.conversations.push(conversation);
   model.active = conversation;
   renderConversation();
@@ -62,6 +171,15 @@ function renderProviderOptions() {
   if (model.active && !model.active.id && !model.providers.some((item) => item.id === model.active.provider && item.available)) model.active.provider = model.providers.find((item) => item.available)?.id || "claude";
   controls.provider.value = model.active?.provider || "claude";
   renderRunning();
+  registry.safe(loadModels);
+}
+function renderTabs() {
+  for (const option of controls.provider.options) {
+    const tab = controls.tabs[option.value];
+    tab.disabled = option.disabled || controls.provider.disabled && controls.provider.value !== option.value;
+    tab.title = option.textContent;
+    tab.setAttribute("aria-selected", String(controls.provider.value === option.value));
+  }
 }
 function renderList() {
   controls.list.replaceChildren();
@@ -74,11 +192,19 @@ function renderList() {
     };
     controls.list.append(button);
   });
+  const active = model.active;
+  const first = active?.messages.find((message) => message.role === "user")?.text || "";
+  controls.title.textContent = first ? first.split("\n")[0].slice(0, 60) : t("New conversation");
+  // Prefer the model the program reported over the chosen label: it is what actually runs.
+  const shownModel = active?.actualModel || (active?.id && active.model ? active.modelLabel || active.model : "");
+  if (shownModel) controls.title.append(el("span", "assistant-model-suffix", " · " + shownModel));
+  controls.history.hidden = model.conversations.length < 2;
 }
 function renderRunning() {
   const conversation = model.active;
   const running = !!conversation?.running;
   controls.provider.disabled = running || !!conversation?.id;
+  renderModelOptions();
   controls.mode.disabled = running || !!conversation?.id;
   const ask = controls.mode.querySelector('option[value="ask"]');
   const approvalsAvailable = ["claude", "codex"].includes(controls.provider.value);
@@ -95,11 +221,13 @@ function renderRunning() {
   controls.session.disabled = agy || running || !!conversation?.id;
   controls.sessionNote.textContent = agy ? t("Antigravity needs a one-time MCP registration; not available yet") : controls.session.value === "run" ? t("Code the assistant runs appears in the Command Window and changes your variables.") : "";
   controls.remove.disabled = !conversation || running && (conversation.provider !== "codex" || !conversation.id);
-  controls.send.disabled = running && (conversation?.provider !== "codex" || !conversation?.id) || !model.providers.some((item) => item.id === controls.provider.value && item.available);
+  controls.send.disabled = running && (conversation?.provider !== "codex" || !conversation?.id) || !catalogs.has(controls.provider.value) || !model.providers.some((item) => item.id === controls.provider.value && item.available);
   controls.stop.hidden = !running;
   controls.stop.disabled = !conversation?.id;
   controls.status.textContent = running ? utils.pendingApprovals(conversation?.messages || []).length ? t("Waiting for your approval") : t("Running…") : conversation?.end ? t({ stopped: "Stopped", failed: "Assistant turn failed.", completed: "Turn completed" }[conversation.end]) : "";
   controls.panel.setAttribute("aria-busy", String(running && !utils.pendingApprovals(conversation?.messages || []).length));
+  controls.send.hidden = running && !(conversation?.provider === "codex" && conversation?.id);
+  renderTabs();
   renderList();
 }
 function codeBlock(part) {
@@ -183,25 +311,36 @@ function renderTranscript() {
   root.replaceChildren();
   const messages = model.active?.messages || [];
   if (!messages.length) root.append(el("p", "assistant-empty", t(controls.session.value !== "none" ? "Ask an installed coding agent about files and the session access you granted." : "Ask an installed coding agent about files in the Current Folder. Agents cannot access or execute commands in your Octave session.")));
-  for (const message of messages) {
+  for (const message of utils.groupActivity(messages)) {
     if (message.role === "approval") {
       root.append(!message.decision && cards.has(message.id) ? cards.get(message.id) : approvalCard(message, model.active));
       continue;
     }
     if (message.role === "raw" || message.role === "reasoning") {
-      const detail = el("details", "assistant-activity");
+      const detail = el("details", "assistant-activity assistant-step");
       detail.append(el("summary", "", t(message.role === "raw" ? "Provider event" : "Reasoning summary")), el("pre", "", message.text));
       root.append(detail);
       continue;
     }
     const entry = el("div", "assistant-message assistant-" + message.role);
-    if (["user", "assistant"].includes(message.role)) {
-      entry.append(el("strong", "", t(message.role === "user" ? "You" : "Assistant") + (message.steered ? " · " + t("Sent during this turn") : "")));
-      for (const part of utils.splitCodeBlocks(message.text)) entry.append(part.type === "code" ? codeBlock(part) : el("div", "assistant-prose", part.text));
+    if (message.role === "user") {
+      entry.append(el("strong", "assistant-role", t("You") + (message.steered ? " · " + t("Sent during this turn") : "")), el("div", "assistant-user-text", message.text));
+    } else if (message.role === "assistant") {
+      entry.append(el("strong", "assistant-role", t("Assistant")));
+      for (const part of utils.splitCodeBlocks(message.text)) entry.append(part.type === "code" ? codeBlock(part) : prose(part.text));
     } else if (message.role === "state") {
+      entry.classList.add("assistant-state-" + (message.text || "completed"));
       entry.textContent = t({ stopped: "Stopped", completed: "Turn completed", failed: "Assistant turn failed." }[message.text] || "Turn completed");
+    } else if (message.role === "tool" && message.label) {
+      entry.className = "assistant-step assistant-step-" + message.kind;
+      entry.append(el("strong", "", t(message.label)), el("span", "assistant-step-target", message.target));
+      const counts = (message.count > 1 ? "×" + message.count + "  " : "") + (message.counted ? "+" + message.added + " −" + message.removed : "");
+      if (counts.trim()) entry.append(el("span", "assistant-step-counts", counts.trim()));
+    } else if (message.role === "tool") {
+      entry.className = "assistant-step";
+      entry.append(el("strong", "", message.name || t("Tool activity")), el("span", "assistant-step-target", message.source ? t(message.text) : message.text));
     } else {
-      entry.textContent = (message.role === "tool" ? (message.label ? t(message.label) : message.name || t("Tool activity")) + (message.text ? " · " : "") : message.role === "file" ? t("File changes") + ": " : "") + (message.source ? t(message.text) : message.text);
+      entry.textContent = (message.role === "file" ? t("File changes") + ": " : "") + (message.source ? t(message.text) : message.text);
     }
     root.append(entry);
   }
@@ -222,6 +361,7 @@ function updateAssistantAttachment() {
   controls.chip.textContent = tab ? tab.path.split("/").pop() + (tab.dirty ? " — " + t("Unsaved changes") : "") : t("No active editor file");
   controls.chip.title = tab?.path || "";
   controls.note.textContent = tab?.dirty && controls.attach.checked && !controls.unsaved.checked ? t("File has unsaved changes; only its path will be attached.") : "";
+  controls.unsaved.parentElement.hidden = !tab?.dirty;
 }
 function attachedContext() {
   if (!controls.attach.checked) return {};
@@ -241,17 +381,26 @@ function editorState() {
   return { active: shared.active?.path || null, dirty: !!shared.active?.dirty, open: shared.tabs.map((tab) => tab.path).slice(0, 30) };
 }
 async function sendAssistant() {
+  const selectedProvider = controls.provider.value;
+  const selectedConversation = model.active;
+  if (!catalogs.has(selectedProvider)) await loadModels();
+  if (controls.provider.value !== selectedProvider || model.active !== selectedConversation) return;
   const prompt = controls.input.value;
   if (!prompt.trim() || model.active?.running && (model.active.provider !== "codex" || !model.active.id)) return;
   const context = attachedContext();
   const provider = controls.provider.value;
   const mode = controls.mode.value;
   const sessionAccess = controls.session.value;
+  const selectedModel = controls.model.value;
+  const effort = controls.effort.hidden ? "" : controls.effort.value;
   if (!model.active) newConversation();
   const conversation = model.active;
   conversation.provider = provider;
   conversation.mode = mode;
   conversation.sessionAccess = sessionAccess;
+  conversation.model = selectedModel;
+  conversation.effort = effort;
+  conversation.modelLabel = catalogs.get(provider)?.models.find((item) => item.id === selectedModel)?.label || selectedModel;
   const steering = conversation.running;
   conversation.running = true;
   conversation.end = null;
@@ -260,7 +409,7 @@ async function sendAssistant() {
   controls.input.value = "";
   conversation.draft = "";
   try {
-    const result = await registry.api("assistant/start", { provider: conversation.provider, mode: conversation.mode, session_access: conversation.sessionAccess, prompt, context, ide: editorState(), ...(conversation.id ? { conversation: conversation.id } : {}) });
+    const result = await registry.api("assistant/start", { provider: conversation.provider, mode: conversation.mode, session_access: conversation.sessionAccess, model: conversation.model, effort: conversation.effort, prompt, context, ide: editorState(), ...(conversation.id ? { conversation: conversation.id } : {}) });
     conversation.id = result.session;
     conversation.turn = result.turn;
     conversation.running = true;
@@ -286,6 +435,10 @@ async function pollAssistant(conversation) {
       return;
     }
     for (const event of result.events) {
+      if (event.type === "model") {
+        conversation.actualModel = event.text;
+        continue;
+      }
       conversation.messages = utils.reduceTranscript(conversation.messages, event);
       if (event.type === "turn-end") conversation.end = event.state;
     }
@@ -384,12 +537,12 @@ function syncAssistantJobs(state, commandJob = shared.lastJob) {
 function setupAssistant() {
   const panel = $("#assistant-panel");
   controls = { panel };
-  const heading = el("div", "panel-heading");
-  const close = el("button", "", t("Close"));
-  const create = el("button", "", t("New conversation"));
+  const heading = el("div", "assistant-header");
+  const close = iconButton("close", t("Close"));
+  const create = iconButton("plus", t("New conversation"));
   close.onclick = toggleAssistant;
   create.onclick = newConversation;
-  controls.remove = el("button", "", t("Remove conversation"));
+  controls.remove = iconButton("trash", t("Remove conversation"));
   controls.remove.id = "assistant-remove";
   controls.remove.onclick = () => registry.safe(async () => {
     const conversation = model.active;
@@ -400,14 +553,40 @@ function setupAssistant() {
     model.active = model.conversations.at(-1) || null;
     renderConversation();
   });
-  heading.append(el("h2", "", t("Assistant")), create, controls.remove, close);
+  controls.history = iconButton("history", t("Conversations"));
+  controls.history.onclick = () => controls.list.classList.toggle("open");
+  controls.tabs = {};
+  const tabs = el("div", "assistant-tabs");
+  tabs.setAttribute("role", "tablist");
+  for (const [id, name] of [["claude", "Claude"], ["codex", "Codex"], ["agy", "Antigravity"]]) {
+    const tab = el("button", "", name);
+    tab.type = "button";
+    tab.id = "assistant-tab-" + id;
+    tab.setAttribute("role", "tab");
+    tab.onclick = () => {
+      if (controls.provider.disabled) return;
+      controls.provider.value = id;
+      controls.provider.onchange();
+    };
+    controls.tabs[id] = tab;
+    tabs.append(tab);
+  }
+  const tools = el("div", "assistant-header-tools");
+  tools.append(controls.history, create, controls.remove, close);
+  heading.append(tabs, tools);
+  controls.title = el("div", "assistant-title");
   controls.provider = el("select");
   controls.provider.id = "assistant-provider";
   controls.provider.setAttribute("aria-label", t("Assistant provider"));
   controls.provider.onchange = () => {
     if (model.active && !model.active.id) model.active.provider = controls.provider.value;
+    if (model.active && !model.active.id) {
+      delete model.active.model;
+      delete model.active.effort;
+    }
     renderRunning();
     renderTranscript();
+    registry.safe(loadModels);
   };
   controls.mode = el("select");
   controls.mode.id = "assistant-mode";
@@ -427,7 +606,7 @@ function setupAssistant() {
   controls.session = el("select");
   controls.session.id = "assistant-session-access";
   controls.session.setAttribute("aria-label", t("Session access"));
-  for (const [value, label] of [["none", "None"], ["inspect", "See variables and figures"], ["run", "Run code in my session"]]) {
+  for (const [value, label] of [["none", "Session: none"], ["inspect", "See variables and figures"], ["run", "Run code in my session"]]) {
     const option = el("option", "", t(label));
     option.value = value;
     controls.session.append(option);
@@ -442,7 +621,23 @@ function setupAssistant() {
   const sessionLabel = el("label", "assistant-session-label", t("Session access"));
   sessionLabel.htmlFor = controls.session.id;
   controls.sessionNote = el("div", "assistant-session-note");
-  selectors.append(controls.provider, controls.mode, controls.modeNote, sessionLabel, controls.session, controls.sessionNote);
+  controls.model = el("select");
+  controls.model.id = "assistant-model";
+  controls.model.setAttribute("aria-label", t("Assistant model"));
+  controls.model.onchange = () => {
+    if (model.active) model.active.model = controls.model.value;
+    shared.settings.assistant.models ||= {};
+    shared.settings.assistant.models[controls.provider.value] = { model: controls.model.value, effort: controls.effort.value };
+    renderModelOptions();
+    saveModelChoice();
+  };
+  controls.effort = el("select");
+  controls.effort.id = "assistant-effort";
+  controls.effort.setAttribute("aria-label", t("Reasoning effort"));
+  controls.effort.onchange = saveModelChoice;
+  controls.provider.className = "assistant-native-provider";
+  for (const select of [controls.mode, controls.session, controls.model, controls.effort]) select.title = select.getAttribute("aria-label") || "";
+  selectors.append(controls.provider, controls.mode, sessionLabel, controls.session, controls.model, controls.effort);
   controls.list = el("div", "assistant-conversations");
   controls.list.setAttribute("aria-label", t("Conversations"));
   controls.transcript = el("div", "assistant-transcript");
@@ -465,7 +660,7 @@ function setupAssistant() {
   controls.note = el("div", "assistant-note");
   controls.input = el("textarea");
   controls.input.id = "assistant-input";
-  controls.input.rows = 4;
+  controls.input.rows = 2;
   controls.input.maxLength = 128000;
   controls.input.setAttribute("aria-label", t("Message to assistant"));
   controls.input.placeholder = t("Enter sends; Shift+Enter adds a new line");
@@ -478,21 +673,31 @@ function setupAssistant() {
   };
   controls.status = el("span", "assistant-status");
   controls.status.setAttribute("role", "status");
-  controls.send = el("button", "", t("Send"));
+  controls.send = iconButton("send", t("Send"));
   controls.send.type = "submit";
   controls.send.id = "assistant-send";
-  controls.stop = el("button", "", t("Stop"));
-  controls.stop.type = "button";
+  controls.send.classList.add("assistant-send");
+  controls.stop = iconButton("stop", t("Stop"));
   controls.stop.id = "assistant-stop";
+  controls.stop.classList.add("assistant-stop");
   controls.stop.onclick = () => registry.safe(() => registry.api("assistant/stop", { session: model.active.id }));
   const actions = el("div", "assistant-actions");
-  actions.append(controls.status, controls.send, controls.stop);
+  actions.append(selectors, controls.stop, controls.send);
   composer.onsubmit = (event) => {
     event.preventDefault();
     registry.safe(sendAssistant);
   };
-  composer.append(controls.note, controls.input, actions);
-  panel.replaceChildren(heading, selectors, controls.list, controls.transcript, composer);
+  const box = el("div", "assistant-box");
+  const context = el("div", "assistant-context");
+  context.append(...composer.children);
+  box.append(context, controls.input, actions);
+  // The file name lives inside its own chip; the second chip only matters while the file has unsaved text.
+  controls.attach.parentElement.title = t("Attach current file");
+  controls.attach.parentElement.classList.add("assistant-file-chip");
+  controls.attach.parentElement.append(controls.chip);
+  controls.unsaved.parentElement.classList.add("assistant-unsaved-chip");
+  composer.append(controls.modeNote, controls.sessionNote, controls.note, controls.status, box);
+  panel.replaceChildren(heading, controls.title, controls.list, controls.transcript, composer);
   $("#toggle-assistant").onclick = toggleAssistant;
   const divider = $("#assistant-divider");
   divider.onpointerdown = (event) => {

@@ -121,4 +121,58 @@ function boundTranscript(result) {
   if (truncated) result.unshift({ role: "notice", text: "Earlier assistant messages were truncated.", source: true });
   return result;
 }
-module.exports = { splitCodeBlocks, reduceTranscript, toolActivity, changesFiles, approvalActivity, approvalLines, pendingApprovals };
+// Light, safe formatting of assistant prose: tokens only, the caller builds text nodes (never HTML).
+function inlineTokens(text) {
+  const tokens = [];
+  const pattern = /(`[^`\n]+`|\*\*[^*\n]+\*\*)/g;
+  let cursor = 0;
+  for (const match of text.matchAll(pattern)) {
+    if (match.index > cursor) tokens.push({ type: "text", text: text.slice(cursor, match.index) });
+    const raw = match[0];
+    tokens.push(raw.startsWith("`") ? { type: "code", text: raw.slice(1, -1) } : { type: "bold", text: raw.slice(2, -2) });
+    cursor = match.index + raw.length;
+  }
+  if (cursor < text.length) tokens.push({ type: "text", text: text.slice(cursor) });
+  return tokens;
+}
+function proseBlocks(text) {
+  const blocks = [];
+  let paragraph = [];
+  const flush = () => {
+    if (paragraph.length) blocks.push({ type: "paragraph", text: paragraph.join("\n") });
+    paragraph = [];
+  };
+  for (const line of text.split("\n")) {
+    const bullet = line.match(/^\s*(?:[-*•]|\d+[.)])\s+(.*)$/);
+    const heading = line.match(/^#{1,4}\s+(.*)$/);
+    if (bullet) {
+      flush();
+      const last = blocks.at(-1);
+      if (last?.type === "list") last.items.push(bullet[1]);
+      else blocks.push({ type: "list", items: [bullet[1]] });
+    } else if (heading) {
+      flush();
+      blocks.push({ type: "heading", text: heading[1] });
+    } else if (!line.trim()) flush();
+    else paragraph.push(line);
+  }
+  flush();
+  return blocks;
+}
+// Seven identical "Edit file" rows read as one step: consecutive activity on the same file is one row with a count.
+function groupActivity(messages) {
+  const result = [];
+  for (const message of messages) {
+    const last = result.at(-1);
+    const counts = message.role === "tool" && message.label ? String(message.text).match(/^(.*?)(?:\s{2}\+(\d+)(?: −(\d+))?)?$/) : null;
+    if (counts && last?.role === "tool" && last.label === message.label && last.turn === message.turn && last.target === counts[1]) {
+      last.count += 1;
+      last.added += Number(counts[2] || 0);
+      last.removed += Number(counts[3] || 0);
+      continue;
+    }
+    result.push(counts ? { ...message, target: counts[1], count: 1, added: Number(counts[2] || 0), removed: Number(counts[3] || 0), counted: counts[2] !== undefined } : message);
+  }
+  return result;
+}
+module.exports = { inlineTokens, proseBlocks, groupActivity, splitCodeBlocks, reduceTranscript, toolActivity, changesFiles, approvalActivity, approvalLines, pendingApprovals };

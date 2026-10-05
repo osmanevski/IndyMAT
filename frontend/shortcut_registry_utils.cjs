@@ -34,6 +34,7 @@ const DISPLAY_CODES = {
 };
 const RESERVED_CODES = new Set(["KeyQ", "KeyW", "KeyT", "KeyN", "KeyL", "KeyR"]);
 const SETTINGS_KEY = "mf-settings-v1";
+const { modelSettings } = require("./assistant_models_utils.cjs");
 const MAX_STORAGE_LENGTH = 65536;
 const MAX_SHORTCUTS = 128;
 const MAX_BINDINGS = 4;
@@ -41,8 +42,8 @@ const BINDING_PATTERN = /^(?:Mod\+)?(?:Ctrl\+)?(?:Alt\+)?(?:Shift\+)?(?:Key[A-Z]
 const DEFAULT_SETTINGS = Object.freeze({
   version: 1,
   preferences: Object.freeze({ language: "system", theme: "dark", editorFontSize: 13, consoleFontSize: 13, indentWidth: 4, useTabs: false }),
-  assistant: Object.freeze({ open: false, width: 340 }),
-  panels: Object.freeze({ files: true, workspace: true, history: true, figures: true, debugger: true }),
+  assistant: Object.freeze({ open: false, width: 340, models: Object.freeze({}) }),
+  panels: Object.freeze({ files: true, workspace: true, history: true, figures: true, debugger: true, bottom: true }),
   layout: Object.freeze({ left: 220, right: 300, editorHeight: 56, consoleWidth: 50 }),
   activeTabs: Object.freeze({ plotMode: "interactive", figureName: "" }),
   shortcuts: Object.freeze({})
@@ -66,6 +67,8 @@ function codeFromEvent(event) {
   const byKey = { ",": "Comma", ".": "Period", "/": "Slash", "=": "Equal", "+": "Equal", "-": "Minus", " ": "Space" };
   return byKey[event.key] || event.key || "";
 }
+
+const layoutUtils = require("./layout_utils.cjs");
 
 function canonicalEvent(event, mac = true, options = {}) {
   if (event.isComposing || ["Dead", "Process", "Unidentified"].includes(event.key)) return "";
@@ -191,11 +194,9 @@ function sanitizeSettings(value, definitions = [], mac = true, translator = (sou
   if (["ask", "read-only", "edit"].includes(value.assistant?.mode)) result.assistant.mode = value.assistant.mode;
   result.assistant.open = value.assistant?.open === true;
   result.assistant.width = finiteNumber(value.assistant?.width, 340, 260, 600);
+  result.assistant.models = modelSettings(value.assistant?.models);
   if (["none", "inspect", "run"].includes(value.assistant?.sessionAccess)) result.assistant.sessionAccess = value.assistant.sessionAccess;
-  result.layout.left = finiteNumber(value.layout?.left, 220, 140, 360);
-  result.layout.right = finiteNumber(value.layout?.right, 300, 190, 500);
-  result.layout.editorHeight = finiteNumber(value.layout?.editorHeight, 56, 20, 78);
-  result.layout.consoleWidth = finiteNumber(value.layout?.consoleWidth, 50, 20, 80);
+  result.layout = layoutUtils.sanitizeLayout(value.layout);
   if (["interactive", "png"].includes(value.activeTabs?.plotMode)) result.activeTabs.plotMode = value.activeTabs.plotMode;
   if (typeof value.activeTabs?.figureName === "string") result.activeTabs.figureName = value.activeTabs.figureName.slice(0, 120);
   if (value.shortcuts && typeof value.shortcuts === "object" && !Array.isArray(value.shortcuts)) {

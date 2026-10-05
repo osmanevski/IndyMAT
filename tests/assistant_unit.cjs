@@ -21,8 +21,8 @@ assert.equal(messages.at(-1).text, 'next');
 messages = reduceTranscript(messages, { type: 'text', text: 'x'.repeat(1100000), turn: 'b' });
 assert.equal(messages[0].role, 'notice');
 assert(messages.at(-1).text.length <= 1000000);
-assert.deepEqual(settings.cloneDefaults().assistant, { open: false, width: 340 });
-assert.deepEqual(settings.sanitizeSettings({ version: 1, assistant: { open: true, width: 9000 } }).assistant, { open: true, width: 600 });
+assert.deepEqual(settings.cloneDefaults().assistant, { open: false, width: 340, models: {} });
+assert.deepEqual(settings.sanitizeSettings({ version: 1, assistant: { open: true, width: 9000 } }).assistant, { open: true, width: 600, models: {} });
 {
   const labels = (name, value) => utils.reduceTranscript([], { type: 'tool', name, text: typeof value === 'string' ? value : JSON.stringify(value), turn: 't' }).map((message) => [message.label || message.name, message.text]);
   assert.deepEqual(labels('Edit', { file_path: '/a/b/yeni_1.m', added: 5, removed: 0 }), [['Edit file', 'b/yeni_1.m  +5 −0']]);
@@ -35,6 +35,14 @@ assert.deepEqual(settings.sanitizeSettings({ version: 1, assistant: { open: true
   assert.deepEqual(once.map((message) => [message.label, message.text]), [['Edit file', 'b/x.m']]);
   assert.equal(utils.changesFiles({ name: 'Write' }), true);
   assert.equal(utils.changesFiles({ name: 'Read' }), false);
+}
+{
+  assert.deepEqual(utils.inlineTokens('a **b** `c` d'), [{ type: 'text', text: 'a ' }, { type: 'bold', text: 'b' }, { type: 'text', text: ' ' }, { type: 'code', text: 'c' }, { type: 'text', text: ' d' }]);
+  assert.deepEqual(utils.inlineTokens('<img src=x onerror=1> **<b>**'), [{ type: 'text', text: '<img src=x onerror=1> ' }, { type: 'bold', text: '<b>' }]);
+  assert.deepEqual(utils.proseBlocks('Merhaba\n\n- bir\n- iki\n\n## Baslik\nson'), [{ type: 'paragraph', text: 'Merhaba' }, { type: 'list', items: ['bir', 'iki'] }, { type: 'heading', text: 'Baslik' }, { type: 'paragraph', text: 'son' }]);
+  const edit = { role: 'tool', label: 'Edit file', kind: 'edit', text: 'examples/ssiodev.m  +0 −1', turn: 't' };
+  const grouped = utils.groupActivity([edit, edit, edit, { role: 'tool', label: 'Shell', kind: 'shell', text: 'ls', turn: 't' }, { ...edit, turn: 'u' }, { role: 'assistant', text: 'x' }]);
+  assert.deepEqual(grouped.map((message) => [message.label || message.role, message.target, message.count, message.removed]), [['Edit file', 'examples/ssiodev.m', 3, 3], ['Shell', 'ls', 1, 0], ['Edit file', 'examples/ssiodev.m', 1, 1], ['assistant', undefined, undefined, undefined]]);
 }
 console.log('ASSISTANT UNIT PASS: transcript, code fences, bounded memory, persisted layout.');
 // Exercise the real async refresh implementation against read races, preserving

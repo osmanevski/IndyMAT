@@ -17,8 +17,9 @@ import workspaceText from "./locales/tr_calisma_alani.js";
 import editorText from "./locales/tr_editor.js";
 import settingsText from "./locales/tr_ayarlar.js";
 import filesText from "./locales/tr_dosyalar.js";
+import layoutText from "./locales/tr_duzen.js";
 
-const turkish = { ...assistantText, ...base, ...workspaceText, ...editorText, ...settingsText, ...filesText };
+const turkish = { ...assistantText, ...base, ...workspaceText, ...editorText, ...settingsText, ...filesText, ...layoutText };
 
 let language = utils.resolveLanguage("system", globalThis.navigator?.languages || [globalThis.navigator?.language]);
 const subscribers = new Set();

@@ -1,0 +1,19 @@
+# Tohum yoklamalar
+tohum-int-karisik | r = int8(5) / 2;
+tohum-sirala-nan | r = sort([3 NaN 1], 'descend');
+tohum-sprintf-d | r = sprintf('%d', 3.9);
+tohum-squeeze | r = squeeze(ones(1,1,3));
+tohum-cift-tirnak | r = "ab";
+tohum-cift-tirnak-toplam | r = "ab" + "cd";
+tohum-uzunluk-utf | r = length('ğ');
+tohum-int2str | r = int2str([1.6 -1.6]);
+tohum-bos-toplam | r = sum(zeros(0,3));
+tohum-indeks-hatasi | x = 1:3; r = x(5);
+tohum-yuvarla | r = round(2.567, 2);
+tohum-unique | [~, ~, r] = unique([3 1 3 2], 'stable');
+tohum-strsplit | r = strsplit('a,b,,c', ',');
+tohum-regexp-adlar | r = regexp('ab12', '(?<harf>[a-z]+)(?<sayi>\d+)', 'names');
+tohum-num2str | r = num2str(pi, 8);
+tohum-mat2str | r = mat2str([1.5 2; 3 4]);
+tohum-func2str | r = @(x, y) x + 2 * y;
+tohum-linspace | r = linspace(0, 1, 5);

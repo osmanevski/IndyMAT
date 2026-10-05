@@ -103,6 +103,8 @@ function applyPanelVisibility() {
   document.body.classList.toggle("hide-debugger", !panels.debugger);
   document.body.classList.toggle("hide-right-panels", !panels.workspace && !panels.history && !panels.debugger);
   registry.$("#right-panel")?.querySelector("#debugger-panel + .panel-heading")?.classList.add("workspace-heading");
+  registry.applyWindowLayout?.();
+  registry.syncLayoutCheckboxes?.();
 }
 
 function applyLayout() {
@@ -146,7 +148,7 @@ function persistLayout() {
   shared.settings.layout.left = parseFloat(rootStyle.getPropertyValue("--left")) || 220;
   shared.settings.layout.right = parseFloat(rootStyle.getPropertyValue("--right")) || 300;
   shared.settings.layout.editorHeight = parseFloat(rootStyle.getPropertyValue("--editor-height")) || 56;
-  if (shared.settings.panels.figures && bottom?.width && consolePanel) shared.settings.layout.consoleWidth = Math.max(20, Math.min(80, consolePanel.getBoundingClientRect().width / bottom.width * 100));
+  if (shared.settings.panels.bottom && shared.settings.panels.figures && bottom?.width && consolePanel) shared.settings.layout.consoleWidth = Math.max(20, Math.min(80, consolePanel.getBoundingClientRect().width / bottom.width * 100));
   saveSettings();
 }
 
@@ -266,10 +268,15 @@ function openSettings() {
   preferences.append(preferenceRow(t("Indent width"), numberControl(getSetting("preferences", "indentWidth"), 1, 8, (value) => updateSetting("preferences", "indentWidth", value, false))));
   preferences.append(preferenceRow(t("Smart Indent"), selectControl([["spaces", t("Spaces")], ["tabs", t("Tabs")]], getSetting("preferences", "useTabs") ? "tabs" : "spaces", (value) => updateSetting("preferences", "useTabs", value === "tabs", false))));
   panels.append(registry.el("h3", "", t("Panels")));
-  for (const [name, label] of [["files", "Current Folder"], ["workspace", "Workspace"], ["history", "Command History"], ["figures", "Figures"], ["debugger", "Debugger (when needed)"]]) panels.append(checkboxRow(t(label), shared.settings.panels[name], (value) => updateSetting("panels", name, value)));
+  for (const [name, label] of [["files", "Current Folder"], ["workspace", "Workspace"], ["history", "Command History"], ["figures", "Figures"], ["debugger", "Debugger (when needed)"], ["bottom", "Bottom panel"]]) {
+    const row = checkboxRow(t(label), shared.settings.panels[name], (value) => updateSetting("panels", name, value));
+    row.querySelector("input").dataset.layoutPanel = name;
+    panels.append(row);
+  }
   panels.append(checkboxRow(t("Assistant"), shared.settings.assistant.open, (value) => updateSetting("assistant", "open", value)));
   const resetLayout = registry.el("button", "", t("Reset Layout"));
   resetLayout.onclick = () => {
+    registry.restorePanelSize?.();
     shared.settings.assistant = shortcutUtils.cloneDefaults().assistant;
     shared.settings.layout = shortcutUtils.cloneDefaults().layout;
     shared.settings.panels = shortcutUtils.cloneDefaults().panels;
@@ -295,6 +302,7 @@ function openSettings() {
   restoreAll.onclick = () => {
     if (!confirm(t("Restore all appearance, layout, and shortcut settings to their defaults?"))) return;
     shared.settings = shortcutUtils.cloneDefaults();
+    registry.restorePanelSize?.();
     shared.figureIndex = 0;
     sessionLayoutFallback = false;
     saveSettings();

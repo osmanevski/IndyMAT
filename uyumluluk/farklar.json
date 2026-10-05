@@ -1,0 +1,1541 @@
+{
+ "yoklama": 1310,
+ "farklar": [
+  {
+   "id": "tohum-sprintf-d",
+   "code": "r = sprintf('%d', 3.9);",
+   "group": "Tohum yoklamalar",
+   "kind": "boyut farklı",
+   "matlab": "char|1x12|u51,46,57,48,48,48,48,48,101,43,48,48,",
+   "octave": "char|1x3|u51,46,57,"
+  },
+  {
+   "id": "tohum-cift-tirnak",
+   "code": "r = \"ab\";",
+   "group": "Tohum yoklamalar",
+   "kind": "sınıf farklı",
+   "matlab": "string|1x1|{char|1x2|u97,98,;}",
+   "octave": "char|1x2|u97,98,"
+  },
+  {
+   "id": "tohum-cift-tirnak-toplam",
+   "code": "r = \"ab\" + \"cd\";",
+   "group": "Tohum yoklamalar",
+   "kind": "sınıf farklı",
+   "matlab": "string|1x1|{char|1x4|u97,98,99,100,;}",
+   "octave": "double|1x2|196,198,"
+  },
+  {
+   "id": "tohum-uzunluk-utf",
+   "code": "r = length('ğ');",
+   "group": "Tohum yoklamalar",
+   "kind": "değer farklı",
+   "matlab": "double|1x1|1,",
+   "octave": "double|1x1|2,"
+  },
+  {
+   "id": "yd-operator-complex-relational",
+   "code": "r = [1+2i 2] < [2+1i 1];",
+   "group": "Islemler ve oncelik",
+   "kind": "değer farklı",
+   "matlab": "logical|1x2|10",
+   "octave": "logical|1x2|00"
+  },
+  {
+   "id": "yd-operator-short-and-empty",
+   "code": "r = [] && true;",
+   "group": "Islemler ve oncelik",
+   "kind": "yalnız MATLAB hata verir",
+   "matlab": "HATA|MATLAB:nonLogicalConditional|Operands to the logical AND (&&) and OR (||) operators must be convertible to logical scalar values. Use the ANY or ALL functions to reduce operands to logical scalar values.",
+   "octave": "logical|1x1|0"
+  },
+  {
+   "id": "yd-operator-short-or-empty",
+   "code": "r = [] || true;",
+   "group": "Islemler ve oncelik",
+   "kind": "yalnız MATLAB hata verir",
+   "matlab": "HATA|MATLAB:nonLogicalConditional|Operands to the logical AND (&&) and OR (||) operators must be convertible to logical scalar values. Use the ANY or ALL functions to reduce operands to logical scalar values.",
+   "octave": "logical|1x1|1"
+  },
+  {
+   "id": "yd-index-dynamic-field",
+   "code": "s=struct(); k='wave-1'; s.(k)=7; r=s.(k);",
+   "group": "Genisleme ve indeksleme",
+   "kind": "yalnız MATLAB hata verir",
+   "matlab": "HATA|MATLAB:AddField:InvalidFieldName|Invalid field name: 'wave-1'.",
+   "octave": "double|1x1|7,"
+  },
+  {
+   "id": "yd-int-plus-single",
+   "code": "r=int16(3)+single(2);",
+   "group": "Integer, single ve bit islemleri",
+   "kind": "yalnız MATLAB hata verir",
+   "matlab": "HATA|MATLAB:mixedClasses|Integers can only be combined with integers of the same class, or scalar doubles.",
+   "octave": "int16|1x1|5,"
+  },
+  {
+   "id": "yd-int-idivide-fix",
+   "code": "r=idivide(int8([-7 7]),int8(3));",
+   "group": "Integer, single ve bit islemleri",
+   "kind": "değer farklı",
+   "matlab": "int8|1x2|-2,2,",
+   "octave": "int8|1x2|-3,2,"
+  },
+  {
+   "id": "yd-int-bitget",
+   "code": "r=bitget(uint8(10),1:8);",
+   "group": "Integer, single ve bit islemleri",
+   "kind": "sınıf farklı",
+   "matlab": "uint8|1x8|0,1,0,1,0,0,0,0,",
+   "octave": "logical|1x8|01010000"
+  },
+  {
+   "id": "yd-cast-char-numeric",
+   "code": "r=char([65 66 937]);",
+   "group": "Tur donusumleri",
+   "kind": "değer farklı",
+   "matlab": "char|1x3|u65,66,937,",
+   "octave": "char|1x3|u65,66,0,"
+  },
+  {
+   "id": "yd-cast-func2str",
+   "code": "r=func2str(@(x)x.^2+1);",
+   "group": "Tur donusumleri",
+   "kind": "boyut farklı",
+   "matlab": "char|1x10|u64,40,120,41,120,46,94,50,43,49,",
+   "octave": "char|1x15|u64,40,120,41,32,120,32,46,94,32,50,32,43,32,49,"
+  },
+  {
+   "id": "yd-construct-eye-like",
+   "code": "r=eye(2,'like',single(1));",
+   "group": "Olcu ve dizi kurma",
+   "kind": "Octave hata verir",
+   "matlab": "single|2x2|1,0,0,1,",
+   "octave": "HATA|Octave:invalid-fun-call|Invalid call to eye.  Correct usage is:   -- I = eye ()  -- I = eye (N)  -- I = eye (M, N)  -- I = eye ([M, N])  -- I = eye (..., CLASS)"
+  },
+  {
+   "id": "yd-string-char-vector",
+   "code": "r=string(['a';'bb']);",
+   "group": "String dizileri",
+   "kind": "yalnız MATLAB hata verir",
+   "matlab": "HATA|MATLAB:catenate:dimensionMismatch|Dimensions of arrays being concatenated are not consistent.",
+   "octave": "string|2x1|{char|1x2|u97,32,;char|1x2|u98,98,;}"
+  },
+  {
+   "id": "yd-string-plus",
+   "code": "r=\"a\"+\"b\";",
+   "group": "String dizileri",
+   "kind": "sınıf farklı",
+   "matlab": "string|1x1|{char|1x2|u97,98,;}",
+   "octave": "double|1x1|195,"
+  },
+  {
+   "id": "yd-string-plus-char",
+   "code": "r=\"a\"+'b';",
+   "group": "String dizileri",
+   "kind": "sınıf farklı",
+   "matlab": "string|1x1|{char|1x2|u97,98,;}",
+   "octave": "double|1x1|195,"
+  },
+  {
+   "id": "yd-string-char-plus",
+   "code": "r='a'+\"b\";",
+   "group": "String dizileri",
+   "kind": "sınıf farklı",
+   "matlab": "string|1x1|{char|1x2|u97,98,;}",
+   "octave": "double|1x1|195,"
+  },
+  {
+   "id": "yd-string-char-convert",
+   "code": "r=char([\"a\" \"bb\"]);",
+   "group": "String dizileri",
+   "kind": "boyut farklı",
+   "matlab": "char|1x2x2|u97,32,98,98,",
+   "octave": "char|1x3|u97,98,98,"
+  },
+  {
+   "id": "yd-string-cellstr-convert",
+   "code": "r=cellstr([\"a\" \"bb\"]);",
+   "group": "String dizileri",
+   "kind": "boyut farklı",
+   "matlab": "cell|1x2|{char|1x1|u97,;char|1x2|u98,98,;}",
+   "octave": "cell|1x1|{char|1x3|u97,98,98,;}"
+  },
+  {
+   "id": "yd-string-double-convert",
+   "code": "r=double(\"123\");",
+   "group": "String dizileri",
+   "kind": "boyut farklı",
+   "matlab": "double|1x1|123,",
+   "octave": "double|1x3|49,50,51,"
+  },
+  {
+   "id": "yd-string-strlength",
+   "code": "r=strlength([\"a\" \"éé\"]);",
+   "group": "String dizileri",
+   "kind": "boyut farklı",
+   "matlab": "double|1x2|1,2,",
+   "octave": "double|1x1|3,"
+  },
+  {
+   "id": "yd-string-join",
+   "code": "r=join([\"a\" \"b\"],\"-\");",
+   "group": "String dizileri",
+   "kind": "sınıf farklı",
+   "matlab": "string|1x1|{char|1x3|u97,45,98,;}",
+   "octave": "cell|1x1|{char|1x2|u97,98,;}"
+  },
+  {
+   "id": "yd-string-split",
+   "code": "r=split(\"a,b,c\",\",\");",
+   "group": "String dizileri",
+   "kind": "sınıf farklı",
+   "matlab": "string|3x1|{char|1x1|u97,;char|1x1|u98,;char|1x1|u99,;}",
+   "octave": "cell|3x1|{char|1x1|u97,;char|1x1|u98,;char|1x1|u99,;}"
+  },
+  {
+   "id": "yd-string-reshape",
+   "code": "r=reshape([\"a\" \"b\" \"c\" \"d\"],2,2);",
+   "group": "String dizileri",
+   "kind": "sınıf farklı",
+   "matlab": "string|2x2|{char|1x1|u97,;char|1x1|u98,;char|1x1|u99,;char|1x1|u100,;}",
+   "octave": "char|2x2|u97,98,99,100,"
+  },
+  {
+   "id": "yd-string-plus-numeric",
+   "code": "r=\"x\"+5;",
+   "group": "String dizileri",
+   "kind": "sınıf farklı",
+   "matlab": "string|1x1|{char|1x2|u120,53,;}",
+   "octave": "double|1x1|125,"
+  },
+  {
+   "id": "yd-handle-func2str",
+   "code": "r=func2str(@(x,y)x+y);",
+   "group": "Handles, akis ve yardimci sorgular",
+   "kind": "boyut farklı",
+   "matlab": "char|1x9|u64,40,120,44,121,41,120,43,121,",
+   "octave": "char|1x13|u64,40,120,44,32,121,41,32,120,32,43,32,121,"
+  },
+  {
+   "id": "yd-handle-nargin-sin-name",
+   "code": "r=nargin('sin');",
+   "group": "Handles, akis ve yardimci sorgular",
+   "kind": "Octave hata verir",
+   "matlab": "double|1x1|1,",
+   "octave": "HATA||nargin: number of input arguments unavailable for built-in function objects"
+  },
+  {
+   "id": "yd-handle-nargin-sin-handle",
+   "code": "r=nargin(@sin);",
+   "group": "Handles, akis ve yardimci sorgular",
+   "kind": "Octave hata verir",
+   "matlab": "double|1x1|1,",
+   "octave": "HATA||nargin: number of input arguments unavailable for built-in function objects"
+  },
+  {
+   "id": "yd-handle-nargout-size",
+   "code": "r=nargout('size');",
+   "group": "Handles, akis ve yardimci sorgular",
+   "kind": "Octave hata verir",
+   "matlab": "double|1x1|-1,",
+   "octave": "HATA||nargout: number of output arguments unavailable for built-in function objects"
+  },
+  {
+   "id": "yd-handle-nargout-size-handle",
+   "code": "r=nargout(@size);",
+   "group": "Handles, akis ve yardimci sorgular",
+   "kind": "Octave hata verir",
+   "matlab": "double|1x1|-1,",
+   "octave": "HATA||nargout: number of output arguments unavailable for built-in function objects"
+  },
+  {
+   "id": "yd-error-catch-fields",
+   "code": "try, a=[1 2]+[1 2 3]; catch e, r={e.identifier,e.message}; end",
+   "group": "Handles, akis ve yardimci sorgular",
+   "kind": "değer farklı",
+   "matlab": "cell|1x2|{char|1x30|u77,65,84,76,65,66,58,115,105,122,101,68,105,109,101,110,115,105,111,110,115,77,117,115,116,77,97,116,99,104,;char|1x50|u65,114,114,97,121,115,32,104,97,118,101,32,105,110,99,111,109,112,97,116,105,98,108,101,32,115,105,122,101,115,32,102,111,114,32,116,104,105,115,32,111,112,101,114,97,116,105,111,110,46,;}",
+   "octave": "cell|1x2|{char|1x25|u79,99,116,97,118,101,58,110,111,110,99,111,110,102,111,114,109,97,110,116,45,97,114,103,115,;char|1x60|u111,112,101,114,97,116,111,114,32,43,58,32,110,111,110,99,111,110,102,111,114,109,97,110,116,32,97,114,103,117,109,101,110,116,115,32,40,111,112,49,32,105,115,32,49,120,50,44,32,111,112,50,32,105,115,32,49,120,51,41,;}"
+  },
+  {
+   "id": "yd-error-catch-undefined",
+   "code": "try, qqq_yd_missing_function(1); catch e, r={e.identifier,e.message}; end",
+   "group": "Handles, akis ve yardimci sorgular",
+   "kind": "değer farklı",
+   "matlab": "cell|1x2|{char|1x24|u77,65,84,76,65,66,58,85,110,100,101,102,105,110,101,100,70,117,110,99,116,105,111,110,;char|1x82|u85,110,100,101,102,105,110,101,100,32,102,117,110,99,116,105,111,110,32,39,113,113,113,95,121,100,95,109,105,115,115,105,110,103,95,102,117,110,99,116,105,111,110,39,32,102,111,114,32,105,110,112,117,116,32,97,114,103,117,109,101,110,116,115,32,111,102,32,116,121,112,101,32,39,100,111,117,98,108,101,39,46,;}",
+   "octave": "cell|1x2|{char|1x25|u79,99,116,97,118,101,58,117,110,100,101,102,105,110,101,100,45,102,117,110,99,116,105,111,110,;char|1x57|u39,113,113,113,95,121,100,95,109,105,115,115,105,110,103,95,102,117,110,99,116,105,111,110,39,32,117,110,100,101,102,105,110,101,100,32,110,101,97,114,32,108,105,110,101,32,51,44,32,99,111,108,117,109,110,32,56,;}"
+  },
+  {
+   "id": "yd-error-catch-index",
+   "code": "try, a=1:2; x=a(4); catch e, r={e.identifier,e.message}; end",
+   "group": "Handles, akis ve yardimci sorgular",
+   "kind": "değer farklı",
+   "matlab": "cell|1x2|{char|1x19|u77,65,84,76,65,66,58,98,97,100,115,117,98,115,99,114,105,112,116,;char|1x68|u73,110,100,101,120,32,101,120,99,101,101,100,115,32,116,104,101,32,110,117,109,98,101,114,32,111,102,32,97,114,114,97,121,32,101,108,101,109,101,110,116,115,46,32,73,110,100,101,120,32,109,117,115,116,32,110,111,116,32,101,120,99,101,101,100,32,50,46,;}",
+   "octave": "cell|1x2|{char|1x26|u79,99,116,97,118,101,58,105,110,100,101,120,45,111,117,116,45,111,102,45,98,111,117,110,100,115,;char|1x41|u97,40,52,41,58,32,111,117,116,32,111,102,32,98,111,117,110,100,32,50,32,40,100,105,109,101,110,115,105,111,110,115,32,97,114,101,32,49,120,50,41,;}"
+  },
+  {
+   "id": "yd-error-catch-assign",
+   "code": "try, a=[1 2]; a([1 2])=[1 2 3]; catch e, r={e.identifier,e.message}; end",
+   "group": "Handles, akis ve yardimci sorgular",
+   "kind": "değer farklı",
+   "matlab": "cell|1x2|{char|1x42|u77,65,84,76,65,66,58,109,97,116,114,105,120,58,115,105,110,103,108,101,83,117,98,115,99,114,105,112,116,78,117,109,101,108,77,105,115,109,97,116,99,104,;char|1x98|u85,110,97,98,108,101,32,116,111,32,112,101,114,102,111,114,109,32,97,115,115,105,103,110,109,101,110,116,32,98,101,99,97,117,115,101,32,116,104,101,32,108,101,102,116,32,97,110,100,32,114,105,103,104,116,32,115,105,100,101,115,32,104,97,118,101,32,97,32,100,105,102,102,101,114,101,110,116,32,110,117,109,98,101,114,32,111,102,32,101,108,101,109,101,110,116,115,46,;}",
+   "octave": "cell|1x2|{char|1x25|u79,99,116,97,118,101,58,110,111,110,99,111,110,102,111,114,109,97,110,116,45,97,114,103,115,;char|1x51|u61,58,32,110,111,110,99,111,110,102,111,114,109,97,110,116,32,97,114,103,117,109,101,110,116,115,32,40,111,112,49,32,105,115,32,50,120,49,44,32,111,112,50,32,105,115,32,49,120,51,41,;}"
+  },
+  {
+   "id": "yd-error-catch-field",
+   "code": "try, s=struct(); x=s.nope; catch e, r={e.identifier,e.message}; end",
+   "group": "Handles, akis ve yardimci sorgular",
+   "kind": "değer farklı",
+   "matlab": "cell|1x2|{char|1x23|u77,65,84,76,65,66,58,110,111,110,69,120,105,115,116,101,110,116,70,105,101,108,100,;char|1x31|u85,110,114,101,99,111,103,110,105,122,101,100,32,102,105,101,108,100,32,110,97,109,101,32,34,110,111,112,101,34,46,;}",
+   "octave": "cell|1x2|{char|1x23|u79,99,116,97,118,101,58,105,110,118,97,108,105,100,45,105,110,100,101,120,105,110,103,;char|1x30|u115,116,114,117,99,116,117,114,101,32,104,97,115,32,110,111,32,109,101,109,98,101,114,32,39,110,111,112,101,39,;}"
+  },
+  {
+   "id": "yd-exist-class",
+   "code": "r=exist('containers.Map','class');",
+   "group": "Handles, akis ve yardimci sorgular",
+   "kind": "değer farklı",
+   "matlab": "double|1x1|8,",
+   "octave": "double|1x1|0,"
+  },
+  {
+   "id": "yd-metadata-builtins",
+   "code": "r={nargin('sum'),nargout('sum'),nargin('size'),nargout('size')};",
+   "group": "Handles, akis ve yardimci sorgular",
+   "kind": "Octave hata verir",
+   "matlab": "cell|1x4|{double|1x1|4,;double|1x1|1,;double|1x1|-1,;double|1x1|-1,;}",
+   "octave": "HATA||nargin: number of input arguments unavailable for built-in function objects"
+  },
+  {
+   "id": "yd-operator-leftdivide-singular",
+   "code": "r=[1 2;2 4]\\[3;6];",
+   "group": "Ek islemler ve integer sinirlari",
+   "kind": "değer farklı",
+   "matlab": "double|2x1|NaN,NaN,",
+   "octave": "double|2x1|0.6,1.2,"
+  },
+  {
+   "id": "yd-int-add-single-uint",
+   "code": "r=single(2)+uint8(3);",
+   "group": "Ek islemler ve integer sinirlari",
+   "kind": "yalnız MATLAB hata verir",
+   "matlab": "HATA|MATLAB:mixedClasses|Integers can only be combined with integers of the same class, or scalar doubles.",
+   "octave": "uint8|1x1|5,"
+  },
+  {
+   "id": "yd-int-bitcmp-width",
+   "code": "r=bitcmp(uint16(1),8);",
+   "group": "Ek islemler ve integer sinirlari",
+   "kind": "yalnız MATLAB hata verir",
+   "matlab": "HATA|MATLAB:bitcmp:unknownTypeString|ASSUMEDTYPE must be an integer type name.",
+   "octave": "uint16|1x1|254,"
+  },
+  {
+   "id": "yd-pred-isfield-cell-empty",
+   "code": "r=isfield(struct('a',1),{});",
+   "group": "Ek predicate ve boyut sorgulari",
+   "kind": "boyut farklı",
+   "matlab": "logical|1x1|0",
+   "octave": "logical|0x0|"
+  },
+  {
+   "id": "yd-query-columns-row",
+   "code": "r=columns(1:5);",
+   "group": "Ek predicate ve boyut sorgulari",
+   "kind": "yalnız MATLAB hata verir",
+   "matlab": "HATA|MATLAB:UndefinedFunction|Undefined function 'columns' for input arguments of type 'double'.",
+   "octave": "double|1x1|5,"
+  },
+  {
+   "id": "yd-query-rows-matrix",
+   "code": "r=rows(reshape(1:6,2,3));",
+   "group": "Ek predicate ve boyut sorgulari",
+   "kind": "yalnız MATLAB hata verir",
+   "matlab": "HATA|MATLAB:UndefinedFunction|Undefined function 'rows' for input arguments of type 'double'.",
+   "octave": "double|1x1|2,"
+  },
+  {
+   "id": "yd-construct-linspace-class",
+   "code": "r=linspace(single(0),single(1),4);",
+   "group": "Ek dizi kurma ve bicim donusumleri",
+   "kind": "değer farklı",
+   "matlab": "single|1x4|0,0.333333343267,0.666666686535,1,",
+   "octave": "single|1x4|0,0.333333343267,0.66666662693,1,"
+  },
+  {
+   "id": "yd-array-permute-sparse",
+   "code": "r=permute(sparse([1 0;0 2]),[2 1]);",
+   "group": "Ek dizi kurma ve bicim donusumleri",
+   "kind": "yalnız MATLAB hata verir",
+   "matlab": "HATA|MATLAB:printf:invalidInputAttribute|Function is not defined for sparse inputs.",
+   "octave": "double|2x2|1,0,0,2,"
+  },
+  {
+   "id": "yd-string-isempty",
+   "code": "r=[isempty(\"\") ismissing(\"\")];",
+   "group": "Ek string, cell, struct ve Map",
+   "kind": "boyut farklı",
+   "matlab": "logical|1x2|00",
+   "octave": "logical|1x1|1"
+  },
+  {
+   "id": "yd-struct-structfun-empty",
+   "code": "s=struct('a',{}); r=structfun(@isempty,s);",
+   "group": "Ek string, cell, struct ve Map",
+   "kind": "yalnız MATLAB hata verir",
+   "matlab": "HATA|MATLAB:structfun:NonScalar|Inputs to STRUCTFUN must be scalar structures.",
+   "octave": "double|1x0x0|,"
+  },
+  {
+   "id": "yd-error-catch-assignment-growth",
+   "code": "try, a=[1 2]; a([1 2])=[3 4 5]; r=a; catch e, r={e.identifier,e.message}; end;",
+   "group": "Ek handle, akis ve hata davranislari",
+   "kind": "değer farklı",
+   "matlab": "cell|1x2|{char|1x42|u77,65,84,76,65,66,58,109,97,116,114,105,120,58,115,105,110,103,108,101,83,117,98,115,99,114,105,112,116,78,117,109,101,108,77,105,115,109,97,116,99,104,;char|1x98|u85,110,97,98,108,101,32,116,111,32,112,101,114,102,111,114,109,32,97,115,115,105,103,110,109,101,110,116,32,98,101,99,97,117,115,101,32,116,104,101,32,108,101,102,116,32,97,110,100,32,114,105,103,104,116,32,115,105,100,101,115,32,104,97,118,101,32,97,32,100,105,102,102,101,114,101,110,116,32,110,117,109,98,101,114,32,111,102,32,101,108,101,109,101,110,116,115,46,;}",
+   "octave": "cell|1x2|{char|1x25|u79,99,116,97,118,101,58,110,111,110,99,111,110,102,111,114,109,97,110,116,45,97,114,103,115,;char|1x51|u61,58,32,110,111,110,99,111,110,102,111,114,109,97,110,116,32,97,114,103,117,109,101,110,116,115,32,40,111,112,49,32,105,115,32,50,120,49,44,32,111,112,50,32,105,115,32,49,120,51,41,;}"
+  },
+  {
+   "id": "yd-error-catch-dimension",
+   "code": "try, a=ones(2,3); b=ones(3,2); c=a+b; r=c; catch e, r={e.identifier,e.message}; end;",
+   "group": "Ek handle, akis ve hata davranislari",
+   "kind": "değer farklı",
+   "matlab": "cell|1x2|{char|1x30|u77,65,84,76,65,66,58,115,105,122,101,68,105,109,101,110,115,105,111,110,115,77,117,115,116,77,97,116,99,104,;char|1x50|u65,114,114,97,121,115,32,104,97,118,101,32,105,110,99,111,109,112,97,116,105,98,108,101,32,115,105,122,101,115,32,102,111,114,32,116,104,105,115,32,111,112,101,114,97,116,105,111,110,46,;}",
+   "octave": "cell|1x2|{char|1x25|u79,99,116,97,118,101,58,110,111,110,99,111,110,102,111,114,109,97,110,116,45,97,114,103,115,;char|1x60|u111,112,101,114,97,116,111,114,32,43,58,32,110,111,110,99,111,110,102,111,114,109,97,110,116,32,97,114,103,117,109,101,110,116,115,32,40,111,112,49,32,105,115,32,50,120,51,44,32,111,112,50,32,105,115,32,51,120,50,41,;}"
+  },
+  {
+   "id": "yd-error-catch-unknown-field",
+   "code": "try, s=struct(); r=s.unknown; catch e, r={e.identifier,e.message}; end;",
+   "group": "Ek handle, akis ve hata davranislari",
+   "kind": "değer farklı",
+   "matlab": "cell|1x2|{char|1x23|u77,65,84,76,65,66,58,110,111,110,69,120,105,115,116,101,110,116,70,105,101,108,100,;char|1x34|u85,110,114,101,99,111,103,110,105,122,101,100,32,102,105,101,108,100,32,110,97,109,101,32,34,117,110,107,110,111,119,110,34,46,;}",
+   "octave": "cell|1x2|{char|1x23|u79,99,116,97,118,101,58,105,110,118,97,108,105,100,45,105,110,100,101,120,105,110,103,;char|1x33|u115,116,114,117,99,116,117,114,101,32,104,97,115,32,110,111,32,109,101,109,98,101,114,32,39,117,110,107,110,111,119,110,39,;}"
+  },
+  {
+   "id": "yd-metadata-nargin-str2double",
+   "code": "r=nargin('str2double');",
+   "group": "Ek handle, akis ve hata davranislari",
+   "kind": "Octave hata verir",
+   "matlab": "double|1x1|1,",
+   "octave": "HATA||nargin: number of input arguments unavailable for built-in function objects"
+  },
+  {
+   "id": "yd-metadata-nargout-max",
+   "code": "r=nargout('max');",
+   "group": "Ek handle, akis ve hata davranislari",
+   "kind": "Octave hata verir",
+   "matlab": "double|1x1|2,",
+   "octave": "HATA||nargout: number of output arguments unavailable for built-in function objects"
+  },
+  {
+   "id": "ym-idivide-default",
+   "code": "r = idivide(int16([-7 7]), int16([3 -3]));",
+   "group": "Temel fonksiyonlar ve sayısal sınırlar",
+   "kind": "değer farklı",
+   "matlab": "int16|1x2|-2,-2,",
+   "octave": "int16|1x2|-3,-2,"
+  },
+  {
+   "id": "ym-idivide-fix",
+   "code": "r = idivide(int16([-7 7]), int16([3 -3]), \"fix\");",
+   "group": "Temel fonksiyonlar ve sayısal sınırlar",
+   "kind": "değer farklı",
+   "matlab": "int16|1x2|-2,-2,",
+   "octave": "int16|1x2|-3,-2,"
+  },
+  {
+   "id": "ym-hypot-inf-nan",
+   "code": "r = hypot([Inf NaN],[NaN Inf]);",
+   "group": "Temel fonksiyonlar ve sayısal sınırlar",
+   "kind": "değer farklı",
+   "matlab": "double|1x2|NaN,NaN,",
+   "octave": "double|1x2|Inf,Inf,"
+  },
+  {
+   "id": "ym-gcd-array-expansion",
+   "code": "r = gcd([12;18], [8 24]);",
+   "group": "Temel fonksiyonlar ve sayısal sınırlar",
+   "kind": "yalnız MATLAB hata verir",
+   "matlab": "HATA|MATLAB:gcd:InputSizeMismatch|Inputs must be the same size.",
+   "octave": "double|2x2|4,2,12,6,"
+  },
+  {
+   "id": "ym-rat-class-size",
+   "code": "x = rat([pi 1/3; sqrt(2) -2]); r = {class(x), size(x)};",
+   "group": "Temel fonksiyonlar ve sayısal sınırlar",
+   "kind": "değer farklı",
+   "matlab": "cell|1x2|{char|1x4|u99,104,97,114,;double|1x2|4,57,;}",
+   "octave": "cell|1x2|{char|1x4|u99,104,97,114,;double|1x2|4,55,;}"
+  },
+  {
+   "id": "ym-rats-class-size",
+   "code": "x = rats([pi 1/3; sqrt(2) -2]); r = {class(x), size(x)};",
+   "group": "Temel fonksiyonlar ve sayısal sınırlar",
+   "kind": "değer farklı",
+   "matlab": "cell|1x2|{char|1x4|u99,104,97,114,;double|1x2|2,28,;}",
+   "octave": "cell|1x2|{char|1x4|u99,104,97,114,;double|1x2|2,30,;}"
+  },
+  {
+   "id": "ym-cumsum-all",
+   "code": "r = cumsum([1 2;3 4],\"all\");",
+   "group": "İndirgemeler ve boyut seçenekleri",
+   "kind": "yalnız MATLAB hata verir",
+   "matlab": "HATA|MATLAB:cumsum:wrongFlag|Invalid option. Option must be 'forward', 'reverse', 'omitnan', 'includenan', 'omitmissing' or 'includemissing'.",
+   "octave": "double|4x1|1,4,6,10,"
+  },
+  {
+   "id": "ym-sort-missing-last",
+   "code": "r = sort([3 NaN 1],\"MissingPlacement\",\"last\");",
+   "group": "Sıralama, kümeler ve birikim",
+   "kind": "Octave hata verir",
+   "matlab": "double|1x3|1,3,NaN,",
+   "octave": "HATA||sort: MODE must be either \"ascend\" or \"descend\""
+  },
+  {
+   "id": "ym-sort-missing-first",
+   "code": "r = sort([3 NaN 1],\"MissingPlacement\",\"first\");",
+   "group": "Sıralama, kümeler ve birikim",
+   "kind": "Octave hata verir",
+   "matlab": "double|1x3|NaN,1,3,",
+   "octave": "HATA||sort: MODE must be either \"ascend\" or \"descend\""
+  },
+  {
+   "id": "ym-sort-stable",
+   "code": "r = sort([2 1 2 1],\"ascend\",\"ComparisonMethod\",\"real\");",
+   "group": "Sıralama, kümeler ve birikim",
+   "kind": "Octave hata verir",
+   "matlab": "double|1x4|1,1,2,2,",
+   "octave": "HATA|Octave:invalid-fun-call|Invalid call to sort.  Correct usage is:   -- [S, I] = sort (X)  -- [S, I] = sort (X, DIM)  -- [S, I] = sort (X, MODE)  -- [S, I] = sort (X, DIM, MODE)"
+  },
+  {
+   "id": "ym-sortrows-char",
+   "code": "r = sortrows(char(\"bb\",\"aa\",\"ab\"));",
+   "group": "Sıralama, kümeler ve birikim",
+   "kind": "yalnız MATLAB hata verir",
+   "matlab": "HATA|MATLAB:maxrhs|Too many input arguments.",
+   "octave": "char|3x2|u97,97,98,97,98,98,"
+  },
+  {
+   "id": "ym-cummax-outs",
+   "code": "[a,b] = cummax([2 1 3 0]); r = {a,b};",
+   "group": "Sıralama, kümeler ve birikim",
+   "kind": "yalnız MATLAB hata verir",
+   "matlab": "HATA|MATLAB:maxlhs|Too many output arguments.",
+   "octave": "cell|1x2|{double|1x4|2,2,3,3,;double|1x4|1,1,3,3,;}"
+  },
+  {
+   "id": "ym-cummin-outs",
+   "code": "[a,b] = cummin([2 1 3 0]); r = {a,b};",
+   "group": "Sıralama, kümeler ve birikim",
+   "kind": "yalnız MATLAB hata verir",
+   "matlab": "HATA|MATLAB:maxlhs|Too many output arguments.",
+   "octave": "cell|1x2|{double|1x4|2,1,1,0,;double|1x4|1,2,2,4,;}"
+  },
+  {
+   "id": "ym-backslash-underdetermined",
+   "code": "r = [1 0 1;0 1 1]\\[2;3];",
+   "group": "Lineer cebir",
+   "kind": "değer farklı",
+   "matlab": "double|3x1|-1,0,3,",
+   "octave": "double|3x1|0.333333333333,1.33333333333,1.66666666667,"
+  },
+  {
+   "id": "ym-backslash-singular",
+   "code": "r = [1 2;2 4]\\[3;6];",
+   "group": "Lineer cebir",
+   "kind": "değer farklı",
+   "matlab": "double|2x1|NaN,NaN,",
+   "octave": "double|2x1|0.6,1.2,"
+  },
+  {
+   "id": "ym-mrdivide-under",
+   "code": "r = [1 2]/[1 0;0 1;1 1];",
+   "group": "Lineer cebir",
+   "kind": "değer farklı",
+   "matlab": "double|1x3|-1,0,2,",
+   "octave": "double|1x3|-2.07030422225e-16,1,1,"
+  },
+  {
+   "id": "ym-trace-rectangular",
+   "code": "r = trace([1 2 3;4 5 6]);",
+   "group": "Lineer cebir",
+   "kind": "yalnız MATLAB hata verir",
+   "matlab": "HATA|MATLAB:trace:square|Matrix must be square.",
+   "octave": "double|1x1|6,"
+  },
+  {
+   "id": "ym-null-rational",
+   "code": "r = null([1 2 3;2 4 6],\"r\");",
+   "group": "Lineer cebir",
+   "kind": "Octave hata verir",
+   "matlab": "double|3x2|-2,1,0,-3,0,1,",
+   "octave": "HATA||null: option for rational not yet implemented"
+  },
+  {
+   "id": "ym-lu-vector",
+   "code": "[a,b,c] = lu([0 1;2 3],\"vector\"); r = {a,b,c};",
+   "group": "Lineer cebir",
+   "kind": "değer farklı",
+   "matlab": "cell|1x3|{double|2x2|1,0,0,1,;double|2x2|2,0,3,1,;double|1x2|2,1,;}",
+   "octave": "cell|1x3|{double|2x2|1,0,0,1,;double|2x2|2,0,3,1,;double|2x1|2,1,;}"
+  },
+  {
+   "id": "ym-polyfit-s-mu-size",
+   "code": "[p,s,mu] = polyfit(1:4,[1 4 9 16],2); r = {p,size(s),class(mu),size(mu)};",
+   "group": "Polinomlar ve interpolasyon",
+   "kind": "değer farklı",
+   "matlab": "cell|1x4|{double|1x3|1.66666666667,6.45497224368,6.25,;double|1x2|1,1,;char|1x6|u100,111,117,98,108,101,;double|1x2|2,1,;}",
+   "octave": "cell|1x4|{double|1x3|1.66666666667,6.45497224368,6.25,;double|1x2|1,1,;char|1x6|u100,111,117,98,108,101,;double|1x2|1,2,;}"
+  },
+  {
+   "id": "ym-interp1-makima",
+   "code": "r = interp1(0:3,[0 1 1 2],[0.5 2.5],\"makima\");",
+   "group": "Polinomlar ve interpolasyon",
+   "kind": "Octave hata verir",
+   "matlab": "double|1x2|0.615625,1.384375,",
+   "octave": "HATA||interp1: invalid METHOD 'makima'"
+  },
+  {
+   "id": "ym-interp2-linear",
+   "code": "r = interp2([1 2;3 4],[1.5 2.5],[1 1.5]);",
+   "group": "Polinomlar ve interpolasyon",
+   "kind": "değer farklı",
+   "matlab": "double|1x2|1.5,NaN,",
+   "octave": "double|1x2|1.5,NA,"
+  },
+  {
+   "id": "ym-spline-endconds",
+   "code": "r = spline([0 1 2],[1 0 1 0],[0 0.5 2]);",
+   "group": "Polinomlar ve interpolasyon",
+   "kind": "yalnız MATLAB hata verir",
+   "matlab": "HATA|MATLAB:chckxy:NumSitesMismatchValues|The number of sample points X, 3, is incompatible with the number of values Y, 4.",
+   "octave": "double|1x3|1,0.25,1,"
+  },
+  {
+   "id": "ym-fminsearch-quad",
+   "code": "r = round(fminsearch(@(x) sum((x-[2 -1]).^2),[0 0]),6);",
+   "group": "Polinomlar ve interpolasyon",
+   "kind": "değer farklı",
+   "matlab": "double|1x2|2.000016,-0.999968,",
+   "octave": "double|1x2|1.999923,-0.999954,"
+  },
+  {
+   "id": "ym-ode45-output-shapes",
+   "code": "[t,y] = ode45(@(t,y) -y,[0 1],[1;2]); r = {class(t),size(t),class(y),size(y)};",
+   "group": "Polinomlar ve interpolasyon",
+   "kind": "değer farklı",
+   "matlab": "cell|1x4|{char|1x6|u100,111,117,98,108,101,;double|1x2|41,1,;char|1x6|u100,111,117,98,108,101,;double|1x2|41,2,;}",
+   "octave": "cell|1x4|{char|1x6|u100,111,117,98,108,101,;double|1x2|45,1,;char|1x6|u100,111,117,98,108,101,;double|1x2|45,2,;}"
+  },
+  {
+   "id": "ym-ode45-options-output",
+   "code": "[t,y,te,ye,ie] = ode45(@(t,y) -y,[0 1],[1;2],odeset(\"Events\",@(t,y) deal(y(1)-0.5,1,0))); r = {size(t),size(y),size(te),size(ye),size(ie)};",
+   "group": "Polinomlar ve interpolasyon",
+   "kind": "yalnız MATLAB hata verir",
+   "matlab": "HATA|MATLAB:deal:narginNargoutMismatch|The number of outputs should match the number of inputs.",
+   "octave": "cell|1x5|{double|1x2|33,1,;double|1x2|33,2,;double|1x2|1,1,;double|1x2|1,2,;double|1x2|1,1,;}"
+  },
+  {
+   "id": "ym-corrcoef-rows",
+   "code": "r = corrcoef([1 NaN 3;2 4 6],\"Rows\",\"complete\");",
+   "group": "İstatistik ve temel veri işlevleri",
+   "kind": "boyut farklı",
+   "matlab": "double|3x3|NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,",
+   "octave": "double|1x1|1,"
+  },
+  {
+   "id": "ym-fft-symmetric-even",
+   "code": "r = ifft(fft([1 2 1 2]),[],2,\"symmetric\");",
+   "group": "Sinyal ve evrişim",
+   "kind": "Octave hata verir",
+   "matlab": "double|1x4|1,2,1,2,",
+   "octave": "HATA|Octave:invalid-fun-call|Invalid call to ifft.  Correct usage is:   -- X = ifft (Y)  -- X = ifft (Y, N)  -- X = ifft (Y, N, DIM)"
+  },
+  {
+   "id": "ym-fft-symmetric-odd",
+   "code": "r = ifft(fft([1 2 3]),[],2,\"symmetric\");",
+   "group": "Sinyal ve evrişim",
+   "kind": "Octave hata verir",
+   "matlab": "double|1x3|1,2,3,",
+   "octave": "HATA|Octave:invalid-fun-call|Invalid call to ifft.  Correct usage is:   -- X = ifft (Y)  -- X = ifft (Y, N)  -- X = ifft (Y, N, DIM)"
+  },
+  {
+   "id": "ym-sprintf-float",
+   "code": "r = sprintf(\"%.3f\",[1.25 -3.5]);",
+   "group": "Sayıları metne dönüştürme",
+   "kind": "sınıf farklı",
+   "matlab": "string|1x1|{char|1x11|u49,46,50,53,48,45,51,46,53,48,48,;}",
+   "octave": "char|1x11|u49,46,50,53,48,45,51,46,53,48,48,"
+  },
+  {
+   "id": "ym-sprintf-matrix",
+   "code": "r = sprintf(\"%d,\",[1 2;3 4]);",
+   "group": "Sayıları metne dönüştürme",
+   "kind": "sınıf farklı",
+   "matlab": "string|1x1|{char|1x8|u49,44,51,44,50,44,52,44,;}",
+   "octave": "char|1x8|u49,44,51,44,50,44,52,44,"
+  },
+  {
+   "id": "ym-sprintf-width",
+   "code": "r = sprintf(\"%8.2f\",pi);",
+   "group": "Sayıları metne dönüştürme",
+   "kind": "sınıf farklı",
+   "matlab": "string|1x1|{char|1x8|u32,32,32,32,51,46,49,52,;}",
+   "octave": "char|1x8|u32,32,32,32,51,46,49,52,"
+  },
+  {
+   "id": "ym-bin2dec-char-matrix",
+   "code": "r = bin2dec(char(\"0\",\"1\",\"10\",\"11\"));",
+   "group": "Sayıları metne dönüştürme",
+   "kind": "yalnız MATLAB hata verir",
+   "matlab": "HATA|MATLAB:maxrhs|Too many input arguments.",
+   "octave": "double|4x1|0,1,2,3,"
+  },
+  {
+   "id": "ym-dec2base-negative",
+   "code": "r = dec2base([-1 -10],16);",
+   "group": "Sayıları metne dönüştürme",
+   "kind": "yalnız MATLAB hata verir",
+   "matlab": "HATA|MATLAB:dec2base:FirstArg|First argument must be an array of integers, 0 <= D <= flintmax.",
+   "octave": "char|2x2|u70,70,70,54,"
+  },
+  {
+   "id": "ym-str2double-empty",
+   "code": "r = str2double([\"\" \"  \"]);",
+   "group": "Sayıları metne dönüştürme",
+   "kind": "boyut farklı",
+   "matlab": "double|1x2|NaN,NaN,",
+   "octave": "double|1x1|NaN,"
+  },
+  {
+   "id": "ym-str2double-special",
+   "code": "r = str2double([\"NaN\" \"Inf\" \"-Inf\"]);",
+   "group": "Sayıları metne dönüştürme",
+   "kind": "boyut farklı",
+   "matlab": "double|1x3|NaN,Inf,-Inf,",
+   "octave": "double|1x1|NaN,"
+  },
+  {
+   "id": "ym-str2double-exponents",
+   "code": "r = str2double([\"1e3\" \"-2.5e-2\" \"1,2\"]);",
+   "group": "Sayıları metne dönüştürme",
+   "kind": "boyut farklı",
+   "matlab": "double|1x3|1000,-0.025,12,",
+   "octave": "double|1x1|NaN,"
+  },
+  {
+   "id": "ym-str2double-cell",
+   "code": "r = str2double({\"1.5\",\"bad\",\"Inf\"});",
+   "group": "Sayıları metne dönüştürme",
+   "kind": "değer farklı",
+   "matlab": "double|1x3|NaN,NaN,NaN,",
+   "octave": "double|1x3|1.5,NaN,Inf,"
+  },
+  {
+   "id": "ym-sprintf-integer-precision",
+   "code": "r = sprintf(\"%04d\",[-2 5]);",
+   "group": "Sayıları metne dönüştürme",
+   "kind": "sınıf farklı",
+   "matlab": "string|1x1|{char|1x8|u45,48,48,50,48,48,48,53,;}",
+   "octave": "char|1x8|u45,48,48,50,48,48,48,53,"
+  },
+  {
+   "id": "ys-blanks-zero",
+   "code": "r = blanks(0)",
+   "group": "Karakter dizileri ve hücre metinleri",
+   "kind": "boyut farklı",
+   "matlab": "char|1x0|u,",
+   "octave": "char|0x0|u,"
+  },
+  {
+   "id": "ys-upper-unicode",
+   "code": "r = upper('é ñ ü ß')",
+   "group": "Karakter dizileri ve hücre metinleri",
+   "kind": "boyut farklı",
+   "matlab": "char|1x7|u201,32,209,32,220,32,223,",
+   "octave": "char|1x11|u195,137,32,195,145,32,195,156,32,83,83,"
+  },
+  {
+   "id": "ys-lower-unicode",
+   "code": "r = lower('É Ñ Ü İ')",
+   "group": "Karakter dizileri ve hücre metinleri",
+   "kind": "boyut farklı",
+   "matlab": "char|1x7|u233,32,241,32,252,32,105,",
+   "octave": "char|1x11|u195,137,32,195,145,32,195,156,32,196,176,"
+  },
+  {
+   "id": "ys-strcmp-mixed-string",
+   "code": "r = strcmp([\"a\",\"b\"], {'a','b'})",
+   "group": "Karakter dizileri ve hücre metinleri",
+   "kind": "değer farklı",
+   "matlab": "logical|1x2|11",
+   "octave": "logical|1x2|00"
+  },
+  {
+   "id": "ys-strncmpi-cells",
+   "code": "r = strncmpi({'Abc','XY'}, {'aBd','xy'}, [2 1])",
+   "group": "Karakter dizileri ve hücre metinleri",
+   "kind": "yalnız MATLAB hata verir",
+   "matlab": "HATA|MATLAB:strcmp:SizeMustBeInt|The number of characters to match must be an integer.",
+   "octave": "logical|1x2|11"
+  },
+  {
+   "id": "ys-strfind-pattern-cell",
+   "code": "r = strfind('abc', {'a','bc','z'})",
+   "group": "Karakter dizileri ve hücre metinleri",
+   "kind": "yalnız MATLAB hata verir",
+   "matlab": "HATA|MATLAB:string:MustBeTextOrPatternScalar|Search term must be a text or pattern scalar.",
+   "octave": "cell|1x3|{double|1x1|1,;double|1x1|2,;double|0x0|,;}"
+  },
+  {
+   "id": "ys-textscan-basic",
+   "code": "r = textscan('1,a;2,b', '%f%s', 'Delimiter', ',', 'CollectOutput', false)",
+   "group": "Karakter dizileri ve hücre metinleri",
+   "kind": "değer farklı",
+   "matlab": "cell|1x2|{double|1x1|1,;cell|1x1|{char|1x3|u97,59,50,;};}",
+   "octave": "cell|1x2|{double|2x1|1,NaN,;cell|2x1|{char|1x3|u97,59,50,;char|1x1|u98,;};}"
+  },
+  {
+   "id": "ys-textscan-width",
+   "code": "r = textscan('12345 abcdef', '%3d%4c')",
+   "group": "Karakter dizileri ve hücre metinleri",
+   "kind": "değer farklı",
+   "matlab": "cell|1x2|{int32|1x1|123,;char|1x4|u52,53,32,97,;}",
+   "octave": "cell|1x2|{int32|1x1|123,;cell|1x1|{char|1x4|u52,53,32,97,;};}"
+  },
+  {
+   "id": "ys-regexp-dotexceptnewline",
+   "code": "r = regexp(sprintf('a\\nb'), 'a.*b', 'dotexceptnewline')",
+   "group": "Regexp çıktıları ve metin API",
+   "kind": "boyut farklı",
+   "matlab": "double|0x0|,",
+   "octave": "double|1x0|,"
+  },
+  {
+   "id": "ys-regexp-empty",
+   "code": "r = regexp('abc', 'x', 'match')",
+   "group": "Regexp çıktıları ve metin API",
+   "kind": "boyut farklı",
+   "matlab": "cell|0x0|{}",
+   "octave": "cell|1x0|{}"
+  },
+  {
+   "id": "ys-contains-string",
+   "code": "r = contains([\"abc\",\"def\"], \"a\")",
+   "group": "Regexp çıktıları ve metin API",
+   "kind": "boyut farklı",
+   "matlab": "logical|1x2|10",
+   "octave": "logical|1x1|1"
+  },
+  {
+   "id": "ys-endswith-string-cell",
+   "code": "r = endsWith([\"abc\",\"def\"], {'c','x'})",
+   "group": "Regexp çıktıları ve metin API",
+   "kind": "boyut farklı",
+   "matlab": "logical|1x2|10",
+   "octave": "logical|1x1|0"
+  },
+  {
+   "id": "ys-extractbetween-char",
+   "code": "r = extractBetween('[one][two]', '[', ']')",
+   "group": "Regexp çıktıları ve metin API",
+   "kind": "boyut farklı",
+   "matlab": "cell|2x1|{char|1x3|u111,110,101,;char|1x3|u116,119,111,;}",
+   "octave": "cell|1x2|{char|1x3|u111,110,101,;char|1x3|u116,119,111,;}"
+  },
+  {
+   "id": "ys-split-string",
+   "code": "r = split(\"a,b,,c\", \",\" )",
+   "group": "Regexp çıktıları ve metin API",
+   "kind": "sınıf farklı",
+   "matlab": "string|4x1|{char|1x1|u97,;char|1x1|u98,;char|0x0|u,;char|1x1|u99,;}",
+   "octave": "cell|4x1|{char|1x1|u97,;char|1x1|u98,;char|1x0|u,;char|1x1|u99,;}"
+  },
+  {
+   "id": "ys-join-string",
+   "code": "r = join([\"a\",\"b\",\"c\"], \"|\")",
+   "group": "Regexp çıktıları ve metin API",
+   "kind": "sınıf farklı",
+   "matlab": "string|1x1|{char|1x5|u97,124,98,124,99,;}",
+   "octave": "cell|1x1|{char|1x3|u97,98,99,;}"
+  },
+  {
+   "id": "ys-strlength-string",
+   "code": "r = strlength([\"abc\",\"é\"])",
+   "group": "Regexp çıktıları ve metin API",
+   "kind": "boyut farklı",
+   "matlab": "double|1x2|3,1,",
+   "octave": "double|1x1|4,"
+  },
+  {
+   "id": "ys-insertbefore-char",
+   "code": "r = insertBefore('abcde', 3, 'X')",
+   "group": "Regexp çıktıları ve metin API",
+   "kind": "Octave hata verir",
+   "matlab": "char|1x6|u97,98,88,99,100,101,",
+   "octave": "HATA|Octave:undefined-function|'insertBefore' undefined near line 3, column 7  The ‘insertBefore’ function is not yet implemented in Octave.  Please read <https://www.octave.org/missing.html> to learn how you can contribute missing functionality."
+  },
+  {
+   "id": "ys-insertafter-char",
+   "code": "r = insertAfter('abcde', 'c', 'X')",
+   "group": "Regexp çıktıları ve metin API",
+   "kind": "Octave hata verir",
+   "matlab": "char|1x6|u97,98,99,88,100,101,",
+   "octave": "HATA|Octave:undefined-function|'insertAfter' undefined near line 3, column 7  The ‘insertAfter’ function is not yet implemented in Octave.  Please read <https://www.octave.org/missing.html> to learn how you can contribute missing functionality."
+  },
+  {
+   "id": "ys-lower-string-cell",
+   "code": "r = lower([\"ABC\",\"DEF\"])",
+   "group": "Regexp çıktıları ve metin API",
+   "kind": "sınıf farklı",
+   "matlab": "string|1x2|{char|1x3|u97,98,99,;char|1x3|u100,101,102,;}",
+   "octave": "char|1x6|u97,98,99,100,101,102,"
+  },
+  {
+   "id": "ys-numel-string",
+   "code": "r = numel([\"a\",\"bb\"])",
+   "group": "Regexp çıktıları ve metin API",
+   "kind": "değer farklı",
+   "matlab": "double|1x1|2,",
+   "octave": "double|1x1|3,"
+  },
+  {
+   "id": "ys-string-missing",
+   "code": "r = ismissing([\"a\",missing,\"b\"])",
+   "group": "Regexp çıktıları ve metin API",
+   "kind": "Octave hata verir",
+   "matlab": "logical|1x3|010",
+   "octave": "HATA||cat: missing/horzcat method failed"
+  },
+  {
+   "id": "ys-string-join-mixed",
+   "code": "r = join([\"a\",\"b\"], '-')",
+   "group": "Regexp çıktıları ve metin API",
+   "kind": "sınıf farklı",
+   "matlab": "string|1x1|{char|1x3|u97,45,98,;}",
+   "octave": "cell|1x1|{char|1x2|u97,98,;}"
+  },
+  {
+   "id": "ys-strtrim-string",
+   "code": "r = strtrim(string(' a '))",
+   "group": "Regexp çıktıları ve metin API",
+   "kind": "Octave hata verir",
+   "matlab": "string|1x1|{char|1x1|u97,;}",
+   "octave": "HATA||strtrim: S argument must be a string or cellstring"
+  },
+  {
+   "id": "ys-char-unicode-width",
+   "code": "r = double(char('é','x'))",
+   "group": "Regexp çıktıları ve metin API",
+   "kind": "boyut farklı",
+   "matlab": "double|2x1|233,120,",
+   "octave": "double|2x2|195,120,169,32,"
+  },
+  {
+   "id": "ys-native-unicode",
+   "code": "r = native2unicode(uint8([195 169]), 'UTF-8')",
+   "group": "Regexp çıktıları ve metin API",
+   "kind": "boyut farklı",
+   "matlab": "char|1x1|u233,",
+   "octave": "char|1x2|u195,169,"
+  },
+  {
+   "id": "ys-unicode-length-char",
+   "code": "r = [length('é'), numel('é'), strlength(\"é\")]",
+   "group": "Regexp çıktıları ve metin API",
+   "kind": "değer farklı",
+   "matlab": "double|1x3|1,1,1,",
+   "octave": "double|1x3|2,2,1,"
+  },
+  {
+   "id": "ys-digitspattern-basic",
+   "code": "p = digitsPattern(1,3); r = extract(\"a12 b1234\", p)",
+   "group": "Regexp çıktıları ve metin API",
+   "kind": "Octave hata verir",
+   "matlab": "string|3x1|{char|1x2|u49,50,;char|1x3|u49,50,51,;char|1x1|u52,;}",
+   "octave": "HATA|Octave:undefined-function|'digitsPattern' undefined near line 3, column 7"
+  },
+  {
+   "id": "ys-letterspattern-basic",
+   "code": "p = lettersPattern(2); r = extract(\"ab cde\", p)",
+   "group": "Regexp çıktıları ve metin API",
+   "kind": "Octave hata verir",
+   "matlab": "string|2x1|{char|1x2|u97,98,;char|1x2|u99,100,;}",
+   "octave": "HATA|Octave:undefined-function|'lettersPattern' undefined near line 3, column 7"
+  },
+  {
+   "id": "ys-alphanumericspattern",
+   "code": "r = contains(\"a1-b\", alphanumericsPattern(3))",
+   "group": "Regexp çıktıları ve metin API",
+   "kind": "Octave hata verir",
+   "matlab": "logical|1x1|0",
+   "octave": "HATA|Octave:undefined-function|'alphanumericsPattern' undefined near line 3, column 24"
+  },
+  {
+   "id": "ys-whitespacepattern",
+   "code": "r = extract(\"a  b\", whitespacePattern(1,2))",
+   "group": "Regexp çıktıları ve metin API",
+   "kind": "Octave hata verir",
+   "matlab": "string|1x1|{char|1x2|u32,32,;}",
+   "octave": "HATA|Octave:undefined-function|'whitespacePattern' undefined near line 3, column 23"
+  },
+  {
+   "id": "ys-optionalpattern",
+   "code": "p = digitsPattern + optionalPattern(\"kg\"); r = extract([\"12kg\",\"7\"], p)",
+   "group": "Regexp çıktıları ve metin API",
+   "kind": "Octave hata verir",
+   "matlab": "string|1x2|{char|1x4|u49,50,107,103,;char|1x1|u55,;}",
+   "octave": "HATA|Octave:undefined-function|'digitsPattern' undefined near line 3, column 7"
+  },
+  {
+   "id": "ys-pattern-replace",
+   "code": "r = replace(\"a12b3\", digitsPattern, \"#\")",
+   "group": "Regexp çıktıları ve metin API",
+   "kind": "Octave hata verir",
+   "matlab": "string|1x1|{char|1x4|u97,35,98,35,;}",
+   "octave": "HATA|Octave:undefined-function|'digitsPattern' undefined near line 3, column 24"
+  },
+  {
+   "id": "ys-pattern-contains",
+   "code": "r = contains([\"abc\",\"123\"], lettersPattern(2))",
+   "group": "Regexp çıktıları ve metin API",
+   "kind": "Octave hata verir",
+   "matlab": "logical|1x2|10",
+   "octave": "HATA|Octave:undefined-function|'lettersPattern' undefined near line 3, column 31"
+  },
+  {
+   "id": "ys-json-pretty",
+   "code": "r = contains(jsonencode(struct('a', 1, 'b', [2 3]), 'PrettyPrint', true), sprintf('\\n'))",
+   "group": "JSON ve tablo temelleri",
+   "kind": "değer farklı",
+   "matlab": "logical|1x1|1",
+   "octave": "logical|1x1|0"
+  },
+  {
+   "id": "ys-tf-properties",
+   "code": "sys = tf([1],[1 2 1]); r = {sys.Numerator, sys.Denominator}",
+   "group": "Kontrol sistemleri",
+   "kind": "Octave hata verir",
+   "matlab": "cell|1x2|{cell|1x1|{double|1x3|0,0,1,;};cell|1x1|{double|1x3|1,2,1,;};}",
+   "octave": "HATA||tf: get: key name 'Numerator' is unknown"
+  },
+  {
+   "id": "ys-zpk-construction",
+   "code": "sys = zpk([-1 -2],[-3 -4],2); r = {class(sys), size(sys)}",
+   "group": "Kontrol sistemleri",
+   "kind": "değer farklı",
+   "matlab": "cell|1x2|{char|1x3|u122,112,107,;double|1x2|1,1,;}",
+   "octave": "cell|1x2|{char|1x2|u116,102,;double|1x2|1,1,;}"
+  },
+  {
+   "id": "ys-zpkdata-outputs",
+   "code": "sys = zpk([-1 -2],[-3 -4],2); [z,p,k] = zpkdata(sys); r = {z,p,k}",
+   "group": "Kontrol sistemleri",
+   "kind": "değer farklı",
+   "matlab": "cell|1x3|{cell|1x1|{double|2x1|-1,-2,;};cell|1x1|{double|2x1|-3,-4,;};double|1x1|2,;}",
+   "octave": "cell|1x3|{cell|1x1|{double|2x1|-2,-1,;};cell|1x1|{double|2x1|-4,-3,;};double|1x1|2,;}"
+  },
+  {
+   "id": "ys-bandwidth",
+   "code": "sys = tf(1,[1 1]); r = round(bandwidth(sys),6)",
+   "group": "Kontrol sistemleri",
+   "kind": "Octave hata verir",
+   "matlab": "double|1x1|0.997628,",
+   "octave": "HATA||bandwidth: A must be a 2-D numeric or logical matrix"
+  },
+  {
+   "id": "ys-minreal",
+   "code": "sys = tf([1 3 2],[1 4 5 2]); r = tfdata(minreal(sys),'v')",
+   "group": "Kontrol sistemleri",
+   "kind": "boyut farklı",
+   "matlab": "double|1x3|0,1,1,",
+   "octave": "double|1x2|0,1,"
+  },
+  {
+   "id": "ys-lsim-output",
+   "code": "[y,t] = lsim(tf(1,[1 1]),[0;1;0],[0;1;2]); r = {size(y),round(y,6)}",
+   "group": "Kontrol sistemleri",
+   "kind": "değer farklı",
+   "matlab": "cell|1x2|{double|1x2|3,1,;double|3x1|0,0,0.632121,;}",
+   "octave": "cell|1x2|{double|1x2|3,1,;double|3x1|0,0.367879,0.399576,;}"
+  },
+  {
+   "id": "ys-bode-output",
+   "code": "[m,p,w] = bode(tf(1,[1 1]),[0.1 1 10]); r = {size(m),round(m(:),6),round(p(:),6),w}",
+   "group": "Kontrol sistemleri",
+   "kind": "değer farklı",
+   "matlab": "cell|1x4|{double|1x3|1,1,3,;double|3x1|0.995037,0.707107,0.099504,;double|3x1|-5.710593,-45,-84.289407,;double|3x1|0.1,1,10,;}",
+   "octave": "cell|1x4|{double|1x2|3,1,;double|3x1|0.995037,0.707107,0.099504,;double|3x1|-5.710593,-45,-84.289407,;double|1x3|0.1,1,10,;}"
+  },
+  {
+   "id": "ys-nyquist-output",
+   "code": "[re,im,w] = nyquist(tf(1,[1 1]),[0.1 1 10]); r = {size(re),round(re(:),6),round(im(:),6)}",
+   "group": "Kontrol sistemleri",
+   "kind": "değer farklı",
+   "matlab": "cell|1x3|{double|1x3|1,1,3,;double|3x1|0.990099,0.5,0.009901,;double|3x1|-0.09901,-0.5,-0.09901,;}",
+   "octave": "cell|1x3|{double|1x2|3,1,;double|3x1|0.990099,0.5,0.009901,;double|3x1|-0.09901,-0.5,-0.09901,;}"
+  },
+  {
+   "id": "ys-stepinfo-fields",
+   "code": "s = stepinfo(tf(1,[1 1])); r = round([s.RiseTime,s.SettlingTime,s.Overshoot,s.Peak],6)",
+   "group": "Kontrol sistemleri",
+   "kind": "değer farklı",
+   "matlab": "double|1x4|2.197006,3.912074,0,0.999339,",
+   "octave": "double|1x4|2.197095,3.912559,0,1,"
+  },
+  {
+   "id": "ys-pid-class",
+   "code": "r = {class(pid(2,3,4)), class(pidtune(tf(1,[1 1]),'PID'))}",
+   "group": "Kontrol sistemleri",
+   "kind": "Octave hata verir",
+   "matlab": "cell|1x2|{char|1x3|u112,105,100,;char|1x3|u112,105,100,;}",
+   "octave": "HATA|Octave:undefined-function|'pidtune' undefined near line 3, column 33  The 'pidtune' function belongs to the 'control' package indexed in Octave Packages at <https://packages.octave.org> but has not yet been implemented."
+  },
+  {
+   "id": "ys-isstable-order",
+   "code": "sys = tf(1,[1 3 2]); r = [isstable(sys), order(sys)]",
+   "group": "Kontrol sistemleri",
+   "kind": "Octave hata verir",
+   "matlab": "double|1x2|1,2,",
+   "octave": "HATA|Octave:undefined-function|'order' undefined near line 3, column 46  The 'order' function belongs to the 'control' package indexed in Octave Packages at <https://packages.octave.org> but has not yet been implemented."
+  },
+  {
+   "id": "ys-margin-outputs",
+   "code": "[gm,pm,wcg,wcp] = margin(tf(1,[1 1])); r = round([gm,pm,wcg,wcp],6)",
+   "group": "Kontrol sistemleri",
+   "kind": "değer farklı",
+   "matlab": "double|1x4|Inf,-180,NaN,0,",
+   "octave": "double|1x4|Inf,180,NaN,NaN,"
+  },
+  {
+   "id": "ys-tf-zpk-ss-convert",
+   "code": "sys = tf([1 2],[1 3 2]); r = {class(zpk(sys)),class(ss(sys))}",
+   "group": "Kontrol sistemleri",
+   "kind": "değer farklı",
+   "matlab": "cell|1x2|{char|1x3|u122,112,107,;char|1x2|u115,115,;}",
+   "octave": "cell|1x2|{char|1x2|u116,102,;char|1x2|u115,115,;}"
+  },
+  {
+   "id": "ys-ellip-coeff",
+   "code": "[b,a] = ellip(2,1,20,0.4); r = round([b,a],8)",
+   "group": "Sinyal işleme",
+   "kind": "değer farklı",
+   "matlab": "double|1x6|0.27261896,0.37550864,0.27261896,1,-0.33209906,0.36519369,",
+   "octave": "double|1x6|0.27294433,0.37594551,0.27294433,1,-0.33036594,0.36468088,"
+  },
+  {
+   "id": "ys-besself-coeff",
+   "code": "[b,a] = besself(2,2); r = round([b,a],8)",
+   "group": "Sinyal işleme",
+   "kind": "boyut farklı",
+   "matlab": "double|1x6|0,0,4,1,3.46410162,4,",
+   "octave": "double|1x4|4,1,3.46410162,4,"
+  },
+  {
+   "id": "ys-fir1-default",
+   "code": "r = round(fir1(4,0.4),8)",
+   "group": "Sinyal işleme",
+   "kind": "değer farklı",
+   "matlab": "double|1x5|0.01008727,0.22034079,0.53914388,0.22034079,0.01008727,",
+   "octave": "double|1x5|0.01018839,0.22046998,0.53868325,0.22046998,0.01018839,"
+  },
+  {
+   "id": "ys-fir1-window",
+   "code": "r = round(fir1(4,0.4,hamming(5)),8)",
+   "group": "Sinyal işleme",
+   "kind": "değer farklı",
+   "matlab": "double|1x5|0.01008727,0.22034079,0.53914388,0.22034079,0.01008727,",
+   "octave": "double|1x5|0.01018839,0.22046998,0.53868325,0.22046998,0.01018839,"
+  },
+  {
+   "id": "ys-fir2-basic",
+   "code": "r = round(fir2(4,[0 0.3 0.5 1],[1 1 0 0]),8)",
+   "group": "Sinyal işleme",
+   "kind": "değer farklı",
+   "matlab": "double|1x5|0.00709922,0.16056159,0.3984375,0.16056159,0.00709922,",
+   "octave": "double|1x5|0.00700127,0.16079854,0.39999771,0.16079854,0.00700127,"
+  },
+  {
+   "id": "ys-firpm-basic",
+   "code": "r = round(firpm(4,[0 0.3 0.5 1],[1 1 0 0]),8)",
+   "group": "Sinyal işleme",
+   "kind": "değer farklı",
+   "matlab": "double|1x5|0.06553393,0.36893215,0.36893215,0.36893215,0.06553393,",
+   "octave": "double|1x5|0.06553198,0.36893604,0.36892732,0.36893604,0.06553198,"
+  },
+  {
+   "id": "ys-pwelch-size",
+   "code": "[p,f] = pwelch(1:16,8,4,8,2); r = {size(p),round(f,8)}",
+   "group": "Sinyal işleme",
+   "kind": "Octave hata verir",
+   "matlab": "cell|1x2|{double|1x2|5,1,;double|5x1|0,0.25,0.5,0.75,1,;}",
+   "octave": "HATA||pwelch: arg 3 (overlap) must be real from 0 to 0.950000"
+  },
+  {
+   "id": "ys-resample-values",
+   "code": "r = round(resample([1 2 3],2,1),8)",
+   "group": "Sinyal işleme",
+   "kind": "değer farklı",
+   "matlab": "double|1x6|1.00051747,1.29462089,2.00103494,2.96514306,3.00155241,1.60705785,",
+   "octave": "double|1x6|1,1.27507166,2,2.97027865,3,1.61216229,"
+  },
+  {
+   "id": "ys-interp-values",
+   "code": "r = round(interp([1 2 3],2),8)",
+   "group": "Sinyal işleme",
+   "kind": "yalnız MATLAB hata verir",
+   "matlab": "HATA|signal:interp:InvalidDimensions|Length of data sequence must be at least 9.  You either need more data or a shorter filter (L).",
+   "octave": "double|1x6|1.3464263,1.89691002,2.23827328,2.21034224,1.79575313,1.14704582,"
+  },
+  {
+   "id": "ys-findpeaks-height",
+   "code": "[p,l,w,h] = findpeaks([0 1 0 3 0],'MinPeakHeight',1.5); r = {p,l,round(w,6),round(h,6)}",
+   "group": "Sinyal işleme",
+   "kind": "Octave hata verir",
+   "matlab": "cell|1x4|{double|1x1|3,;double|1x1|4,;double|1x1|1,;double|1x1|3,;}",
+   "octave": "HATA||element number 4 undefined in return list"
+  },
+  {
+   "id": "ys-envelope-default",
+   "code": "[u,l] = envelope([1 2 1 2 1],3); r = {round(u,6),round(l,6)}",
+   "group": "Sinyal işleme",
+   "kind": "Octave hata verir",
+   "matlab": "cell|1x2|{double|1x5|1.800001,2,1.8,2,1.800001,;double|1x5|0.999999,0.8,1,0.8,0.999999,;}",
+   "octave": "HATA||envelope: only default analytic and RMS forms are supported"
+  },
+  {
+   "id": "ys-tf2ss",
+   "code": "[a,b,c,d] = tf2ss([1 2],[1 3 2]); r = {a,b,c,d}",
+   "group": "Sinyal işleme",
+   "kind": "değer farklı",
+   "matlab": "cell|1x4|{double|2x2|-3,1,-2,0,;double|2x1|1,0,;double|1x2|1,2,;double|1x1|0,;}",
+   "octave": "cell|1x4|{double|1x1|-1,;double|1x1|-2.2360679775,;double|1x1|-0.4472135955,;double|1x1|0,;}"
+  },
+  {
+   "id": "ys-sos2tf",
+   "code": "[b,a] = sos2tf([1 0 0 1 -0.5 0.1;1 0 0 1 -0.2 0.05]); r = round([b,a],8)",
+   "group": "Sinyal işleme",
+   "kind": "boyut farklı",
+   "matlab": "double|1x9|1,0,0,0,1,-0.7,0.25,-0.045,0.005,",
+   "octave": "double|1x10|1,0,0,0,0,1,-0.7,0.25,-0.045,0.005,"
+  },
+  {
+   "id": "ys-residuez",
+   "code": "[rv,p,k] = residuez([1 2],[1 -0.5 -0.25]); r = {round(rv,8),round(p,8),k}",
+   "group": "Sinyal işleme",
+   "kind": "değer farklı",
+   "matlab": "cell|1x3|{double|2x1|2.51246118,-1.51246118,;double|2x1|0.80901699,-0.30901699,;double|0x0|,;}",
+   "octave": "cell|1x3|{double|2x1|-1.51246118,2.51246118,;double|2x1|-0.30901699,0.80901699,;double|0x0|,;}"
+  },
+  {
+   "id": "ys-buttord",
+   "code": "[n,w] = buttord(0.2,0.3,1,20); r = {n,round(w,8)}",
+   "group": "Sinyal işleme",
+   "kind": "değer farklı",
+   "matlab": "cell|1x2|{double|1x1|7,;double|1x1|0.22390215,;}",
+   "octave": "cell|1x2|{double|1x1|7,;double|1x1|0.21877086,;}"
+  },
+  {
+   "id": "ys-cheb2ord",
+   "code": "[n,w] = cheb2ord(0.2,0.3,1,20); r = {n,round(w,8)}",
+   "group": "Sinyal işleme",
+   "kind": "değer farklı",
+   "matlab": "cell|1x2|{double|1x1|4,;double|1x1|0.3,;}",
+   "octave": "cell|1x2|{double|1x1|4,;double|1x1|0.28031875,;}"
+  },
+  {
+   "id": "ys-window-zero",
+   "code": "r = {hamming(0),hann(0),blackman(0)}",
+   "group": "Sinyal işleme",
+   "kind": "Octave hata verir",
+   "matlab": "cell|1x3|{double|0x1|,;double|0x1|,;double|0x1|,;}",
+   "octave": "HATA||hamming: M must be a positive integer"
+  },
+  {
+   "id": "ys-pwelch-default-size",
+   "code": "[p,f] = pwelch(1:8); r = {size(p),size(f)}",
+   "group": "Sinyal işleme",
+   "kind": "yalnız MATLAB hata verir",
+   "matlab": "HATA|signal:welchparse:NotEnoughSamplesForDefaultSettings|The input record needs more than eight samples in order to use the default window and overlap.",
+   "octave": "cell|1x2|{double|1x2|3,1,;double|1x2|3,1,;}"
+  },
+  {
+   "id": "ys-envelope-rms",
+   "code": "r = envelope([1 2 1 2 1],3,'rms')",
+   "group": "Sinyal işleme",
+   "kind": "değer farklı",
+   "matlab": "double|1x5|1.90990195136,1.87609522857,1.94160256031,1.87609522857,1.90990195136,",
+   "octave": "double|1x5|1.58113883008,1.41421356237,1.73205080757,1.41421356237,1.58113883008,"
+  },
+  {
+   "id": "ys-grpstats-output",
+   "code": "r = grpstats([1 1 2 2],[2 4 6 8],{'mean','sum'})",
+   "group": "İstatistik ve veri özetleri",
+   "kind": "Octave hata verir",
+   "matlab": "double|4x1|1,1,2,2,",
+   "octave": "HATA||grpstats: unrecognized function names in WHICHSTATS."
+  },
+  {
+   "id": "ys-poisspdf-zero",
+   "code": "r = poisspdf(0:4,0)",
+   "group": "İstatistik ve veri özetleri",
+   "kind": "değer farklı",
+   "matlab": "double|1x5|1,0,0,0,0,",
+   "octave": "double|1x5|NaN,NaN,NaN,NaN,NaN,"
+  },
+  {
+   "id": "ys-prctile-integer",
+   "code": "r = prctile(int16([1 2 3 4]),[25 50 75])",
+   "group": "İstatistik ve veri özetleri",
+   "kind": "sınıf farklı",
+   "matlab": "int16|1x3|2,3,4,",
+   "octave": "double|1x3|1.5,2.5,3.5,"
+  },
+  {
+   "id": "ys-strrep-char-matrix",
+   "code": "r = strrep(char('aba','bab'),'a','XY')",
+   "group": "Ek metin biçimleri ve seçenekler",
+   "kind": "yalnız MATLAB hata verir",
+   "matlab": "HATA|MATLAB:strrep:MultiRowInput|Char inputs must be row vectors.",
+   "octave": "char|2x5|u88,98,89,88,98,89,88,98,89,0,"
+  },
+  {
+   "id": "ys-contains-string-pattern",
+   "code": "r = contains([\"a1\",\"ab\"], digitsPattern)",
+   "group": "Ek metin biçimleri ve seçenekler",
+   "kind": "Octave hata verir",
+   "matlab": "logical|1x2|10",
+   "octave": "HATA|Octave:undefined-function|'digitsPattern' undefined near line 3, column 29"
+  },
+  {
+   "id": "ys-startswith-string-pattern",
+   "code": "r = startsWith([\"abc\",\"123\"], lettersPattern(1))",
+   "group": "Ek metin biçimleri ve seçenekler",
+   "kind": "Octave hata verir",
+   "matlab": "logical|1x2|10",
+   "octave": "HATA|Octave:undefined-function|'lettersPattern' undefined near line 3, column 33"
+  },
+  {
+   "id": "ys-count-string-pattern",
+   "code": "r = count(\"a1b22\", digitsPattern)",
+   "group": "Ek metin biçimleri ve seçenekler",
+   "kind": "Octave hata verir",
+   "matlab": "double|1x1|2,",
+   "octave": "HATA|Octave:undefined-function|'digitsPattern' undefined near line 3, column 22"
+  },
+  {
+   "id": "ys-replace-string-pattern",
+   "code": "r = replace([\"a1\",\"b2\"], digitsPattern, \"N\")",
+   "group": "Ek metin biçimleri ve seçenekler",
+   "kind": "Octave hata verir",
+   "matlab": "string|1x2|{char|1x2|u97,78,;char|1x2|u98,78,;}",
+   "octave": "HATA|Octave:undefined-function|'digitsPattern' undefined near line 3, column 28"
+  },
+  {
+   "id": "ys-pad-string-left",
+   "code": "r = pad(\"abc\",6,'left',\"0\")",
+   "group": "Ek metin biçimleri ve seçenekler",
+   "kind": "sınıf farklı",
+   "matlab": "string|1x1|{char|1x6|u48,48,48,97,98,99,;}",
+   "octave": "char|1x6|u48,48,48,97,98,99,"
+  },
+  {
+   "id": "ys-extractbefore-string",
+   "code": "r = extractBefore(\"abcdef\",4)",
+   "group": "Ek metin biçimleri ve seçenekler",
+   "kind": "sınıf farklı",
+   "matlab": "string|1x1|{char|1x3|u97,98,99,;}",
+   "octave": "char|1x3|u97,98,99,"
+  },
+  {
+   "id": "ys-extractafter-string",
+   "code": "r = extractAfter(\"abcdef\",3)",
+   "group": "Ek metin biçimleri ve seçenekler",
+   "kind": "sınıf farklı",
+   "matlab": "string|1x1|{char|1x3|u100,101,102,;}",
+   "octave": "char|1x3|u100,101,102,"
+  },
+  {
+   "id": "ys-extractbetween-string",
+   "code": "r = extractBetween([\"<a>\",\"<b>\"],'<','>')",
+   "group": "Ek metin biçimleri ve seçenekler",
+   "kind": "sınıf farklı",
+   "matlab": "string|1x2|{char|1x1|u97,;char|1x1|u98,;}",
+   "octave": "cell|1x2|{char|1x1|u97,;char|1x1|u98,;}"
+  },
+  {
+   "id": "ys-splitlines-string",
+   "code": "r = splitlines(\"a\"+newline+\"b\")",
+   "group": "Ek metin biçimleri ve seçenekler",
+   "kind": "Octave hata verir",
+   "matlab": "string|2x1|{char|1x1|u97,;char|1x1|u98,;}",
+   "octave": "HATA||splitlines: STR must be a character vector or cell array of character vectors"
+  },
+  {
+   "id": "ys-reverse-string",
+   "code": "r = reverse([\"abc\",\"xyz\"])",
+   "group": "Ek metin biçimleri ve seçenekler",
+   "kind": "sınıf farklı",
+   "matlab": "string|1x2|{char|1x3|u99,98,97,;char|1x3|u122,121,120,;}",
+   "octave": "char|1x6|u122,121,120,99,98,97,"
+  },
+  {
+   "id": "ys-insertbefore-string",
+   "code": "r = insertBefore(\"abcd\",2,\"!\")",
+   "group": "Ek metin biçimleri ve seçenekler",
+   "kind": "Octave hata verir",
+   "matlab": "string|1x1|{char|1x5|u97,33,98,99,100,;}",
+   "octave": "HATA|Octave:undefined-function|'insertBefore' undefined near line 3, column 7  The ‘insertBefore’ function is not yet implemented in Octave.  Please read <https://www.octave.org/missing.html> to learn how you can contribute missing functionality."
+  },
+  {
+   "id": "ys-insertafter-string",
+   "code": "r = insertAfter(\"abcd\",2,\"!\")",
+   "group": "Ek metin biçimleri ve seçenekler",
+   "kind": "Octave hata verir",
+   "matlab": "string|1x1|{char|1x5|u97,98,33,99,100,;}",
+   "octave": "HATA|Octave:undefined-function|'insertAfter' undefined near line 3, column 7  The ‘insertAfter’ function is not yet implemented in Octave.  Please read <https://www.octave.org/missing.html> to learn how you can contribute missing functionality."
+  },
+  {
+   "id": "ys-insertbefore-pattern",
+   "code": "r = insertBefore(\"a1b2\",digitsPattern,\"_\")",
+   "group": "Ek metin biçimleri ve seçenekler",
+   "kind": "Octave hata verir",
+   "matlab": "string|1x1|{char|1x6|u97,95,49,98,95,50,;}",
+   "octave": "HATA|Octave:undefined-function|'digitsPattern' undefined near line 3, column 27"
+  },
+  {
+   "id": "ys-insertafter-pattern",
+   "code": "r = insertAfter(\"a1b2\",digitsPattern,\"_\")",
+   "group": "Ek metin biçimleri ve seçenekler",
+   "kind": "Octave hata verir",
+   "matlab": "string|1x1|{char|1x6|u97,49,95,98,50,95,;}",
+   "octave": "HATA|Octave:undefined-function|'digitsPattern' undefined near line 3, column 26"
+  },
+  {
+   "id": "ys-native2unicode-empty",
+   "code": "r = native2unicode(uint8([]),'UTF-8')",
+   "group": "Ek metin biçimleri ve seçenekler",
+   "kind": "Octave hata verir",
+   "matlab": "char|0x0|u,",
+   "octave": "HATA||native2unicode: NATIVE_BYTES must be a numeric vector"
+  },
+  {
+   "id": "ys-string-mixed-contains",
+   "code": "r = contains([\"Alpha\",\"beta\"],'a','IgnoreCase',true)",
+   "group": "Ek metin biçimleri ve seçenekler",
+   "kind": "boyut farklı",
+   "matlab": "logical|1x2|11",
+   "octave": "logical|1x1|1"
+  },
+  {
+   "id": "ys-pattern-optional",
+   "code": "p = optionalPattern(digitsPattern); r = extract([\"x12\",\"x\"],\"x\"+p)",
+   "group": "Ek metin biçimleri ve seçenekler",
+   "kind": "Octave hata verir",
+   "matlab": "string|1x2|{char|1x3|u120,49,50,;char|1x1|u120,;}",
+   "octave": "HATA|Octave:undefined-function|'digitsPattern' undefined near line 3, column 23"
+  },
+  {
+   "id": "ys-zpk-static",
+   "code": "sys = zpk([],[],3); r = {class(sys),zpkdata(sys)}",
+   "group": "Kontrol ve sinyal ek biçimler",
+   "kind": "değer farklı",
+   "matlab": "cell|1x2|{char|1x3|u122,112,107,;cell|1x1|{double|0x1|,;};}",
+   "octave": "cell|1x2|{char|1x2|u116,102,;cell|1x1|{double|0x1|,;};}"
+  },
+  {
+   "id": "ys-stepinfo-extra",
+   "code": "s = stepinfo(tf(1,[1 1])); r = round([s.SettlingMin,s.SettlingMax,s.PeakTime],6)",
+   "group": "Kontrol ve sinyal ek biçimler",
+   "kind": "değer farklı",
+   "matlab": "double|1x3|0.904501,0.999339,7.322221,",
+   "octave": "double|1x3|0.9,1,15,"
+  },
+  {
+   "id": "ys-ellip-zpk",
+   "code": "[z,p,k] = ellip(2,1,20,0.4); r = {round(z,8),round(p,8),round(k,8)}",
+   "group": "Kontrol ve sinyal ek biçimler",
+   "kind": "değer farklı",
+   "matlab": "cell|1x3|{double|2x1|-0.68870603-0.72504069i,-0.68870603+0.72504069i,;double|2x1|0.16604953-0.58105184i,0.16604953+0.58105184i,;double|1x1|0.27261896,;}",
+   "octave": "cell|1x3|{double|2x1|-0.68868533-0.72506036i,-0.68868533+0.72506036i,;double|2x1|0.16518297-0.58085753i,0.16518297+0.58085753i,;double|1x1|0.27294433,;}"
+  },
+  {
+   "id": "ys-fir1-highpass",
+   "code": "r = round(fir1(4,0.4,'high'),8)",
+   "group": "Kontrol ve sinyal ek biçimler",
+   "kind": "değer farklı",
+   "matlab": "double|1x5|-0.00820621,-0.17925211,0.65790821,-0.17925211,-0.00820621,",
+   "octave": "double|1x5|-0.00827058,-0.17896976,0.65860163,-0.17896976,-0.00827058,"
+  },
+  {
+   "id": "ys-fir1-bandpass",
+   "code": "r = round(fir1(4,[0.2 0.6]),8)",
+   "group": "Kontrol ve sinyal ek biçimler",
+   "kind": "değer farklı",
+   "matlab": "double|1x5|-0.04166152,0.13277184,0.85053273,0.13277184,-0.04166152,",
+   "octave": "double|1x5|-0.04145505,0.13396176,0.8501314,0.13396176,-0.04145505,"
+  },
+  {
+   "id": "ys-pwelch-frequency-vector",
+   "code": "[p,f] = pwelch(1:16,8,4,[0 0.5 1],4); r = {size(p),f}",
+   "group": "Kontrol ve sinyal ek biçimler",
+   "kind": "Octave hata verir",
+   "matlab": "cell|1x2|{double|1x2|1,3,;double|1x3|0,0.5,1,;}",
+   "octave": "HATA||pwelch: arg 3 (overlap) must be real from 0 to 0.950000"
+  },
+  {
+   "id": "ys-periodogram-frequency-vector",
+   "code": "[p,f] = periodogram(1:8,[],[0 1 2],4); r = {size(p),f}",
+   "group": "Kontrol ve sinyal ek biçimler",
+   "kind": "Octave hata verir",
+   "matlab": "cell|1x2|{double|1x2|1,3,;double|1x3|0,1,2,;}",
+   "octave": "HATA||periodogram: NFFT must be a scalar"
+  },
+  {
+   "id": "ys-findpeaks-distance",
+   "code": "[p,l] = findpeaks([0 1 0 2 0 3 0],'MinPeakDistance',2); r = {p,l}",
+   "group": "Kontrol ve sinyal ek biçimler",
+   "kind": "değer farklı",
+   "matlab": "cell|1x2|{double|1x2|1,3,;double|1x2|2,6,;}",
+   "octave": "cell|1x2|{double|1x3|1,2,3,;double|1x3|2,4,6,;}"
+  },
+  {
+   "id": "ys-findpeaks-prominence",
+   "code": "[p,l] = findpeaks([0 1 0 3 0],'MinPeakProminence',1); r = {p,l}",
+   "group": "Kontrol ve sinyal ek biçimler",
+   "kind": "Octave hata verir",
+   "matlab": "cell|1x2|{double|1x2|1,3,;double|1x2|2,4,;}",
+   "octave": "HATA||findpeaks: argument 'MinPeakProminence' is not a declared parameter or switch"
+  },
+  {
+   "id": "ys-norminv-logtail",
+   "code": "r = norminv([0.1 0.5 0.9],0,1,'upper')",
+   "group": "İstatistik ek biçimler",
+   "kind": "Octave hata verir",
+   "matlab": "double|1x3|-1.28155156554,0,1.28155156554,",
+   "octave": "HATA|Octave:invalid-fun-call|norminv: function called with too many inputs"
+  },
+  {
+   "id": "ys-prctile-method",
+   "code": "r = prctile([1 2 3 4],50,'Method','midpoint')",
+   "group": "İstatistik ek biçimler",
+   "kind": "Octave hata verir",
+   "matlab": "double|1x1|2.5,",
+   "octave": "HATA||quantile: DIM must be a positive integer scalar, vector, or 'all'"
+  },
+  {
+   "id": "ys-quantile-method",
+   "code": "r = quantile([1 2 3 4],0.5,'Method','midpoint')",
+   "group": "İstatistik ek biçimler",
+   "kind": "Octave hata verir",
+   "matlab": "double|1x1|2.5,",
+   "octave": "HATA||quantile: DIM must be a positive integer scalar, vector, or 'all'"
+  },
+  {
+   "id": "ys-grpstats-size",
+   "code": "r = size(grpstats([1 1 2 2],[2 4 6 8],{'mean','std'}))",
+   "group": "İstatistik ek biçimler",
+   "kind": "Octave hata verir",
+   "matlab": "double|1x2|4,1,",
+   "octave": "HATA||grpstats: inconsistent number of output arguments."
+  }
+ ]
+}

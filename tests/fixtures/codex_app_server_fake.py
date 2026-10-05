@@ -185,6 +185,13 @@ for line in sys.stdin:
         initialized = True
     elif not initialized:
         send({'id': message['id'], 'error': {'code': -32600, 'message': 'Not initialized'}})
+    elif method == 'model/list':
+        def model(identity, label, default=False, hidden=False):
+            return {'id': identity, 'displayName': label, 'isDefault': default, 'hidden': hidden, 'defaultReasoningEffort': 'medium', 'supportedReasoningEfforts': [{'reasoningEffort': effort} for effort in ('low', 'medium', 'high', 'xhigh', 'max')]}
+        if params.get('cursor') == 'page-2':
+            reply(message, {'data': [model('gpt-6-astra', 'GPT-6 Astra')], 'nextCursor': None})
+        else:
+            reply(message, {'data': [model('gpt-6.1-sol', 'GPT-6.1 Sol', True), model('hidden-model', 'Hidden', hidden=True)], 'nextCursor': 'page-2'})
     elif method == 'thread/start':
         serial += 1
         thread = 'thread-' + str(serial)
@@ -217,7 +224,7 @@ for line in sys.stdin:
             continue
         reply(message, {'turn': {'id': turn}})
         if prompt.split('End of IndyMAT context.\n\n')[-1].strip() == 'config':
-            text(thread, turn, json.dumps({'thread': threads[thread], 'argv': sys.argv[1:], 'env': dict(os.environ), 'input': prompt}))
+            text(thread, turn, json.dumps({'thread': threads[thread], 'effort': params.get('effort', ''), 'argv': sys.argv[1:], 'env': dict(os.environ), 'input': prompt}))
             finish(thread, turn)
         else:
             threading.Thread(target=script, args=(thread, turn, prompt), daemon=True).start()

@@ -4,6 +4,7 @@ import "./core.js";
 import "./native_window.js";
 import "./shortcut_registry.js";
 import "./settings.js";
+import "./layout.js";
 import "./symbols.js";
 import "./editor.js";
 import "./outline.js";
@@ -29,6 +30,7 @@ if (location.hash) {
 }
 
 registry.setupSettings();
+registry.setupLayout();
 // The CSP allows this bundled script; reveal only after stored language is applied.
 document.body.style.removeProperty("visibility");
 registry.setupEditor();

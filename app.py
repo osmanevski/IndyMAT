@@ -358,6 +358,7 @@ class Handler(BaseHTTPRequestHandler):
                 data=json.loads(self.rfile.read(size))
                 return self.post(path,data)
             if path=='/api/assistant/providers':return self.send(200,self.app.assistants.providers())
+            if path=='/api/assistant/models':return self.send(200,self.app.assistants.models(params.get('provider',[''])[0]))
             if path=='/api/assistant/events':return self.send(200,self.app.assistants.events(params.get('session',[''])[0],int(params.get('after',['0'])[0])))
             if path=='/api/state':
                 with self.app.kernel.lock:

@@ -1,6 +1,9 @@
 """Turkish server messages; values preserve the original UI text."""
 
 TRANSLATIONS = {
+    'Invalid assistant model or effort.': 'Geçersiz asistan modeli veya akıl yürütme düzeyi.',
+    'Change effort after the current turn ends.': 'Akıl yürütme düzeyini geçerli tur bittikten sonra değiştirin.',
+    'Could not load models from the local program. Default uses its own setting; try again after ten minutes.': 'Yerel programdan modeller yüklenemedi. Varsayılan, programın kendi ayarını kullanır; on dakika sonra yeniden deneyin.',
     'Codex turn ended before this message could be sent; send it again.': 'Bu ileti gönderilemeden Codex turu sona erdi; yeniden gönderin.',
     'Codex could not resume the previous thread; starting a new thread.': 'Codex önceki konuşmayı sürdüremedi; yeni bir konuşma başlatılıyor.',
     'IndyMAT is running: {url}\nPress Ctrl+C to close.\n': 'IndyMAT çalışıyor: {url}\nKapatmak için Ctrl+C.\n',

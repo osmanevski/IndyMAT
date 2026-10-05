@@ -271,6 +271,8 @@ class MeasuredStreams(unittest.TestCase):
     def test_claude_bookkeeping_is_not_shown(self):
         from backend.assistants import parse_claude
         self.assertEqual(parse_claude({'type': 'system', 'subtype': 'hook_started'}), [])
+        self.assertEqual(parse_claude({'type': 'system', 'subtype': 'init', 'session_id': 's', 'model': 'claude-haiku-4-5-20251001'}), [{'type': 'conversation', 'conversation': 's'}, {'type': 'model', 'text': 'claude-haiku-4-5-20251001'}])
+        self.assertEqual(len(parse_claude({'type': 'system', 'subtype': 'init', 'session_id': 's', 'model': '<img src=x>'})), 1)
         self.assertEqual(parse_claude({'type': 'rate_limit_event', 'rate_limit_info': {}}), [])
         self.assertEqual(parse_claude({'type': 'user', 'message': {'content': [{'type': 'tool_result', 'content': 'x'}]}}), [])
         self.assertEqual(parse_claude({'type': 'system', 'subtype': 'future'})[0]['type'], 'raw')

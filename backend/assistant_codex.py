@@ -5,6 +5,17 @@ from backend.codex_app_server import CodexAppServer
 from backend.i18n import tr
 
 
+class SelectedCodexAppServer(CodexAppServer):
+    """Add validated conversation choices at the RPC boundary without changing transport."""
+    model = ''
+    effort = ''
+
+    def _id_call(self, method, params, key):
+        if method == 'thread/start' and self.model: params = {**params, 'model': self.model}
+        if method == 'turn/start' and self.effort: params = {**params, 'effort': self.effort}
+        return super()._id_call(method, params, key)
+
+
 class CodexConversations:
     def _codex_new_client(self, identity, session, executable):
         generation = uuid.uuid4().hex
@@ -18,7 +29,7 @@ class CodexConversations:
                 abandoned = self.closed or self.sessions.get(identity) is not session or not session['running'] or session.get('codex_generation') != generation
                 if not abandoned: session['codex_client'] = child
             if abandoned: child.close()
-        client = CodexAppServer(executable, session['folder'], child_environment(secret=self.secret),
+        client = SelectedCodexAppServer(executable, session['folder'], child_environment(secret=self.secret),
             lambda event: self._codex_event(identity, session, generation, event),
             lambda kind, payload: self._codex_request(identity, session, generation, kind, payload), on_created=created)
         with self.lock:
@@ -45,6 +56,7 @@ class CodexConversations:
                     if client is None:
                         client, generation = self._codex_new_client(identity, session, executable)
                         if client is None: return
+                        client.model = session.get('model', '')
                         thread = session['conversation']
                         if thread:
                             with self.lock: session['codex_resuming'] = True
@@ -55,6 +67,7 @@ class CodexConversations:
                                 with self.lock: session['codex_resuming'] = False
                                 client, generation = self._codex_new_client(identity, session, executable)
                                 if client is None: return
+                                client.model = session.get('model', '')
                                 thread = None
                             finally:
                                 with self.lock: session['codex_resuming'] = False
@@ -80,6 +93,7 @@ class CodexConversations:
                     if stopped:
                         self._codex_finish(identity, session, 'stopped')
                         return
+                    client.effort = session.get('effort', '')
                     remote_turn = client.start_turn(thread, prompt)
                     with self.lock:
                         current = session['turn'] == turn and session.get('codex_generation') == generation and session['running']

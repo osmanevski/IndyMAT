@@ -161,13 +161,13 @@ const fs = require("node:fs");
     await expect(page.locator('#toast')).toContainText('Etkin dosyayı kaydet');
     assert.equal((await storedSettings()).shortcuts['global.font-increase'], undefined);
     await fontRow.getByRole("button", { name: "Editör yazısını büyüt kısayolunu değiştir" }).click();
-    await page.keyboard.press("ControlOrMeta+b");
-    await expect.poll(async () => (await storedSettings()).shortcuts["global.font-increase"]?.map((item) => item.binding)).toEqual(["Mod+KeyB"]);
+    await page.keyboard.press("ControlOrMeta+u");  // Mod+B now belongs to the Primary Side Bar toggle
+    await expect.poll(async () => (await storedSettings()).shortcuts["global.font-increase"]?.map((item) => item.binding)).toEqual(["Mod+KeyU"]);
     await page.locator("#modal-close").click();
     await expect(dialog).toBeHidden();
     await page.locator(".cm-content").focus();
     await pressFontShortcut("ControlOrMeta+=", 15, "old shortcut still ran after rebinding");
-    await pressFontShortcut("ControlOrMeta+b", 16, "new shortcut did not run exactly once");
+    await pressFontShortcut("ControlOrMeta+u", 16, "new shortcut did not run exactly once");
 
     await openSettings();
     const reboundRow = page.locator(".shortcut-row").filter({ has: page.locator(".shortcut-name", { hasText: "Editör yazısını büyüt" }) });
@@ -183,7 +183,7 @@ const fs = require("node:fs");
     await expect.poll(consoleRatio).toBeGreaterThan(0.49);
     await expect.poll(consoleRatio).toBeLessThan(0.51);
     await page.locator(".cm-content").focus();
-    await pressFontShortcut("ControlOrMeta+b", 16, "custom binding still ran after restoring defaults");
+    await pressFontShortcut("ControlOrMeta+u", 16, "custom binding still ran after restoring defaults");
     await pressFontShortcut("ControlOrMeta+=", 17, "restored shortcut did not run exactly once");
 
     const malformed = await browser.newContext({ locale: "tr-TR", viewport: { width: 1512, height: 982 } });
