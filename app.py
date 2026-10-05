@@ -6,6 +6,8 @@ import argparse, base64, hashlib, json, math, mimetypes, os, re, secrets, signal
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import urlparse, parse_qs, unquote
+from backend.assistants import Assistants
+from backend.assistant_bridge_service import BridgeService
 from backend.kernel import Kernel
 from backend.files import Workspace
 from backend.file_operations import FileOperations
@@ -70,6 +72,7 @@ class PublishKernel(Kernel):
     def _finish_publish(self):
         self.publish_app.finish_publish(self)
         if hasattr(self.publish_app,'workspace_actions'):self.publish_app.workspace_actions.finish(self)
+        if hasattr(self.publish_app,'assistant_bridge'):self.publish_app.assistant_bridge.capture(self)
     def _collect(self,*args):
         super()._collect(*args)
         with self.lock:self._finish_publish()
@@ -84,6 +87,7 @@ class PublishKernel(Kernel):
     def _submit(self,*args,**kwargs):
         # Breakpoint jobs enter here directly; close the MAT completion gap too.
         if hasattr(self.publish_app,'workspace_actions'):self.publish_app.workspace_actions.finish(self)
+        if hasattr(self.publish_app,'assistant_bridge'):self.publish_app.assistant_bridge.capture(self)
         return super()._submit(*args,**kwargs)
     def reset(self):
         with self.lock:
@@ -105,6 +109,7 @@ class App:
         self.runtime=ROOT/'.matlab-free';self.runtime.mkdir(exist_ok=True)
         os.chmod(self.runtime,0o700)
         self.token=secrets.token_urlsafe(32)
+        self.assistants=Assistants(self.workspace,self.token,describe=lambda:self.kernel.snapshot())
         self.history_path=self.runtime/'history.json'
         self.history_lock=threading.Lock();self.file_lock=threading.Lock()
         self.history_session=secrets.token_hex(8)
@@ -121,8 +126,10 @@ class App:
         self.server.daemon_threads=True; self.server.app=self
         self.port=self.server.server_address[1]
         self.base=f'http://127.0.0.1:{self.port}'
+        self.assistant_bridge=BridgeService(self)
+        self.assistants.bridge=self.assistant_bridge
         self.open_browser=open_browser
-    def close(self):self.octave_services.close();self.kernel.close();self.server.server_close()
+    def close(self):self.assistants.close();self.octave_services.close();self.kernel.close();self.server.server_close()
     # Command history manager: persistence only; these methods never submit jobs.
     HISTORY_ENTRY_BYTES=64_000
     HISTORY_TOTAL_BYTES=1_000_000
@@ -331,6 +338,18 @@ class Handler(BaseHTTPRequestHandler):
     def handle_request(self,post):
         try:
             url=urlparse(self.path);path=unquote(url.path);params=parse_qs(url.query)
+            if path.startswith('/api/bridge/'):
+                self.validate(False)
+                if 'Origin' in self.headers:raise PermissionError(tr('Browser Origin is not allowed on the session bridge.'))
+                grant=self.app.assistant_bridge.authenticate(self.headers.get('X-IndyMAT-Bridge',''))
+                if not post or path not in ('/api/bridge/tools','/api/bridge/call'):return self.send(404,{'error':tr('Not found')})
+                size=int(self.headers.get('Content-Length','0'))
+                if size<0 or size>150_000:raise ValueError(tr('The request is too large.'))
+                data=json.loads(self.rfile.read(size))
+                with grant['lock']:
+                    if not grant['active']:raise PermissionError(tr('Invalid assistant session capability.'))
+                    if path=='/api/bridge/tools':return self.send(200,self.app.assistant_bridge.tools(grant))
+                return self.send(200,self.app.assistant_bridge.call(grant,data))
             self.validate(path.startswith('/api/'))
             if post:
                 if not path.startswith('/api/'):return self.send(404,{'error':tr('Not found')})
@@ -338,8 +357,12 @@ class Handler(BaseHTTPRequestHandler):
                 if size<0 or size>28_000_000:raise ValueError(tr('The request is too large.'))
                 data=json.loads(self.rfile.read(size))
                 return self.post(path,data)
+            if path=='/api/assistant/providers':return self.send(200,self.app.assistants.providers())
+            if path=='/api/assistant/events':return self.send(200,self.app.assistants.events(params.get('session',[''])[0],int(params.get('after',['0'])[0])))
             if path=='/api/state':
-                state=self.app.kernel.snapshot()
+                with self.app.kernel.lock:
+                    state=self.app.kernel.snapshot()
+                    state['assistant_jobs']=self.app.assistant_bridge.visible_jobs(self.app.kernel)
                 with self.app.file_lock:
                     if state['status']=='idle':self.app.workspace.follow(state.get('cwd',''))
                     state.update(self.app.workspace.info())
@@ -414,6 +437,18 @@ class Handler(BaseHTTPRequestHandler):
         if state.get('status')!='idle' or state.get('job')!=job or state.get('kind')!='publish' or state.get('error') or report.get('path')!=ticket['path']:raise PermissionError(tr('This publish job can no longer be written.'))
         return ticket
     def post(self,path,d):
+        if path=='/api/assistant/start':
+            facts=self.app.assistants.describe() if self.app.assistants.describe else {}
+            with self.app.file_lock:result=self.app.assistants.start(d,facts=facts)
+            return self.send(202,result)
+        if path=='/api/assistant/approve':
+            return self.send(200,self.app.assistant_bridge.approvals.decide(d))
+        if path=='/api/assistant/remove':
+            if not isinstance(d,dict) or set(d)!={'session'} or not isinstance(d['session'],str):raise ValueError(tr('Invalid assistant request.'))
+            return self.send(200,self.app.assistants.remove(d['session']))
+        if path=='/api/assistant/stop':
+            if not isinstance(d,dict) or set(d)!={'session'} or not isinstance(d['session'],str):raise ValueError(tr('Invalid assistant request.'))
+            return self.send(200,self.app.assistants.stop(d['session']))
         k=self.app.kernel;w=self.app.workspace
         # Command Window and Command History routes. History mutations only
         # replace the private history file; location resolution only reads a

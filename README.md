@@ -4,7 +4,7 @@
 
 **GNU Octave diliyle bilimsel hesaplama, veri analizi ve grafik üretimi için Türkçe ve İngilizce arayüzlü bir masaüstü çalışma ortamı.** Arayüz ilk açılışta sistem dilini izler; dil Ayarlar'dan değiştirilebilir. IndyMAT; kod editörünü, komut penceresini, değişken incelemesini ve grafikleri aynı pencerede bir araya getirir. Hesaplamalar bilgisayarınızda çalışır; normal kullanım için bulut hesabı veya internet bağlantısı gerekmez.
 
-*English:* IndyMAT is a local desktop workspace for scientific computing with GNU Octave: editor, Command Window, Workspace and figures in one window. The interface is available in English and Turkish, follows the system language on first start, and uses the terms MATLAB users already know (Workspace, Command Window, Run Section). The rest of this document is in Turkish.
+*English:* IndyMAT is a local desktop workspace for scientific computing with GNU Octave: editor, Command Window, Workspace and figures in one window. An optional Assistant panel can drive coding-agent command line programs you already have installed (Claude Code, Codex CLI, Antigravity CLI), with approval cards for changes and optional access to the live session; IndyMAT itself makes no model calls. The interface is available in English and Turkish, follows the system language on first start, and uses the terms MATLAB users already know (Workspace, Command Window, Run Section). The rest of this document is in Turkish.
 
 ## Hangi dil ile çalışır?
 
@@ -38,7 +38,20 @@ Uygulamanın teknik yapısı:
 - Fonksiyon yardımı, paket yönetimi, açık ve koyu tema, boyutlanabilir paneller ve değiştirilebilir klavye kısayolları.
 - Türkçe ve İngilizce arayüz; Türkçe arayüzde çalıştırma ve hata ayıklama düğmelerinin ipucunda MATLAB'daki adı da görünür.
 
-`control`, `signal` ve `datatypes` paketleri ilgili örnekler için kullanılabilir. Paketler depoya dahil değildir; ayrı kurulurlar.
+`control`, `signal`, `datatypes` ve `statistics` paketleri kuruluysa oturum başlarken yüklenir. Paketler depoya dahil değildir; ayrı kurulurlar.
+
+`datatypes` paketinin string sınıfındaki bazı karışık char/string çağrıları için sürümlü yamalar `octave/paket-yamalari/` altındadır. `python3 scripts/patch_packages.py` bunları kurulu pakete uygular (`--check` yalnızca durumu gösterir, `--revert` geri alır); betik tanımadığı bir paket sürümüne dokunmaz.
+
+## Kodlama asistanları (isteğe bağlı)
+
+Sağdaki Asistan paneli, bilgisayarınızda zaten kurulu ve oturum açılmış kodlama asistanı komut satırı programlarını (Claude Code, Codex CLI, Antigravity CLI) geçerli klasörde çalıştırır. IndyMAT'ın kendisi hiçbir model çağrısı yapmaz, anahtar ya da model barındırmaz; program kurulu değilse o seçenek kapalı görünür ve uygulamanın geri kalanı aynen çalışır.
+
+- Asistan, editörde açık olan dosyayı ve geçerli klasörü kendiliğinden bilir; motorun GNU Octave olduğu ve yüklü paketler de ona bildirilir.
+- Dosya erişimi görüşme başına seçilir: **Salt okunur**, **Değişiklikten önce sor** (Claude Code ve Codex için varsayılan) ve **Geçerli klasörde düzenle**. "Sor" kipinde asistanın izin gerektiren her işlemi panelde bir onay kartı olur; dosya düzenlemeleri fark önizlemesiyle gösterilir.
+- Oturum erişimi ayrıca seçilir: **Yok** (varsayılan), **Değişkenleri ve grafikleri gör**, **Oturumumda kod çalıştır**. Çalıştırılan kod Komut penceresinde görünür ve sıradan bir iş gibi durdurulabilir. Bu erişim Claude Code ve Codex ile kullanılabilir.
+- Kaydedilmemiş taslaklar asistanın disk üzerindeki değişiklikleriyle ezilmez; yalnızca "diskte değişti" diye işaretlenir.
+
+Asistanın çalıştırdığı kod ve komutlar sizin kullanıcı yetkilerinizle çalışır; "Oturumumda kod çalıştır" ve "Geçerli klasörde düzenle" seçeneklerini buna göre kullanın. Asistanlara gönderilen metin, ilgili programın kendi hesabı ve koşullarıyla sağlayıcısına gider.
 
 ## Başlatma
 

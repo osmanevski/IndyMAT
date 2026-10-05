@@ -299,6 +299,7 @@ function renderTabs() {
   registry.$("#editor-label").textContent = shared.active ? shared.active.path.split("/").pop() : tr("New File");
   registry.$("#editor-label").title = shared.active?.path || "";
   updateLintCaption();
+  registry.renderAssistantDiskMarks?.();
   registry.renderFiles();
 }
 function switchTab(t) {

@@ -12,7 +12,7 @@ from backend.kernel import cli_executable, _Detached
 
 BASE=root/'uyumluluk'
 REPORT=root/'docs'/'Uyumluluk-Envanteri.md'
-PACKAGES=('control','signal','datatypes')
+PACKAGES=('control','signal','datatypes','statistics')
 # Functions that exist only as methods of these classes are reported as present.
 CLASSES=('lti','tf','ss','zpk','frd','iddata','table','datetime','duration','calendarDuration','categorical','string','containers.Map','inputParser')
 PACKAGE_TITLES={'control':'Kontrol sistemleri','signal':'Sinyal işleme','communications':'Haberleşme','datatypes':'Veri tipleri ve kapsayıcılar','dicom':'DICOM','financial':'Finans','image':'Görüntü işleme','statistics':'İstatistik','symbolic':'Sembolik matematik','optim':'Optimizasyon'}

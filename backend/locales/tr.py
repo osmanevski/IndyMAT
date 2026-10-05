@@ -1,6 +1,8 @@
 """Turkish server messages; values preserve the original UI text."""
 
 TRANSLATIONS = {
+    'Codex turn ended before this message could be sent; send it again.': 'Bu ileti gönderilemeden Codex turu sona erdi; yeniden gönderin.',
+    'Codex could not resume the previous thread; starting a new thread.': 'Codex önceki konuşmayı sürdüremedi; yeni bir konuşma başlatılıyor.',
     'IndyMAT is running: {url}\nPress Ctrl+C to close.\n': 'IndyMAT çalışıyor: {url}\nKapatmak için Ctrl+C.\n',
     'Invalid or reserved variable name.': 'Geçersiz veya ayrılmış değişken adı.',
     'Variable names must be a bounded list.': 'Değişken adları sınırlı bir liste olmalı.',
@@ -301,3 +303,73 @@ TRANSLATIONS = {
     'Could not apply breakpoint: %s': 'Kesme noktası uygulanamadı: %s',
     '{message} Could not clear the old breakpoint in Octave: {error}': "{message} Octave'taki eski kesme noktası temizlenemedi: {error}",
 }
+
+# Optional local coding-agent integration.
+TRANSLATIONS.update({
+    'Invalid assistant provider or access mode.': 'Geçersiz asistan sağlayıcısı veya erişim modu.',
+    'Invalid assistant conversation.': 'Geçersiz asistan görüşmesi.',
+    'Assistant turn failed.': 'Asistan turu başarısız oldu.',
+    'Program not installed or not executable.': 'Program kurulu değil veya çalıştırılamıyor.',
+    'Assistant event was truncated.': 'Asistan olayı kısaltıldı.',
+    'Enter an assistant prompt.': 'Asistana bir ileti yazın.',
+    'Invalid assistant context.': 'Geçersiz asistan bağlamı.',
+    'Attach a file relative to the current folder.': 'Geçerli klasöre göre bir dosya ekleyin.',
+    'Assistant context is outside the current folder.': 'Asistan bağlamı geçerli klasörün dışında.',
+    'File has unsaved changes; unsaved text was not included.': 'Dosyada kaydedilmemiş değişiklikler var; kaydedilmemiş metin eklenmedi.',
+    'Assistant prompt exceeds 128 KB.': 'Asistan iletisi 128 KB sınırını aşıyor.',
+    'Invalid assistant request.': 'Geçersiz asistan isteği.',
+    'Assistants are closed.': 'Asistanlar kapatıldı.',
+    'Start a new conversation when changing provider, mode, or folder.': 'Sağlayıcı, mod veya klasör değiştirirken yeni görüşme başlatın.',
+    'This assistant conversation is already running.': 'Bu asistan görüşmesi zaten çalışıyor.',
+    'Too many assistant turns are running.': 'Çok fazla asistan turu çalışıyor.',
+    'Assistant conversation limit reached for this app run.': 'Bu uygulama oturumu için asistan görüşmesi sınırına ulaşıldı.',
+    'Provider did not return a conversation ID; start a new conversation.': 'Sağlayıcı görüşme kimliği döndürmedi; yeni görüşme başlatın.',
+    'Assistant output line was truncated.': 'Asistan çıktı satırı kısaltıldı.',
+    'Assistant exited with status {status}.': 'Asistan {status} durumuyla sonlandı.',
+    'Invalid assistant event cursor.': 'Geçersiz asistan olay konumu.',
+    'Earlier assistant events were truncated.': 'Önceki asistan olayları kısaltıldı.',
+    'Actions denied by the access mode: {names}': 'Erişim kipinin izin vermediği işlemler: {names}',
+})
+
+TRANSLATIONS.update({
+    'Invalid bridge directory.': 'Geçersiz köprü klasörü.',
+    'Invalid assistant session access.': 'Geçersiz asistan oturum erişimi.',
+    'Antigravity needs a one-time MCP registration; not available yet': 'Antigravity bir defalık MCP kaydı gerektirir; henüz kullanılamıyor',
+    'Session bridge is not available.': 'Oturum köprüsü kullanılamıyor.',
+    'Invalid assistant session capability.': 'Geçersiz asistan oturum yetkisi.',
+    'Browser Origin is not allowed on the session bridge.': 'Oturum köprüsünde tarayıcı Origin başlığına izin verilmez.',
+    'Bridge output was truncated.': 'Köprü çıktısı kısaltıldı.',
+    'The Octave session changed; this job is no longer available.': 'Octave oturumu değişti; bu iş artık kullanılamıyor.',
+    'This assistant job is no longer available.': 'Bu asistan işi artık kullanılamıyor.',
+    'Job is still running; use job_result to check its outcome.': 'İş hâlâ çalışıyor; sonucunu denetlemek için job_result kullanın.',
+    'Invalid bridge tool request.': 'Geçersiz köprü aracı isteği.',
+    'This tool is not allowed by the session access level.': 'Oturum erişim düzeyi bu araca izin vermiyor.',
+    'Invalid bridge tool arguments.': 'Geçersiz köprü aracı parametreleri.',
+    'Figure list was truncated.': 'Grafik listesi kısaltıldı.',
+    'Variable list was truncated.': 'Değişken listesi kısaltıldı.',
+    'No open figure at this index.': 'Bu sırada açık grafik yok.',
+    'Figure image exceeds the bridge size limit.': 'Grafik görseli köprü boyut sınırını aşıyor.',
+    'Session must be idle; finish the running job, debugger pause or input request first.': 'Oturum boşta olmalı; önce çalışan işi, hata ayıklama duraklamasını veya giriş isteğini bitirin.',
+    'Bridge code must be nonempty and at most 16 KB.': 'Köprü kodu boş olmamalı ve en fazla 16 KB olmalı.',
+    'Preview is limited to 10 rows, 10 columns and the first N-dimensional slice.': 'Önizleme 10 satır, 10 sütun ve N boyutlu dizinin ilk dilimiyle sınırlıdır.',
+})
+
+TRANSLATIONS.update({
+    'Approvals for this program arrive in a later step': 'Bu programın onayları sonraki bir adımda gelecek',
+    'Warning: this file is outside the current folder or inside private app data.': 'Uyarı: bu dosya geçerli klasörün dışında veya uygulamanın özel verileri içinde.',
+    'Preview could not be applied to the current file; proposed old/new blocks follow.': 'Önizleme geçerli dosyaya uygulanamadı; önerilen eski/yeni bloklar aşağıda.',
+    'Private app data is not read for approval previews.': 'Uygulamanın özel verileri onay önizlemeleri için okunmaz.',
+    'The user denied this action.': 'Kullanıcı bu işlemi reddetti.',
+    'Old text:': 'Eski metin:',
+    'New text:': 'Yeni metin:',
+    'Proposed edit {number}': 'Önerilen düzenleme {number}',
+    'Invalid approval request.': 'Geçersiz onay isteği.',
+    'The assistant turn is no longer running.': 'Asistan turu artık çalışmıyor.',
+    'Too many approvals are pending in this conversation.': 'Bu görüşmede çok fazla onay bekliyor.',
+    'Approval expired after one hour; the action was denied.': 'Bir saat sonra onayın süresi doldu; işlem reddedildi.',
+    'Conversation approval limit reached; use Allow for this action.': 'Görüşme onayı sınırına ulaşıldı; bu işlem için İzin ver seçeneğini kullanın.',
+    'Invalid approval decision.': 'Geçersiz onay kararı.',
+    'Approval does not belong to this conversation.': 'Onay bu görüşmeye ait değil.',
+    'The conversation was removed or the app closed; the action was denied.': 'Görüşme kaldırıldı veya uygulama kapandı; işlem reddedildi.',
+    'The assistant was stopped; the action was denied.': 'Asistan durduruldu; işlem reddedildi.',
+})

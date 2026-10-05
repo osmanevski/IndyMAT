@@ -43,5 +43,6 @@ export default {
   commandRecall: null,
   historyEntries: [],
   historySession: "",
+  assistant: null,
   settings: undefined
 };

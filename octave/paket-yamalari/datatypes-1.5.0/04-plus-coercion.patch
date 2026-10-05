@@ -1,0 +1,32 @@
+--- a/string.m
++++ b/string.m
+@@ -4019,11 +4019,24 @@
+     ##
+     ## @end deftypefn
+     function out = plus (str1, str2)
+-      if (isa (str1, 'string') && isa (str2, 'string'))
+-        out = append (str1, str2);
+-      else
+-        error ("string.plus: both STR1 and STR2 must be string arrays.");
+-      endif
++      ## IndyMAT: supported text concatenation subset; retain string/string path.
++      args = {str1, str2};
++      for k = 1:2
++        x = args{k};
++        if (isa (x, 'string'))
++          continue;
++        elseif (ischar (x) && (isrow (x) || isempty (x)))
++          args{k} = string (x);
++        elseif (isnumeric (x) && isreal (x) && isscalar (x) ...
++                && isfinite (x) && x == fix (x) && abs (double (x)) <= 9999)
++          args{k} = string (x);
++        else
++          error (strcat ("string.plus: non-string operands must be char", ...
++                         " vectors or finite integer numeric scalars", ...
++                         " between -9999 and 9999."));
++        endif
++      endfor
++      out = append (args{:});
+     endfunction
+ 
+     ## -*- texinfo -*-

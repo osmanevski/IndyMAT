@@ -6,11 +6,13 @@ async function poll() {
   if (shared.polling) return;
   shared.polling = true;
   const generation = shared.uiGeneration;
+  const commandJob = shared.lastJob;
   try {
     let s = await registry.api("state");
     if (generation !== shared.uiGeneration) return;
     shared.wasDisconnected = false;
     shared.engine = s;
+    registry.syncAssistantJobs?.(s, commandJob);
     registry.setStatus(s);
     let nextBreakpointKey = JSON.stringify(s.breakpoints || []);
     if (nextBreakpointKey !== shared.breakpointKey) {

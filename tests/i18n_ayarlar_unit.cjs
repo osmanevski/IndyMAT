@@ -13,7 +13,7 @@ const owned = [
   "frontend/app.js",
   "frontend/state.js"
 ];
-const localeFiles = ["frontend/locales/tr.js", "frontend/locales/tr_ayarlar.js"];
+const localeFiles = ["frontend/locales/tr.js", "frontend/locales/tr_ayarlar.js", "frontend/locales/tr_assistant.js"];
 function locale(file) {
   const source = fs.readFileSync(file, "utf8").replace(/^\s*\/\/[^\n]*\n/, "").replace(/^export default\s*/, "").replace(/;\s*$/, "");
   return vm.runInNewContext(`(${source})`);
@@ -22,7 +22,7 @@ const translations = Object.assign({}, ...localeFiles.map(locale));
 const turkish = /[çğıöşüİÇĞÖŞÜ]|\\x(?:[0-9a-f]{2})|\\u(?:[0-9a-f]{4})/i;
 const allowedTurkish = new Map([
   // These two event.key literals detect Turkish keyboard layouts; they are input values, not UI copy.
-  ["frontend/shortcut_registry_utils.cjs", new Set([64])],
+  ["frontend/shortcut_registry_utils.cjs", new Set([65])],
   // The language name "Türkçe" is shown in its own language and is never translated.
   ["frontend/settings.js", new Set([6])]
 ]);

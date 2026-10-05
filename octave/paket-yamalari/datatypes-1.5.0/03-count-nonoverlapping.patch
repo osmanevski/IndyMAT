@@ -1,0 +1,16 @@
+--- a/string.m
++++ b/string.m
+@@ -652,11 +652,11 @@
+       if (IgnoreCase)
+         for i = 1:numel (pattern)
+           out(vid) += cellfun ('numel', ...
+-                               strfind (lower (str), lower (pattern{i})));
++                               strfind (lower (str), lower (pattern{i}), "overlaps", false));
+         endfor
+       else
+         for i = 1:numel (pattern)
+-          out(vid) += cellfun ('numel', strfind (str, pattern{i}));
++          out(vid) += cellfun ('numel', strfind (str, pattern{i}, "overlaps", false));
+         endfor
+       endif
+     endfunction

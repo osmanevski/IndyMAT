@@ -19,6 +19,7 @@ import "./publish.js";
 import "./figures.js";
 import "./poll.js";
 import "./dialogs.js";
+import "./assistant.js";
 import "./bootstrap.js";
 
 shared.token = location.hash.slice(1) || sessionStorage.getItem("mf-token") || "";
@@ -40,5 +41,6 @@ registry.setupHistoryPanel();
 registry.setupVariableSearch();
 registry.captureEmptyPlot();
 registry.setupDialogs();
+registry.setupAssistant();
 registry.setupShortcutRegistry();
 registry.bootstrap();

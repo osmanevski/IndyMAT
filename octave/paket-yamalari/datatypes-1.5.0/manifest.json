@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "package": "datatypes-1.5.0",
+  "patches": [
+    "01-mixed-dispatch.patch",
+    "02-contains-empty.patch",
+    "03-count-nonoverlapping.patch",
+    "04-plus-coercion.patch"
+  ],
+  "files": [
+    {
+      "path": "string.m",
+      "pristine_sha256": "abccb42477dee58c330a31324d9e18b00570f276f401349c415d78cda2b58a61",
+      "patched_sha256": "06fb841ca0b274ae6bb10f2294219800ad0773f537941807e6e7113542aaa379"
+    }
+  ]
+}

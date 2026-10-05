@@ -138,6 +138,90 @@
    "hash": "875212bd8145966000dc810b39675ba6c483ce2b100f2bd6d8cfb5d2b474f4ff",
    "status": "OK"
   },
+  "dily-dict-cell-value": {
+   "hash": "98d6b438cf1aba39e3697e0c81b49ebd9b644313f1d17890a93d9597987d59a4",
+   "status": "OK"
+  },
+  "dily-dict-configured": {
+   "hash": "c76aa82b1d4659b39c1f8502c8da95ab358c6536314c9361856ca5cc3573e906",
+   "status": "OK"
+  },
+  "dily-dict-duplicates": {
+   "hash": "bfa5b07cbd9c498f74e587d913f45461b0fb36abfa9dd897de01b7ce19a2a77f",
+   "status": "OK"
+  },
+  "dily-dict-fallback": {
+   "hash": "d75b169d3770fbdf8cbb7b7033e490c82e78e0f13350f7e434cbef1c60193636",
+   "status": "OK"
+  },
+  "dily-dict-insert-remove": {
+   "hash": "9f8247705b49ef9eea47591e4c8a9bb9f36a76423178510bf7bc172e36adc880",
+   "status": "OK"
+  },
+  "dily-dict-logical": {
+   "hash": "ef2ede19d9154cb38b5bb3e51766d1c3600fe25c397574532d79c60ec4068df5",
+   "status": "OK"
+  },
+  "dily-dict-missing": {
+   "hash": "086bda5d00cd589b2f2336286da89d85efdf58d8dcb99bfbf0604d68494b56ff",
+   "status": "OK"
+  },
+  "dily-dict-numeric": {
+   "hash": "c1671c99196f5f9c0c9b210f1f780b863808b5e5b3a78e18b89aec082f264ffd",
+   "status": "OK"
+  },
+  "dily-dict-order": {
+   "hash": "b0484b484b948ee01aa3b8f02223db2b903ef7560039d1bd9174d221436cb74f",
+   "status": "OK"
+  },
+  "dily-dict-pairs": {
+   "hash": "04266b967aa21900baccb1eb0bb5629df4e0bf8192d0e88e1161e50d615a3d25",
+   "status": "OK"
+  },
+  "dily-dict-remove": {
+   "hash": "56ec7a011cb2dbfadbce4d0fffc892496ffd2d05e1fa28b3e000c2224242a9c2",
+   "status": "OK"
+  },
+  "dily-dict-string-char-lookup": {
+   "hash": "d6d8f5fb8ab7aab3f3cf19e2fda1c318c177666c8cf5aea50bee8d2086bcfe2b",
+   "status": "OK"
+  },
+  "dily-dict-string-value": {
+   "hash": "c51ab512bda6f0e19591631566560d50884b48cc05830d8a733e9b678c69ef63",
+   "status": "OK"
+  },
+  "dily-dict-text": {
+   "hash": "0fe2d395a6be2deba801cb7daeb76919f08e49c98191367ce5c79870c2178c22",
+   "status": "OK"
+  },
+  "dily-dict-update": {
+   "hash": "358247a6e910d4a0ebbd8990ecc584bb9a31e2fb94b770210ead9b2d908dde3b",
+   "status": "OK"
+  },
+  "dily-dict-value-copy": {
+   "hash": "9e28e3d7239266795462b876f151bead1f92b97d5a4a482daede3d3b2d8a27af",
+   "status": "OK"
+  },
+  "dily-dict-vector-write": {
+   "hash": "39de9fbbe2ed9053c19a4ddca5c4597dd632d045ee2b0f0a832c6e7807fdda07",
+   "status": "OK"
+  },
+  "dily-report-basic": {
+   "hash": "efd7517ccd259c3fa18f7d59f483541c5194332738cc254dc9f94c2249c06f78",
+   "status": "OK"
+  },
+  "dily-report-extended": {
+   "hash": "b640879d0cfff7227fd3a1c81adfbe9bf84180077dc0229d9d60d53496017a8f",
+   "status": "OK"
+  },
+  "dily-timeit": {
+   "hash": "e34d19059d0e5e6b3d746ac32fe83af0729bb174088bf7e5d7d84be4057e257c",
+   "status": "OK"
+  },
+  "dily-timeit-no-output": {
+   "hash": "6108317e4c5e1217ab490c971db908a2562993edbdbdf0bf446f9f1738999680",
+   "status": "OK"
+  },
   "dizgi-bicimleme": {
    "hash": "fe3f12d3c0309de6e689d22ad2400b244b08bab2182b73b235b2ccef07757d2b",
    "status": "OK"
@@ -208,6 +292,98 @@
   },
   "dizgi-strlength-char": {
    "hash": "e5007313e811a2e94dedf99c2617ae00ab0501be94b7069814e49d590889a087",
+   "status": "OK"
+  },
+  "dizgip-compose-rows": {
+   "hash": "48fb7922f2b218c0dfa48c14dcf7c968279337c6a23c9f0ee0a5ae4ed3682ff7",
+   "status": "OK"
+  },
+  "dizgip-compose-scalar": {
+   "hash": "3664aeda3fad4c341ba58b824d06b515d04d45a6bbd965274b7ab5de709a4e50",
+   "status": "OK"
+  },
+  "dizgip-contains-cell": {
+   "hash": "06f098decf5945208024e3cb38a2adab26cfe0909d36bf3d76b8a434d0e5792b",
+   "status": "OK"
+  },
+  "dizgip-contains-char": {
+   "hash": "7f9d890dbbc617603d52af9fc41b01806dd899df593de77d18aa7042d2e1980a",
+   "status": "OK"
+  },
+  "dizgip-contains-empty": {
+   "hash": "ee0bf50a98c18ebff4343c564fe129f54e035f0819548a25c868bd8ab93d71d0",
+   "status": "OK"
+  },
+  "dizgip-contains-ignorecase": {
+   "hash": "e555b3ad228f10e864c83f69e6a9039200daa875dc4aa26b8a1df14c6c0cd4a2",
+   "status": "OK"
+  },
+  "dizgip-count-mixed": {
+   "hash": "1bf3280e308c7b55404d8f2f461da3ce67b35f0c708f8ccb62d418c8c1d285a7",
+   "status": "OK"
+  },
+  "dizgip-count-nonoverlap": {
+   "hash": "d8222145c9885f77bb2f69399d0ff75780cdd40086ee4b8a8eb0567045885ce7",
+   "status": "OK"
+  },
+  "dizgip-erase-char": {
+   "hash": "50424fd35aff88cf5b290522abfa9eab1fe460cdd296ae30f02dc9abe2cd04f4",
+   "status": "OK"
+  },
+  "dizgip-join-char-ilk": {
+   "hash": "2ebcc3c2c0fcc1389ec16e198455ec7ebc7893b1d86c00612c35088529bc5ee0",
+   "status": "OK"
+  },
+  "dizgip-join-delimiters": {
+   "hash": "768a7e033889f323b1b772e60ac4ea11c93017b525f031c54c8282f8f2589e72",
+   "status": "OK"
+  },
+  "dizgip-join-empty": {
+   "hash": "8be3b0dbce9e9855b7bbaf7e13d1e9a1bcb844f092baddaf067fab7042f89f69",
+   "status": "OK"
+  },
+  "dizgip-plus-array": {
+   "hash": "df2b76ecfe4760cf17e37f65174f609c6c1b9cd7b29075f616829d691329c875",
+   "status": "OK"
+  },
+  "dizgip-plus-char": {
+   "hash": "000ce20dc90e73faafb7bd985fab05e1956d0cf1ae5c7e543a68e7cd6dcabd09",
+   "status": "OK"
+  },
+  "dizgip-plus-numeric": {
+   "hash": "84987f8acb3094ec0c88374a40f25f13c32928e690932fcd48f75c8f2da38f24",
+   "status": "OK"
+  },
+  "dizgip-replace-cell": {
+   "hash": "694b724f38a73e26661d3c19e51cf74cfd9989b98434fdb3155075311c403208",
+   "status": "OK"
+  },
+  "dizgip-replace-new": {
+   "hash": "ab32b8c8c79966735e3840b504419b49ec67e4288f62f692285ba44c4f03f369",
+   "status": "OK"
+  },
+  "dizgip-replace-old": {
+   "hash": "40124de35b5750eb4b6a285fcf444ca06a3a2cd7e5e6267570182eee20bb7549",
+   "status": "OK"
+  },
+  "dizgip-split-cell": {
+   "hash": "23925973a4dfff7127f956a6b4ba11c0551f5f2e8ebcdca5a6056d778af123ca",
+   "status": "OK"
+  },
+  "dizgip-split-match": {
+   "hash": "e5ce3fa3032e8b5439403b23e209ef10f9224e3908b02120ac7aeb79d04f7feb",
+   "status": "OK"
+  },
+  "dizgip-string-first-edit": {
+   "hash": "b0006d1ab40fe83a24b6e38453916ab46893f1aa9e8c0391028192a9f84e610a",
+   "status": "OK"
+  },
+  "dizgip-string-first-layout": {
+   "hash": "925b8c7791ac3c383a374acd6a314cd334179f0f9e14eef45e37e5961e2afeda",
+   "status": "OK"
+  },
+  "dizgip-string-first-query": {
+   "hash": "c699401b863129a6341c5c0b96b82f18d1b3953f835681d0b3f375edbad4d50a",
    "status": "OK"
   },
   "dizgiy-baslar-biter-cell": {
@@ -882,6 +1058,122 @@
    "hash": "3568a90197183e1ef4ddeb3504f61de8d49d24fc52177ec81b4cc5e629316810",
    "status": "OK"
   },
+  "istat-adla-dagilim": {
+   "hash": "f0f3cbdc9e31311714d69e62e62c5646fe998217dcc8393ad6f4c026573d5cca",
+   "status": "OK"
+  },
+  "istat-anova1": {
+   "hash": "0835a3129eb515135ce6d9056080ac95d1ed3bfa2ed6d2caaa2643cca0ce4890",
+   "status": "OK"
+  },
+  "istat-ayrik-dagilimlar": {
+   "hash": "d5a8772ee4b4a701f5eeb87565c8792c145203fb0cf713ae8fb7b6b39cf0d096",
+   "status": "OK"
+  },
+  "istat-bicim-olculeri": {
+   "hash": "7579ea05bd64eacbc0c37081c061c4be0b32e87a766381d901318788b90dd67b",
+   "status": "OK"
+  },
+  "istat-capraz-dogrulama": {
+   "hash": "e07409fcdc0cbc70147ea58b96883b82fb67b2f3ab21d161ccc131b0102dba38",
+   "status": "OK"
+  },
+  "istat-cok-degiskenli-normal": {
+   "hash": "8a238222081b1e2a749a7778ff193d156800233a924b34d290fb4c8f21a4cc69",
+   "status": "OK"
+  },
+  "istat-dagilim-nesnesi": {
+   "hash": "aa153821f04e843f43fc69bfc7f4dcf8c4ba88a54b8df19769b35a753e1ec329",
+   "status": "OK"
+  },
+  "istat-dagilim-uydurma": {
+   "hash": "f84530b6f7fc33d59cb3776821c8d77446316585c3df7f8c41ceef7d87b4d515",
+   "status": "OK"
+  },
+  "istat-ecdf": {
+   "hash": "ab6ea101cc1bb1337c9959867bcd87cbe02662e273b54c23f6de56d632344e61",
+   "status": "OK"
+  },
+  "istat-fitlm": {
+   "hash": "6066ef74518099b5742c2a11f49208bf2391170c702667d02e356a533bd840dc",
+   "status": "OK"
+  },
+  "istat-gamma-beta": {
+   "hash": "2046d136b009e7606703ded3f96dcd71fe7ecdbed2c77e000c2a273cbb3c8c75",
+   "status": "OK"
+  },
+  "istat-hiyerarsik-kumeleme": {
+   "hash": "6e3dfc1f86be0e463760287af9973d795ff7c44b4dc0b94c8e7486965e19bca8",
+   "status": "OK"
+  },
+  "istat-kmeans": {
+   "hash": "b969a7d6ed03e20d8a3377958ac7cd820cdf2ca09e0e86a81078aa04d84224b8",
+   "status": "OK"
+  },
+  "istat-knn-siniflandirma": {
+   "hash": "f2f9a293c7187f417dc10514c00f5813c0581355395e6fdeb9c82c6e729630b7",
+   "status": "OK"
+  },
+  "istat-korelasyon": {
+   "hash": "a4d5798f41330a675cfac2d37ce58aa0948b44c15c17d028730d4e7d9688b3c5",
+   "status": "OK"
+  },
+  "istat-linkage-sutun-vektoru": {
+   "hash": "a0b49dd6b9b8fc38b09cd62017282f30ec1e7e7ffef014e0df97589384e0970e",
+   "status": "OK"
+  },
+  "istat-mesafe": {
+   "hash": "7d6756e473261d7a55d47fb9e9f0ba9ba9c06cbcd48b52d57fb3bb78144bb47a",
+   "status": "OK"
+  },
+  "istat-normal-dagilim": {
+   "hash": "56842d200a6736114c840fb02923ac77541be94daeb70d4bce4513ed4e0a89ae",
+   "status": "OK"
+  },
+  "istat-ortalamalar": {
+   "hash": "21d0ceb656c357a072207b63efe4afa24fa0f107f993633371e69eb3cbaeab85",
+   "status": "OK"
+  },
+  "istat-pca": {
+   "hash": "0ae42ce92eaeaf6a896bf34166f8e27be10ad7ca7eba67a71efcfa7d44a13511",
+   "status": "OK"
+  },
+  "istat-rastgele-boyut": {
+   "hash": "2f37a552e1f811870936766b4177967103a04d3456b058bbf19d61cce3aa9c62",
+   "status": "OK"
+  },
+  "istat-regress": {
+   "hash": "db2530dc189c9ff4401a2531bf94880298e1a6e8b3c3a17b5c5e3a05a1eea109",
+   "status": "OK"
+  },
+  "istat-siklik-tablosu": {
+   "hash": "b74c9256998e24f3d72ecb9738a7e5346aceea57e404a6ee05a3a0e0eb9d5360",
+   "status": "OK"
+  },
+  "istat-standartlastirma": {
+   "hash": "834f153e7f1a031215fba4b0d55e74076e5bbb69bd84c4ceb74d597a68cd2d47",
+   "status": "OK"
+  },
+  "istat-surekli-dagilimlar": {
+   "hash": "b849a436a7e0c22049ece2d6204b1290936fb23003dfaf8274ac183dd39c70fb",
+   "status": "OK"
+  },
+  "istat-t-ki-kare-f": {
+   "hash": "7f518099affed87157c44ec6e9ba8d6b7f6312398c5676c501eac7c877c590c3",
+   "status": "OK"
+  },
+  "istat-ttest": {
+   "hash": "a1e0fd44e629e01016246adbece01007cc399b476d6b4f9aae7dd64a2262fda3",
+   "status": "OK"
+  },
+  "istat-ttest2": {
+   "hash": "91d18abe42e4ab213f47c581c7ef77490c9ed2a1c5aa26b8accc5b301472adeb",
+   "status": "OK"
+  },
+  "istat-yuzdelik": {
+   "hash": "fec7f6546fd35a63eaa09d1d6b98f07d55158ee4265ad104148a4051fb86eb36",
+   "status": "OK"
+  },
   "kategorik": {
    "hash": "6a29a64f6260008e5b6eba3aa294241de04f27551f799a62c5e74841d6e24ed9",
    "status": "OK"
@@ -1026,6 +1318,70 @@
    "hash": "b4fb0157d96bd7d315cb5e99ef1f7642d04bafdcc49a6586b24ff6793ad1639d",
    "status": "OK"
   },
+  "mats-lsqminnorm-complex": {
+   "hash": "ab3525d5e6fe57c8d2fe0475505493d4607fd090dfbfe8e2707cfce69dbd6483",
+   "status": "OK"
+  },
+  "mats-lsqminnorm-rank-deficient": {
+   "hash": "89ff1966f4e3b8d1e359c20a3dfcbbdffa365dba07a2658f0b19c7639a01f855",
+   "status": "OK"
+  },
+  "mats-lsqminnorm-tall": {
+   "hash": "9f556c47d920d78085d63fa951a3ce13ecf0985e756b6d418857d6a31226a8f2",
+   "status": "OK"
+  },
+  "mats-lsqminnorm-tolerance": {
+   "hash": "bdc67b8f473f0f468f5120be676f61c3d062328c4c926dae7f4342fd617f51fb",
+   "status": "OK"
+  },
+  "mats-lsqminnorm-underdetermined": {
+   "hash": "2d985e6c6ececbb25fc35afe3c9d5f04dd693cf80373634bf3fb39adf38fe3e2",
+   "status": "OK"
+  },
+  "mats-lsqminnorm-zero": {
+   "hash": "b9c573185f8bd8a705470dcbfbd7a4e2b09baf300496ea4c05ac0ff902957ebf",
+   "status": "OK"
+  },
+  "maty-complex": {
+   "hash": "4334d2dba6cefd9c664257bb10ba7f0ffb9059aa2805719c21bfad51b1a26f5c",
+   "status": "OK"
+  },
+  "maty-decimals": {
+   "hash": "ad7a5f52f77d71bdc7245bec3b38f9ddb6071ca2cbd0375ae50eaacebf9d45ec",
+   "status": "OK"
+  },
+  "maty-default": {
+   "hash": "f9bdcd6530a276181fa2271c326e818db59289583da8a2a76f52fadd8ebf4086",
+   "status": "OK"
+  },
+  "maty-integer": {
+   "hash": "3a5d2f2c596d8f267a30f84d0f8b62381efeb59c7e03e9f091d85c5661c359aa",
+   "status": "OK"
+  },
+  "maty-mode": {
+   "hash": "7e3e083c5bb0f2c00acc028017d2ddf696cecc7e8e0b7a4e43fda181ef48bec7",
+   "status": "OK"
+  },
+  "maty-negative": {
+   "hash": "9e5a9b64f2ff1c5e330497997e1ce5e017239384d392786b6e73467a741c892f",
+   "status": "OK"
+  },
+  "maty-significant": {
+   "hash": "4f1b08e875d4266e19ba13664bec48cfe9e90ce95bb82ff28c46987a683b8279",
+   "status": "OK"
+  },
+  "maty-single": {
+   "hash": "02d9b16e895f94e1728d5b753628bac6f1a83a0f604d0c93e95bcf74d3871c3d",
+   "status": "OK"
+  },
+  "maty-special": {
+   "hash": "1b3a43a2bd78ebf3f154aaae6ff750f6645edf3ecaaaf52e250c7be55c4d3ec8",
+   "status": "OK"
+  },
+  "maty-validation": {
+   "hash": "252e516a20ac2a3efc2cce55e0b2e7ad41e3e8cce30cee1b342f256bf2e1a792",
+   "status": "OK"
+  },
   "sayisal-fsolve": {
    "hash": "e6c5fa6e3406088e4793fd5bc57ff0d8bef6506b25c6a0ae94a7242562998936",
    "status": "OK"
@@ -1060,6 +1416,114 @@
   },
   "sayisal-ode45": {
    "hash": "b7c7b33e1b81e1c5d4c921b72978eb592946a2d961587cec53d668b2f0116f95",
+   "status": "OK"
+  },
+  "sayisaly-deval-backward": {
+   "hash": "dab32c4e5f9314d4013a9dc21ca9cdc86f67ab8f397e47441df81d34879399fc",
+   "status": "OK"
+  },
+  "sayisaly-deval-components": {
+   "hash": "774b87f0740e8ebb996e32d66fa1fd4180f105ed0f475b8d18f8c367da59c972",
+   "status": "OK"
+  },
+  "sayisaly-deval-decay": {
+   "hash": "a194bfa5f7c5a95a81d11a23b503249ed84b3f7a59a679f5b08ed7f22cd8adc9",
+   "status": "OK"
+  },
+  "sayisaly-deval-derivative": {
+   "hash": "ebbefbaa019f4d54d553f7d1d1ac268a71a5931db4b2dc27330206eea89e0dd9",
+   "status": "OK"
+  },
+  "sayisaly-deval-ode23": {
+   "hash": "956e864265a4b9b7678362e9b46cdd57a01a50bf1f3b8348e73a95a8f0a65545",
+   "status": "OK"
+  },
+  "sayisaly-histcounts2-cumulative": {
+   "hash": "bbcb967f1c6e535bfc50ca344a865fbd56b48785c7ea4d34dbc81fc0af22296c",
+   "status": "OK"
+  },
+  "sayisaly-histcounts2-density": {
+   "hash": "8c0da2410555a9659b7e4dc9bb19268e2d45c37d6814c2964141f11d13ae42a8",
+   "status": "OK"
+  },
+  "sayisaly-histcounts2-edges": {
+   "hash": "46a577b65ff591aa0c1c907f731334a5c0f43d3e40d34f743b9c966efe85bc14",
+   "status": "OK"
+  },
+  "sayisaly-histcounts2-probability": {
+   "hash": "98e5174babcf129c36c9e84a4a2cde7c234b8f2a304b3410ce73141cc9f66e02",
+   "status": "OK"
+  },
+  "sayisaly-histcounts2-shapes": {
+   "hash": "f43b017fcaf4beed85886a81134b14eb18082952b56094d7d33510bc4ed50784",
+   "status": "OK"
+  },
+  "sayisaly-makima-formula": {
+   "hash": "0b84579e57aa9d9157ff2f92479b8623ddd157bfc7de9d7a0015bbe3ef88de6a",
+   "status": "OK"
+  },
+  "sayisaly-makima-matrix": {
+   "hash": "a62dfc46e70cb1bba0c7c306d318ac972a3d98a8ceafd12e4f995b6326af292d",
+   "status": "OK"
+  },
+  "sayisaly-makima-nd": {
+   "hash": "ae77aadbd6bcd093b67190e5c5991ff55f20510bae4570c5d2f9cd424f38bfae",
+   "status": "OK"
+  },
+  "sayisaly-makima-pp": {
+   "hash": "aae24a8b9f574d8667cbe5bba25b7c2e50ae055b59fa7dd802308b1fbeb70e57",
+   "status": "OK"
+  },
+  "sayisaly-makima-two-points": {
+   "hash": "040abd88f46ce498e42adbb54de2d7b12ba81bc64b4fbd878b9c685dc0b3c7ab",
+   "status": "OK"
+  },
+  "sayisaly-ode113-backward": {
+   "hash": "9c5be10abf0a7113a53b1c5f01e8bd8b1b2c8c1efbac71393f6a087fe9a5d5c2",
+   "status": "OK"
+  },
+  "sayisaly-ode113-decay": {
+   "hash": "f2754da2eb31bc38fed12ccb5ce08465d4bec7486d058d0e974fcd4ced087292",
+   "status": "OK"
+  },
+  "sayisaly-ode113-logistic": {
+   "hash": "485b1ce2cae2c540c0b582e892f99afe1127297cab068c21b492ff0a8631d922",
+   "status": "OK"
+  },
+  "sayisaly-ode113-oscillator": {
+   "hash": "a5828ad7c608f23ebb45c0895628c68aa11e3d94770cf204d5041f44dd9c3060",
+   "status": "OK"
+  },
+  "sayisaly-ode113-output-times": {
+   "hash": "0167b4c5303e7fe5da7e7275f4c10df8da525bbe567d3e736bdf691c7a94e4b9",
+   "status": "OK"
+  },
+  "sayisaly-ode113-structure": {
+   "hash": "41f79a79ac9902a008d7a90a7f7e7a32c3d6e48aa7c1538d1ea8fd8a99ad198d",
+   "status": "OK"
+  },
+  "sayisaly-ode113-system": {
+   "hash": "f8dbc1dc54c9a30ae69db3413e00744a9dffbc488eaa4ad556a53bbd84981472",
+   "status": "OK"
+  },
+  "sayisaly-smoothdata-dimension": {
+   "hash": "8b96123a768fa9efe368182241365fc995e7b592ed00344d3ade8bcf0cddf93d",
+   "status": "OK"
+  },
+  "sayisaly-smoothdata-gaussian": {
+   "hash": "b3d78438ae4a489a09a28384565329dcb74dc5260e48f3a04223b6119fc30365",
+   "status": "OK"
+  },
+  "sayisaly-smoothdata-mean": {
+   "hash": "f029116b9b49fc45395a4cdb928490f6c56523e2564bd974d2e64428d367cc3b",
+   "status": "OK"
+  },
+  "sayisaly-smoothdata-median": {
+   "hash": "7bca3d351c8d521ed481c02e3a4349807abafe5916ac299d1bd8cceabaddae47",
+   "status": "OK"
+  },
+  "sayisaly-smoothdata-nan": {
+   "hash": "7e943a65bded301eee56913b45a4358d9ce67742e3a6c3027dfdd4e92d7a9a7b",
    "status": "OK"
   },
   "sinyal-bandpower": {
@@ -1148,6 +1612,142 @@
   },
   "sinyal-zarf": {
    "hash": "eb5dfdb00e83e581007fda3947fc9dfd661c8955fa98a0d17cadf358c30b70b4",
+   "status": "OK"
+  },
+  "sinyaly-bandpower-matrix": {
+   "hash": "84b4a25226aef0bbe356a366a888b157264cf7c3a00e3ed6c5f77315f42a899d",
+   "status": "OK"
+  },
+  "sinyaly-bandpower-matrix-columns": {
+   "hash": "42ea0131020c28d52011b981dffd62dee353d13115691dcefe4b0330f251bd4e",
+   "status": "OK"
+  },
+  "sinyaly-bandpower-measured-tone": {
+   "hash": "60425068b47ee4eadafa8f68e5501aed5c99add55dad781febfb2d2b0b8e5502",
+   "status": "OK"
+  },
+  "sinyaly-bandpower-psd": {
+   "hash": "ae773f6b1b1f98343cc1301734f891ed87f1bb67232b25552ade1806c8fab4a9",
+   "status": "OK"
+  },
+  "sinyaly-bandpower-psd-range": {
+   "hash": "2dbd3cf9e60b621e4dc5207ebc48ccd4509cdfcd669e6b3892dd0c358829f508",
+   "status": "OK"
+  },
+  "sinyaly-bandpower-range": {
+   "hash": "ae8a0e44ca71a3f3aef72914d7b3a9852778fda2c354575548bc46518ace41ac",
+   "status": "OK"
+  },
+  "sinyaly-bandpower-row-psd": {
+   "hash": "90ab1836c5ea7c695fd3a62a7408ac50b946b2fa7e5c1f4de1684226f9492a2e",
+   "status": "OK"
+  },
+  "sinyaly-bandpower-scalar": {
+   "hash": "d8730296cdd3cec7329d195bc58836e8d0484a1d06fe1302cc1bc89f3d843c63",
+   "status": "OK"
+  },
+  "sinyaly-envelope-analytic": {
+   "hash": "ceb0dffae955490f5b392f739df5dc4a73008b5675cbd43fc3f924149960cb51",
+   "status": "OK"
+  },
+  "sinyaly-envelope-column": {
+   "hash": "8a3fba32697db3386acbabd59e40be934248572ce53f3838493d2bb5b69c464b",
+   "status": "OK"
+  },
+  "sinyaly-envelope-offset": {
+   "hash": "cee9cfcf29520e81e88629cc9eb6c6194f690be8b9c3c7c373458ba9e148bd83",
+   "status": "OK"
+  },
+  "sinyaly-envelope-rms": {
+   "hash": "16eb3f6893215a093cd78687dd51135fd28acb52a8548cb4ec69ebab7eaec6e2",
+   "status": "OK"
+  },
+  "sinyaly-firtype": {
+   "hash": "e2a77584fb45413d8402f799861a06b4e1595e78ea435bd5d504223c682d67bc",
+   "status": "OK"
+  },
+  "sinyaly-goertzel-all": {
+   "hash": "95168cb683ed8a46ad11c472b6b18510c907cd742881dce61a97dee4dd960344",
+   "status": "OK"
+  },
+  "sinyaly-goertzel-bin": {
+   "hash": "3824a5d2d26e0b675c5775e0683bd0b53aaf7564aea675541c4612a71479c519",
+   "status": "OK"
+  },
+  "sinyaly-islinphase": {
+   "hash": "2f6a16cf7ead53dcc4e3370627624a8d7f27ff0febe661ed62fd187a5c34cadb",
+   "status": "OK"
+  },
+  "sinyaly-phasedelay-first-order": {
+   "hash": "857a0a95a4d55140a35b176d1460a6171d7a54dc779fe28050d1530953df00e9",
+   "status": "OK"
+  },
+  "sinyaly-phasedelay-zero": {
+   "hash": "3c0ec8b5eea250ee0e9f03449f0c1d15229b7f149fb0e53edbaac9fbf3120020",
+   "status": "OK"
+  },
+  "sinyaly-rc-poly-roundtrip": {
+   "hash": "01ef3e44e167c1fff8cb68d6593dd93b87eba23e38d27a38a03d62b1517f547f",
+   "status": "OK"
+  },
+  "sinyaly-rlevinson": {
+   "hash": "8c5611116696fdbcc7568ce664a6c8c12c4719564736f50aa8a511c0959381f0",
+   "status": "OK"
+  },
+  "sinyaly-seqperiod": {
+   "hash": "a732ce0da6689222ab7874af0f8b4f5746a828e6103e56101ab1bbf254b4f77a",
+   "status": "OK"
+  },
+  "sinyaly-spectrogram-complex": {
+   "hash": "9f2949932506730691bf4cf1b532401df5fe68d8933de8c388404017d9e06705",
+   "status": "OK"
+  },
+  "sinyaly-spectrogram-complex-odd": {
+   "hash": "52a6711f357530098cde3c7c904be7485ff457e9e933b71085aaa51afa17ead9",
+   "status": "OK"
+  },
+  "sinyaly-spectrogram-default": {
+   "hash": "175f7fe60d0cfbc733728562c9f112cd05a972d202c7b7bf12f4e1f91b2586cb",
+   "status": "OK"
+  },
+  "sinyaly-spectrogram-explicit-window": {
+   "hash": "f6b7899d5090b3a0287ba454257f924e685b87ef09b0d1c9e7fc4e0beecde683",
+   "status": "OK"
+  },
+  "sinyaly-spectrogram-overlap-columns": {
+   "hash": "3e748c02feb589483760650f56e77f63a3bc8f21874ac382b6031a9b3c7254c5",
+   "status": "OK"
+  },
+  "sinyaly-spectrogram-power": {
+   "hash": "c596acbec6ed54bb05541fac308504464004184f02fd4be3ec179ab2cd753864",
+   "status": "OK"
+  },
+  "sinyaly-spectrogram-psd": {
+   "hash": "15a8e92fc9b1b125f7f42a429f04de0e7ec66a420476ae4cbc98043169b3d1a6",
+   "status": "OK"
+  },
+  "sinyaly-spectrogram-row-column": {
+   "hash": "47732ede554515811d536e86b021873825ad70065b55c4bee167b6136f323a63",
+   "status": "OK"
+  },
+  "sinyaly-spectrogram-symmetric-window": {
+   "hash": "bb4a2616d00bac4841f4d47ce218b49b78d6d150d6b37afc7cc8970f94c8b9a5",
+   "status": "OK"
+  },
+  "sinyaly-spectrogram-tone": {
+   "hash": "ece57e5885ca998d5873d22a7b66612a579d8e6d2a04874670b2face77885523",
+   "status": "OK"
+  },
+  "sinyaly-tf2zpk": {
+   "hash": "937a5cfca449050aca0bf59ebfaa00d7b0b547080d87359116de63e2c5c5b62b",
+   "status": "OK"
+  },
+  "sinyaly-tf2zpk-constant": {
+   "hash": "ed3d79f94a0aa9aabab517b5e6779f62eda89ea2d270a63a204ee9b584b6d5af",
+   "status": "OK"
+  },
+  "sinyaly-zerophase-symmetric": {
+   "hash": "adb3eddb8bec36cf8b6399f8056d122df4bf4156a597b8788e8e5335fcf2e844",
    "status": "OK"
   },
   "tablo-bas-son": {

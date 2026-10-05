@@ -1,0 +1,28 @@
+--- a/string.m
++++ b/string.m
+@@ -755,7 +755,12 @@
+       ## Check pattern
+       if (nargin < 2)
+         error ("string.contains: PATTERN is required.");
+-      elseif (ischar (pattern) || isstring (pattern))
++      elseif (isstring (pattern))
++        ## Missing patterns must not become matching empty literals.
++        missing_pattern = ismissing (pattern);
++        pattern = cellstr (pattern);
++        pattern = pattern(! missing_pattern);
++      elseif (ischar (pattern))
+         pattern = cellstr (pattern);
+       elseif (! iscellstr (pattern))
+         error (strcat ("string.contains: PATTERN must be a character", ...
+@@ -787,6 +792,11 @@
+       TF = false (size (this));
+       vid = ! this.isMissing;
+       str = this.strs(vid);
++      ## An empty literal matches every nonmissing string.
++      if (any (cellfun ('isempty', pattern)))
++        TF(vid) = true;
++        return;
++      endif
+       if (IgnoreCase)
+         for i = 1:numel (pattern)
+           idx = strfind (lower (str), lower (pattern{i}));

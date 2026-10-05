@@ -1,0 +1,118 @@
+--- a/string.m
++++ b/string.m
+@@ -610,6 +610,12 @@
+     ##
+     ## @end deftypefn
+     function out = count (this, pattern, varargin)
++      ## IndyMAT: later string arguments must not change the input/result type.
++      if (! isa (this, 'string'))
++        args = indymat_text_args ({pattern, varargin{:}}, 'count');
++        out = feval ('count', this, args{:});
++        return;
++      endif
+       ## Check pattern
+       if (nargin < 2)
+         error ("string.count: PATTERN is required.");
+@@ -740,6 +746,12 @@
+     ##
+     ## @end deftypefn
+     function TF = contains (this, pattern, varargin)
++      ## IndyMAT: later string arguments must not change the input/result type.
++      if (! isa (this, 'string'))
++        args = indymat_text_args ({pattern, varargin{:}}, 'contains');
++        TF = feval ('contains', this, args{:});
++        return;
++      endif
+       ## Check pattern
+       if (nargin < 2)
+         error ("string.contains: PATTERN is required.");
+@@ -2215,6 +2227,12 @@
+     ##
+     ## @end deftypefn
+     function out = compose (this, varargin)
++      ## IndyMAT: later string arguments must not change the input/result type.
++      if (! isa (this, 'string'))
++        args = indymat_text_args (varargin, 'compose');
++        out = feval ('compose', this, args{:});
++        return;
++      endif
+ 
+       ## Escape-sequence translation syntax: compose (TXT)
+       if (nargin == 1)
+@@ -2331,6 +2349,12 @@
+     ##
+     ## @end deftypefn
+     function out = erase (this, match)
++      ## IndyMAT: later string arguments must not change the input/result type.
++      if (! isa (this, 'string'))
++        args = indymat_text_args ({match}, 'erase');
++        out = feval ('erase', this, args{:});
++        return;
++      endif
+       if (isa (match, 'string'))
+         pats = cellstr (match);
+       elseif (ischar (match) || iscellstr (match))
+@@ -2908,6 +2932,12 @@
+     ##
+     ## @end deftypefn
+     function out = replace (this, old, new)
++      ## IndyMAT: later string arguments must not change the input/result type.
++      if (! isa (this, 'string'))
++        args = indymat_text_args ({old, new}, 'replace');
++        out = feval ('replace', this, args{:});
++        return;
++      endif
+       if (nargin < 3)
+         error ("string.replace: not enough input arguments.");
+       endif
+@@ -3503,6 +3533,16 @@
+     ##
+     ## @end deftypefn
+     function [newstr, matchstr] = split (this, varargin)
++      ## IndyMAT: later string arguments must not change the input/result type.
++      if (! isa (this, 'string'))
++        args = indymat_text_args (varargin, 'split');
++        if (nargout > 1)
++          [newstr, matchstr] = feval ('split', this, args{:});
++        else
++          newstr = feval ('split', this, args{:});
++        endif
++        return;
++      endif
+       if (numel (varargin) > 2)
+         error ("string.split: too many input arguments.");
+       endif
+@@ -3841,6 +3881,12 @@
+     ##
+     ## @end deftypefn
+     function newstr = join (this, varargin)
++      ## IndyMAT: later string arguments must not change the input/result type.
++      if (! isa (this, 'string'))
++        args = indymat_text_args (varargin, 'join');
++        newstr = feval ('join', this, args{:});
++        return;
++      endif
+       if (numel (varargin) > 2)
+         error ("string.join: too many input arguments.");
+       endif
+@@ -5388,3 +5434,20 @@
+ ## answers for it and checks nothing itself.
+ %!test
+ %! ## The suite for this class is inst/tests/string.m-tst.
++
++## IndyMAT mixed-dispatch bridge: remove all string objects before redispatch.
++## Missing later arguments are unsupported rather than silently becoming ''.
++function args = indymat_text_args (args, name)
++  for k = 1:numel (args)
++    if (isa (args{k}, 'string'))
++      if (any (ismissing (args{k})(:)))
++        error ('%s: missing string arguments are not supported', name);
++      endif
++      if (isscalar (args{k}))
++        args{k} = char (args{k});
++      else
++        args{k} = cellstr (args{k});
++      endif
++    endif
++  endfor
++endfunction

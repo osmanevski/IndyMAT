@@ -41,6 +41,7 @@ const BINDING_PATTERN = /^(?:Mod\+)?(?:Ctrl\+)?(?:Alt\+)?(?:Shift\+)?(?:Key[A-Z]
 const DEFAULT_SETTINGS = Object.freeze({
   version: 1,
   preferences: Object.freeze({ language: "system", theme: "dark", editorFontSize: 13, consoleFontSize: 13, indentWidth: 4, useTabs: false }),
+  assistant: Object.freeze({ open: false, width: 340 }),
   panels: Object.freeze({ files: true, workspace: true, history: true, figures: true, debugger: true }),
   layout: Object.freeze({ left: 220, right: 300, editorHeight: 56, consoleWidth: 50 }),
   activeTabs: Object.freeze({ plotMode: "interactive", figureName: "" }),
@@ -187,6 +188,10 @@ function sanitizeSettings(value, definitions = [], mac = true, translator = (sou
   result.preferences.indentWidth = finiteNumber(value.preferences?.indentWidth, 4, 1, 8);
   result.preferences.useTabs = value.preferences?.useTabs === true;
   for (const name of Object.keys(result.panels)) if (typeof value.panels?.[name] === "boolean") result.panels[name] = value.panels[name];
+  if (["ask", "read-only", "edit"].includes(value.assistant?.mode)) result.assistant.mode = value.assistant.mode;
+  result.assistant.open = value.assistant?.open === true;
+  result.assistant.width = finiteNumber(value.assistant?.width, 340, 260, 600);
+  if (["none", "inspect", "run"].includes(value.assistant?.sessionAccess)) result.assistant.sessionAccess = value.assistant.sessionAccess;
   result.layout.left = finiteNumber(value.layout?.left, 220, 140, 360);
   result.layout.right = finiteNumber(value.layout?.right, 300, 190, 500);
   result.layout.editorHeight = finiteNumber(value.layout?.editorHeight, 56, 20, 78);
@@ -277,6 +282,11 @@ function settingsPatch(base, next) {
     for (const key of new Set([...Object.keys(base[section]), ...Object.keys(next[section])])) {
       if (JSON.stringify(base[section][key]) !== JSON.stringify(next[section][key])) patch.push({ section, key, value: next[section][key] });
     }
+  }
+  if (base.assistant?.mode && !next.assistant?.mode) patch.push({ section: "assistant", key: "mode", value: "ask" });
+  if (base.assistant?.sessionAccess && !next.assistant?.sessionAccess) patch.push({ section: "assistant", key: "sessionAccess", value: "none" });
+  for (const key of Object.keys(next.assistant || {})) {
+    if (JSON.stringify(base.assistant?.[key]) !== JSON.stringify(next.assistant[key])) patch.push({ section: "assistant", key, value: next.assistant[key] });
   }
   return patch;
 }

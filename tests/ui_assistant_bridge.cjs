@@ -1,0 +1,55 @@
+const assert = require('node:assert/strict');
+const { chromium } = require('playwright');
+const { assistantServer } = require('./assistant_harness.cjs');
+(async () => {
+  const server = await assistantServer();
+  let browser;
+  try {
+    browser = await chromium.launch({ headless: true });
+    const context = await browser.newContext({ locale: 'tr-TR' });
+    const page = await context.newPage();
+    await page.goto(server.launch.url);
+    await page.locator('#files .file-button').filter({ hasText: 'sample' }).waitFor();
+    await page.locator('#toggle-assistant').click();
+    await page.waitForFunction(() => [...document.querySelector('#assistant-provider').options].every((option) => !option.disabled));
+    assert.equal(await page.locator('#assistant-session-access').inputValue(), 'none');
+    assert.equal(await page.locator('#assistant-session-access').getAttribute('aria-label'), 'Oturum erişimi');
+    await page.locator('#assistant-provider').selectOption('agy');
+    assert(await page.locator('#assistant-session-access').isDisabled());
+    assert((await page.locator('.assistant-session-note').innerText()).includes('bir defalık MCP'));
+    await page.locator('#assistant-provider').selectOption('claude');
+    assert(await page.locator('#assistant-session-access').isEnabled());
+    await page.locator('#assistant-session-access').selectOption('run');
+    assert((await page.locator('.assistant-session-note').innerText()).includes('değişkenlerinizi değiştirir'));
+    await page.waitForFunction(() => JSON.parse(localStorage.getItem('mf-settings-v1')).assistant.sessionAccess === 'run');
+    await page.reload();
+    await page.locator('#assistant-panel').waitFor();
+    await page.waitForFunction(() => [...document.querySelector('#assistant-provider').options].every((option) => !option.disabled));
+    assert.equal(await page.locator('#assistant-session-access').inputValue(), 'run');
+    await page.getByRole('button', { name: 'Yeni görüşme', exact: true }).click();
+    await page.locator('#assistant-provider').selectOption('codex');
+    assert.equal(await page.locator('#assistant-session-access').inputValue(), 'run');
+    await page.locator('#assistant-input').fill('bridge-run');
+    const sent = page.waitForRequest((request) => request.url().endsWith('/api/assistant/start'));
+    await page.locator('#assistant-send').click();
+    assert.equal((await sent).postDataJSON().session_access, 'run');
+    await page.waitForFunction(() => document.querySelector('.assistant-status').textContent === 'Tur tamamlandı');
+    assert(await page.locator('#assistant-session-access').isDisabled());
+    assert((await page.locator('#assistant-transcript').innerText()).includes('indymat · run_code'));
+    await page.waitForFunction(() => document.querySelector('#console').textContent.includes('% Assistant (Codex)') && document.querySelector('#console').textContent.includes('bridge_fixture_codex'));
+    await page.waitForFunction(() => document.querySelector('.workspace-table-wrap').textContent.includes('bridge_fixture_codex'));
+    await page.locator('#assistant-remove').click();
+    await page.waitForFunction(() => !document.querySelector('#assistant-session-access').disabled);
+    await page.locator('#assistant-session-access').selectOption('inspect');
+    await page.waitForFunction(() => JSON.parse(localStorage.getItem('mf-settings-v1')).assistant.sessionAccess === 'inspect');
+    assert.equal(await page.locator('.assistant-session-note').innerText(), '');
+    const fresh = await context.newPage();
+    await fresh.goto(server.launch.url);
+    await fresh.locator('#assistant-panel').waitFor();
+    assert.equal(await fresh.locator('#assistant-session-access').inputValue(), 'inspect');
+    console.log('UI ASSISTANT BRIDGE PASS: Turkish selector, Antigravity reason, saved default, immutable access, run note, MCP activity, console and workspace refresh.');
+  } finally {
+    if (browser) await browser.close();
+    await server.close();
+  }
+})().catch((error) => { console.error(error); process.exitCode = 1; });

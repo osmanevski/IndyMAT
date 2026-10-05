@@ -120,7 +120,7 @@ class Kernel:
         init += "setappdata(0,'__mf_entry__',@__mf_execute__); "
         if (self.root/'.packages'/'octave_packages').exists():
             init += f"pkg('prefix',{self.quote(self.root/'.packages')},{self.quote(self.root/'.packages'/'.arch')}); pkg('local_list',{self.quote(self.root/'.packages'/'octave_packages')}); "
-            init += "try; pkg load control signal datatypes; catch; end; "
+            init += "try; pkg load control signal datatypes; catch; end; try; pkg load statistics; catch; end; "
         init += "set(0,'defaultaxesfontname','Helvetica'); set(0,'defaulttextfontname','Helvetica'); PS1(''); PS2(''); clear ans; "
         self._write_command(self.proc, init + '\n')
         self._submit('', 'code', '', 30, initializing=True)

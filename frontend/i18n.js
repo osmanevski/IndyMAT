@@ -11,13 +11,14 @@
  * onLanguageChange(fn) re-renders dynamic text and returns an unsubscribe function.
  */
 import utils from "./i18n_utils.cjs";
+import assistantText from "./locales/tr_assistant.js";
 import base from "./locales/tr.js";
 import workspaceText from "./locales/tr_calisma_alani.js";
 import editorText from "./locales/tr_editor.js";
 import settingsText from "./locales/tr_ayarlar.js";
 import filesText from "./locales/tr_dosyalar.js";
 
-const turkish = { ...base, ...workspaceText, ...editorText, ...settingsText, ...filesText };
+const turkish = { ...assistantText, ...base, ...workspaceText, ...editorText, ...settingsText, ...filesText };
 
 let language = utils.resolveLanguage("system", globalThis.navigator?.languages || [globalThis.navigator?.language]);
 const subscribers = new Set();

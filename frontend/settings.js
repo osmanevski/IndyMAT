@@ -135,6 +135,7 @@ function applySettings() {
   if (shared.editor && registry.applyTheme) registry.applyTheme(preferences.theme === "dark", false);
   else document.body.classList.toggle("dark", preferences.theme === "dark");
   shared.plotMode = shared.settings.activeTabs.plotMode;
+  registry.applyAssistantLayout?.();
   applyPanelVisibility();
   applyLayout();
 }
@@ -266,8 +267,10 @@ function openSettings() {
   preferences.append(preferenceRow(t("Smart Indent"), selectControl([["spaces", t("Spaces")], ["tabs", t("Tabs")]], getSetting("preferences", "useTabs") ? "tabs" : "spaces", (value) => updateSetting("preferences", "useTabs", value === "tabs", false))));
   panels.append(registry.el("h3", "", t("Panels")));
   for (const [name, label] of [["files", "Current Folder"], ["workspace", "Workspace"], ["history", "Command History"], ["figures", "Figures"], ["debugger", "Debugger (when needed)"]]) panels.append(checkboxRow(t(label), shared.settings.panels[name], (value) => updateSetting("panels", name, value)));
+  panels.append(checkboxRow(t("Assistant"), shared.settings.assistant.open, (value) => updateSetting("assistant", "open", value)));
   const resetLayout = registry.el("button", "", t("Reset Layout"));
   resetLayout.onclick = () => {
+    shared.settings.assistant = shortcutUtils.cloneDefaults().assistant;
     shared.settings.layout = shortcutUtils.cloneDefaults().layout;
     shared.settings.panels = shortcutUtils.cloneDefaults().panels;
     shared.settings.activeTabs = shortcutUtils.cloneDefaults().activeTabs;
