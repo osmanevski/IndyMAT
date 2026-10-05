@@ -115,6 +115,17 @@ class SourceAdapterTests(unittest.TestCase):
         self.assertEqual(following.generated_line, 3)
         self.assertEqual(following.generated_column_utf16, 1)
 
+    def test_later_line_offsets_after_literal_expansion_are_exact(self):
+        code = 'attempts=0;\nattempts=attempts+1; r="x"; missing_adapter_ui;'
+        result = self.adapted(code)
+        offset = result.generated_text.index('missing_adapter_ui')
+        original = code.index('missing_adapter_ui')
+        self.assertEqual(result.source_map.locate(len(result.generated_text[:offset].encode('utf-8')), units='utf8'),
+                         (SourceSpan(original, original + 1), False))
+        piece = next(piece for piece in result.source_map.pieces if piece.original_start_utf16 == original)
+        self.assertEqual((piece.generated_line, piece.generated_column_utf16), (2, 40))
+        self.assertEqual((piece.original_line, piece.original_column_utf16), (2, 29))
+
     def test_invalid_utf16_and_invalid_inputs(self):
         for span in [(0,), (0, 1, 2), (-1, 1), (2, 1), (0, 100), (1.0, 2), (1, 2)]:
             with self.subTest(span=span), self.assertRaises(ValueError): adapt_source('😀"x"', span, UNIT_PROFILE)

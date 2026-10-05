@@ -252,10 +252,12 @@ function pumpLocations() {
 }
 
 function resolveLocation(candidate, current) {
-  const key = `${shared.engine?.cwd || shared.currentFolder || ""}\0${candidate.path}\0${candidate.line}`;
+  const cwd = candidate.cwd || shared.engine?.cwd || shared.currentFolder || "";
+  const key = `${candidate.epoch}\0${candidate.job}\0${cwd}\0${candidate.path}\0${candidate.line}`;
   if (locationCache.has(key)) return locationCache.get(key);
   if (locationQueue.length >= LOCATION_LIMIT) return Promise.resolve(null);
-  const promise = new Promise((resolve) => locationQueue.push({ key, resolve, current, payload: { path: candidate.path, line: candidate.line } }));
+  const path = candidate.cwd && !candidate.path.startsWith("/") ? registry.joinPath(candidate.cwd, candidate.path) : candidate.path;
+  const promise = new Promise((resolve) => locationQueue.push({ key, resolve, current, payload: { path, line: candidate.line } }));
   locationCache.set(key, promise);
   while (locationCache.size > 128) locationCache.delete(locationCache.keys().next().value);
   pumpLocations();
@@ -268,7 +270,8 @@ function resolvedOutputLocations(node, raw, limit) {
   if (cached?.raw === raw) return cached.locations.slice(0, limit);
   cached = { raw, locations: [] };
   outputLocations.set(node, cached);
-  const candidates = parseErrorLocations(raw, limit);
+  const entry = node.closest?.(".console-entry");
+  const candidates = parseErrorLocations(raw, limit).map((candidate) => ({ ...candidate, job: entry?.dataset.job, epoch: entry?.dataset.epoch, cwd: entry?.dataset.cwd }));
   cached.candidateCount = candidates.length;
   if (candidates.length) {
     // Both stdout/stderr and caught errors can carry locations. Resolve once

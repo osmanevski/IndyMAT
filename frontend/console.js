@@ -2,6 +2,7 @@ import shared from "./state.js";
 import registry from "./registry.js";
 import { t, onLanguageChange } from "./i18n.js";
 import editorCommandUtils from "./editor_command_utils.cjs";
+import { editorSourceContext, showAdaptation } from "./source_adapter.js";
 
 const { sectionRange } = editorCommandUtils;
 let lastStatus = null;
@@ -30,14 +31,28 @@ function scrollConsole() {
   let c = registry.$("#console");
   c.scrollTop = c.scrollHeight;
 }
-async function execute(code, mode = "code", argument = "", label, recordHistory = false, source = "", onAccepted) {
+async function execute(code, mode = "code", argument = "", label, recordHistory = false, source = "", onAccepted, sourceContext = null) {
   registry.requireIdle();
   const generation = shared.uiGeneration;
-  let result = await registry.api("execute", { code, mode, argument, history: recordHistory });
+  const payload = { code, mode, argument, history: recordHistory };
+  if (sourceContext) Object.assign(payload, { adapt_editor_literals: true, source_context: sourceContext });
+  let result = await registry.api("execute", payload);
   if (generation !== shared.uiGeneration) return;
   shared.publishRenders.clear();
   shared.lastJob = result.job;
-  addConsole(label || code || argument, source);
+  const entry = addConsole(label || code || argument, source);
+  entry.job = result.job;
+  entry.epoch = result.source_adapter?.epoch ?? shared.engine.epoch;
+  entry.wrap.dataset.job = result.job;
+  entry.wrap.dataset.epoch = String(entry.epoch);
+  entry.wrap.dataset.cwd = shared.engine.cwd || shared.currentFolder || "";
+  if (sourceContext) {
+    entry.sourceContext = sourceContext;
+    entry.wrap.sourceEntry = entry;
+    const original = registry.el("pre", "console-source", code);
+    entry.wrap.querySelector(".console-command").after(original);
+    showAdaptation(entry, result.source_adapter);
+  }
   shared.busy = true;
   setStatus({ status: "running", elapsed: 0 });
   if (onAccepted) onAccepted(result);
@@ -88,18 +103,22 @@ async function runSelection() {
   let range = shared.editor.state.selection.main, code = shared.editor.state.sliceDoc(range.from, range.to);
   if (!code.trim()) throw new Error(t("Select code to run."));
   let count = code.replace(/\r?\n$/, "").split(/\r?\n/).length;
-  await execute(code, "code", "", t("Selection · {count} lines", { count }), false, code);
+  const context = editorSourceContext("editor-selection", shared.editor.state.doc.toString(), range.from, range.to, range.head);
+  await execute(code, "code", "", t("Selection · {count} lines", { count }), false, code, null, context);
 }
 async function runEditorSection(kind = "section") {
   registry.requireIdle();
-  let tab = shared.active, source = shared.editor.state.doc.toString(), position = shared.editor.state.selection.main.head, throughEnd = kind === "to-end", range = sectionRange(source, position, throughEnd);
+  const profile = registry.getSetting("preferences", "adaptEditorLiterals") ? "matlab" : "native-octave";
+  let tab = shared.active, source = shared.editor.state.doc.toString(), position = shared.editor.state.selection.main.head, throughEnd = kind === "to-end", range = sectionRange(source, position, throughEnd, profile);
   let code = source.slice(range.from, range.to), name = (tab?.path || "").split("/").pop(), label = kind === "to-end" ? t("To end · {name}:{start}–{end}", { name, start: range.startLine, end: range.endLine }) : t("Section · {name}:{start}–{end}", { name, start: range.startLine, end: range.endLine });
   let advance = kind === "advance" && range.nextFrom !== null ? () => {
     if (shared.active !== tab || shared.editor.state.doc.toString() !== source) return;
     shared.editor.dispatch({ selection: { anchor: range.nextFrom }, scrollIntoView: true });
     shared.editor.focus();
   } : null;
-  await execute(code, "code", "", label, false, code, advance);
+  const origin = kind === "to-end" ? "editor-to-end" : kind === "advance" ? "editor-advance" : "editor-section";
+  const context = editorSourceContext(origin, source, range.from, range.to, position);
+  await execute(code, "code", "", label, false, code, advance, context);
 }
 function runSection() {
   return runEditorSection("section");

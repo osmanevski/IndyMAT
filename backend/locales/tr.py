@@ -309,6 +309,11 @@ TRANSLATIONS = {
 
 # Optional local coding-agent integration.
 TRANSLATIONS.update({
+    'Invalid editor source context.': 'Geçersiz editör kaynak bağlamı.',
+    'Source adaptation is limited to editor selections and sections.': 'Kaynak uyarlama yalnızca editör seçimleri ve bölümleriyle sınırlıdır.',
+    'Invalid editor source identity.': 'Geçersiz editör kaynak kimliği.',
+    'Editor source span does not match the submitted code.': 'Editör kaynak aralığı gönderilen kodla eşleşmiyor.',
+    'Editor section boundaries changed; submit the current snapshot again.': 'Editör bölüm sınırları değişti; güncel kaynak görüntüsünü yeniden gönderin.',
     'Invalid assistant provider or access mode.': 'Geçersiz asistan sağlayıcısı veya erişim modu.',
     'Invalid assistant conversation.': 'Geçersiz asistan görüşmesi.',
     'Assistant turn failed.': 'Asistan turu başarısız oldu.',

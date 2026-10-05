@@ -1,6 +1,8 @@
 """A single persistent, trusted local Octave session. No emulated evaluator."""
 from __future__ import annotations
 from backend.i18n import tr, get_language
+from backend.source_adapter import AdapterProfile, PackageSupport, adapt_source, verify_package
+from backend.source_jobs import map_error
 import codecs, json, os, queue, re, shutil, signal, subprocess, threading, time, uuid
 from pathlib import Path
 import sys
@@ -144,11 +146,22 @@ class Kernel:
             if self.run_to_cursor_state:state['run_to_cursor']={'file':self.run_to_cursor_state['file'],'line':self.run_to_cursor_state.get('actual_line') or self.run_to_cursor_state['line'],'continued':self.run_to_cursor_state.get('continued',False)}
             return state
 
-    def submit(self, code='', mode='code', argument='', timeout=0):
+    def submit(self, code='', mode='code', argument='', timeout=0, *, source_context=None):
         with self.lock:
             if self.state['status'] in ('running','starting','stopping','paused'): raise ValueError(tr('Stop the running operation first.'))
             if not self.proc or self.proc.poll() is not None: raise ValueError(tr('Octave closed. Reset the session.'))
-            return self._submit(code,mode,argument,timeout)
+            return self._submit(code,mode,argument,timeout,source_context=source_context)
+
+    def _source_package(self):
+        # The previous completed job records the live path, resolution and cwd.
+        # Reverify every opt-in job; package/path changes never reuse a capability.
+        try:
+            environment=json.loads((self.runtime/self.job/'source-environment.json').read_text())
+            setup=self.call('path',environment['path'])
+            return verify_package(environment['constructor'],executable=cli_executable(self.executable),
+                                  setup=setup,cwd=environment['cwd'])
+        except (OSError,ValueError,KeyError,TypeError):
+            return PackageSupport(reason='Live constructor/package verification is unavailable.')
 
     def package(self,action,name):
         import re
@@ -163,7 +176,17 @@ class Kernel:
             if self.state['status']=='paused':raise ValueError(tr('Workspace is read-only while debugging is paused.'))
             return self.submit(mode=mode,argument=json.dumps(request,ensure_ascii=False,separators=(',',':')))
 
-    def _submit(self,code,mode,argument,timeout,initializing=False,apply_breakpoints=True):
+    def _submit(self,code,mode,argument,timeout,initializing=False,apply_breakpoints=True,source_context=None):
+        adaptation=None
+        original=code
+        if source_context is not None:
+            source_context=json.loads(json.dumps(source_context))
+            if mode!='code' or initializing:raise ValueError(tr('Source adaptation is limited to editor selections and sections.'))
+            if adapt_source(source_context['document'],source_context['span']).generated_text!=code:
+                raise ValueError(tr('Editor source span does not match the submitted code.'))
+            adaptation=adapt_source(source_context['document'],source_context['span'],
+                                    AdapterProfile(True,package=self._source_package()))
+            code=adaptation.generated_text
         job=uuid.uuid4().hex
         folder=self.runtime/job
         # Stage every file before any state changes: a failure here leaves the
@@ -171,6 +194,10 @@ class Kernel:
         try:
             folder.mkdir()
             (folder/'code.m').write_text(code)
+            if adaptation is not None:
+                metadata={**adaptation.metadata(),'original_text':original,'adapted_text':code,
+                          'source_context':source_context,'job':job,'epoch':self.generation,'profile':'matlab'}
+                (folder/'source.json').write_text(json.dumps(metadata,ensure_ascii=False),encoding='utf-8')
             # The entry function rehashes and applies preapply.txt in its own workspace.
             if apply_breakpoints:(folder/'preapply.txt').write_text(self._breakpoint_commands())
         except OSError as exc:
@@ -178,6 +205,14 @@ class Kernel:
             raise ValueError(tr('Could not prepare the job (disk or permission error): {error}', error=exc)) from exc
         self.job=job
         self.state.update(waiting_input=False,status='starting' if initializing else 'running',job=job,output='',error=None,started=time.time(),elapsed=0,kind=mode,detail=None,workspace_action=None,variable_action=None,breakpoint_relocation=None,console_clear=0,debug=None)
+        self._source_job=(job,adaptation,source_context) if adaptation is not None else None
+        for name in ('source_adapter','source_error_locations','raw_error','error_frames'):
+            self.state.pop(name,None)
+        if adaptation is not None:
+            # Maps and whole documents stay in private job staging. The UI owns
+            # its submitted snapshot and receives bounded transparency metadata.
+            self.state['source_adapter']={key:value for key,value in metadata.items()
+                if key in ('status','adapter_version','diagnostics','replacements','package_fingerprint','span','job','epoch','profile')}
         proc,events,gen=self.proc,self.events,self.generation
         execute=self.call('__mf_execute__',str(folder),mode,argument)+"\n"
         if apply_breakpoints:
@@ -338,7 +373,20 @@ class Kernel:
                 meta=json.loads((folder/'result.json').read_text())
                 if 'figures' in meta:
                     for figure in meta['figures']:figure['job']=job
+                frames=meta.pop('error_frames',None)
+                if isinstance(frames,dict):frames=[frames] if frames else []
                 self.state.update(meta)
+                source_job=getattr(self,'_source_job',None)
+                if source_job and source_job[0]==job:
+                    _,adaptation,context=source_job
+                    self.state['raw_error']=self.state.get('error')
+                    self.state['error_frames']=frames or []
+                    # External file frames are native and retain their raw
+                    # locations. Only evalin's submitted-source messages map.
+                    external=any(frame.get('file') and '__mf_' not in frame.get('name','') for frame in frames or [])
+                    if self.state.get('error') and not external:
+                        self.state['error'],locations=map_error(adaptation,context,self.state['error'])
+                        self.state['source_error_locations']=[{**item,'job':job,'epoch':gen} for item in locations]
             except (OSError,ValueError):
                 if not reason: reason=tr('No session response received. Reset the session.')
             self.state['error']=reason or self.state.get('error') or None

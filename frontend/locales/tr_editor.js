@@ -1,5 +1,15 @@
 // Turkish translations owned by one feature lane; merged in i18n.js.
 export default {
+  "Adapted: {count} literals": "Uyarlandı: {count} metin sabiti",
+  "Original lines: {lines}": "Özgün satırlar: {lines}",
+  "Executed unchanged: {reason}": "Değiştirilmeden çalıştırıldı: {reason}",
+  "Quoted command-form arguments execute unchanged.": "Tırnaklı komut biçimi argümanları değiştirilmeden çalıştırılır.",
+  "The patched datatypes string constructor is unavailable or could not be verified.": "Yamalı datatypes string kurucusu bulunamadı veya doğrulanamadı.",
+  "Unsupported or uncertain source ({reason}).": "Desteklenmeyen veya belirsiz kaynak ({reason}).",
+  "Only measured literal positions are adapted; other overloads, dynamic source, or reflection can differ.": "Yalnızca ölçülmüş metin sabiti konumları uyarlanır; diğer aşırı yüklemeler, dinamik kaynak veya yansıma farklı davranabilir.",
+  "Supplementary Unicode operations may differ from MATLAB UTF-16 semantics.": "Ek düzlem Unicode işlemleri MATLAB UTF-16 davranışından farklı olabilir.",
+  "Submitted editor snapshot": "Gönderilen editör görüntüsü",
+  "Original source: line {line}, column {column}": "Özgün kaynak: satır {line}, sütun {column}",
   "Conditional breakpoint; right-click to edit condition": "Koşullu kesme noktası; sağ tıkla ve koşulu düzenle",
   "Breakpoint; right-click to add a condition": "Kesme noktası; sağ tıkla ve koşul ekle",
   "Breakpoint": "Kesme noktası",

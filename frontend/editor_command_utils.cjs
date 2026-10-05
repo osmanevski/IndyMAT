@@ -141,7 +141,7 @@ function sourceLines(source) {
 // One lexical pass for execution boundaries, section decoration and folding.
 // Delimiters must occupy a whole line, as in Octave/MATLAB. Nested Octave
 // comments and continued strings must never expose a marker inside them.
-function scanEditorSource(source) {
+function scanEditorSource(source, profile = "native-octave") {
   let blocks = 0;
   let quote = "";
   return sourceLines(source).map((line) => {
@@ -160,7 +160,7 @@ function scanEditorSource(source) {
       const character = line.text[index];
       if (quote) {
         code += " ";
-        if (character === "\\" && quote === '"') {
+        if (character === "\\" && quote === '"' && profile !== "matlab") {
           if (index + 1 < line.text.length) {
             code += " ";
             index++;
@@ -186,8 +186,8 @@ function scanEditorSource(source) {
   });
 }
 
-function sectionRange(source, position, throughEnd = false) {
-  let lines = scanEditorSource(source);
+function sectionRange(source, position, throughEnd = false, profile = "native-octave") {
+  let lines = scanEditorSource(source, profile);
   position = clampPosition(source, position);
   let current = 0;
   while (current + 1 < lines.length && lines[current + 1].from <= position) current++;

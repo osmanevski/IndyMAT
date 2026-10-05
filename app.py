@@ -9,6 +9,7 @@ from urllib.parse import urlparse, parse_qs, unquote
 from backend.assistants import Assistants
 from backend.assistant_bridge_service import BridgeService
 from backend.kernel import Kernel
+from backend.source_jobs import validate_source_context
 from backend.files import Workspace
 from backend.file_operations import FileOperations
 from backend.workspace_actions import WorkspaceActions, MatTarget, variable_read_request, variable_write_request
@@ -116,6 +117,7 @@ class App:
         self._load_history()
         self.publish_lock=threading.Lock();self.publish_renders={}
         self.workspace_actions=WorkspaceActions(self)
+        self.workspace.source_private_roots=(self.runtime/'jobs',)
         self.server=ThreadingHTTPServer(('127.0.0.1',port),Handler)
         try:self.kernel=PublishKernel(ROOT,self.runtime/'jobs',self.workspace.root,publish_app=self)
         except Exception:
@@ -482,6 +484,19 @@ class Handler(BaseHTTPRequestHandler):
                 f=w.path(arg)
                 if not f.is_file() or f.suffix!='.m':raise ValueError(tr('Select a .m file.'))
                 arg=str(f)
+            source_context=None
+            if 'adapt_editor_literals' in d and type(d['adapt_editor_literals']) is not bool:
+                raise ValueError(tr('Invalid editor source context.'))
+            if d.get('adapt_editor_literals') is True:
+                with self.app.file_lock:
+                    source_context=validate_source_context(d.get('source_context'),code,mode,w)
+            elif 'source_context' in d:
+                raise ValueError(tr('Invalid editor source context.'))
+            if source_context is not None:
+                with k.lock:
+                    job=k.submit(code,mode,arg,min(3600,max(0,float(d.get('timeout',0)))),source_context=source_context)
+                    adapter=k.snapshot().get('source_adapter')
+                return self.send(202,{'job':job,'source_adapter':adapter})
             job=k.submit(code,mode,arg,min(3600,max(0,float(d.get('timeout',0)))))
             if mode=='code' and code.strip() and d.get('history') is True:
                 return self.send(202,{'job':job,'history_recorded':self.app.record(code)})

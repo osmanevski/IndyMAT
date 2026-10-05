@@ -267,6 +267,10 @@ function openSettings() {
   preferences.append(preferenceRow(t("Command Window font size"), numberControl(getSetting("preferences", "consoleFontSize"), 10, 24, (value) => updateSetting("preferences", "consoleFontSize", value))));
   preferences.append(preferenceRow(t("Indent width"), numberControl(getSetting("preferences", "indentWidth"), 1, 8, (value) => updateSetting("preferences", "indentWidth", value, false))));
   preferences.append(preferenceRow(t("Smart Indent"), selectControl([["spaces", t("Spaces")], ["tabs", t("Tabs")]], getSetting("preferences", "useTabs") ? "tabs" : "spaces", (value) => updateSetting("preferences", "useTabs", value === "tabs", false))));
+  const adapterRow = checkboxRow(t("Adapt double-quoted editor literals"), getSetting("preferences", "adaptEditorLiterals"), (value) => updateSetting("preferences", "adaptEditorLiterals", value));
+  adapterRow.querySelector("input").dataset.setting = "adaptEditorLiterals";
+  preferences.append(adapterRow);
+  preferences.append(registry.el("p", "settings-note", t("Experimental: adapts MATLAB double-quoted text before Run Selection and Run Section, including Run and Advance and Run to End. Saved-file Run, Command Window, Publish, assistant code, and files loaded by Octave are not covered.")));
   panels.append(registry.el("h3", "", t("Panels")));
   for (const [name, label] of [["files", "Current Folder"], ["workspace", "Workspace"], ["history", "Command History"], ["figures", "Figures"], ["debugger", "Debugger (when needed)"], ["bottom", "Bottom panel"]]) {
     const row = checkboxRow(t(label), shared.settings.panels[name], (value) => updateSetting("panels", name, value));

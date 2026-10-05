@@ -41,7 +41,7 @@ const MAX_BINDINGS = 4;
 const BINDING_PATTERN = /^(?:Mod\+)?(?:Ctrl\+)?(?:Alt\+)?(?:Shift\+)?(?:Key[A-Z]|Digit[0-9]|F(?:[1-9]|1[0-9]|2[0-4])|Backquote|Minus|Equal|BracketLeft|BracketRight|Backslash|Semicolon|Quote|Comma|Period|Slash|Space|Enter|Tab|Escape|Backspace|Delete|Insert|Home|End|PageUp|PageDown|ArrowUp|ArrowDown|ArrowLeft|ArrowRight)$/;
 const DEFAULT_SETTINGS = Object.freeze({
   version: 1,
-  preferences: Object.freeze({ language: "system", theme: "dark", editorFontSize: 13, consoleFontSize: 13, indentWidth: 4, useTabs: false }),
+  preferences: Object.freeze({ language: "system", theme: "dark", editorFontSize: 13, consoleFontSize: 13, indentWidth: 4, useTabs: false, adaptEditorLiterals: false }),
   assistant: Object.freeze({ open: false, width: 340, models: Object.freeze({}) }),
   panels: Object.freeze({ files: true, workspace: true, history: true, figures: true, debugger: true, bottom: true }),
   layout: Object.freeze({ left: 220, right: 300, editorHeight: 56, consoleWidth: 50 }),
@@ -190,6 +190,7 @@ function sanitizeSettings(value, definitions = [], mac = true, translator = (sou
   result.preferences.consoleFontSize = finiteNumber(value.preferences?.consoleFontSize, 13, 10, 24);
   result.preferences.indentWidth = finiteNumber(value.preferences?.indentWidth, 4, 1, 8);
   result.preferences.useTabs = value.preferences?.useTabs === true;
+  result.preferences.adaptEditorLiterals = value.preferences?.adaptEditorLiterals === true;
   for (const name of Object.keys(result.panels)) if (typeof value.panels?.[name] === "boolean") result.panels[name] = value.panels[name];
   if (["ask", "read-only", "edit"].includes(value.assistant?.mode)) result.assistant.mode = value.assistant.mode;
   result.assistant.open = value.assistant?.open === true;

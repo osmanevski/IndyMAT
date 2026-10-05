@@ -15,8 +15,13 @@ import { t as tr, getLanguage, onLanguageChange } from "./i18n.js";
 
 const lexicalDocuments = new WeakMap();
 function editorLexicalLines(doc) {
-  if (!lexicalDocuments.has(doc)) lexicalDocuments.set(doc, editorCommandUtils.scanEditorSource(doc.toString()));
-  return lexicalDocuments.get(doc);
+  const profile = registry.getSetting?.("preferences", "adaptEditorLiterals") ? "matlab" : "native-octave";
+  let cached = lexicalDocuments.get(doc);
+  if (!cached || cached.profile !== profile) {
+    cached = { profile, lines: editorCommandUtils.scanEditorSource(doc.toString(), profile) };
+    lexicalDocuments.set(doc, cached);
+  }
+  return cached.lines;
 }
 
 const themeCompartment = new Compartment();
@@ -98,7 +103,7 @@ const sections = ViewPlugin.fromClass(class {
     this.decorations = this.build(view);
   }
   update(u) {
-    if (u.docChanged || u.viewportChanged) this.decorations = this.build(u.view);
+    if (u.docChanged || u.viewportChanged || u.transactions.some((transaction) => transaction.reconfigured)) this.decorations = this.build(u.view);
   }
   build(view) {
     let b = new RangeSetBuilder();

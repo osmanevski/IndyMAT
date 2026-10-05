@@ -1,6 +1,7 @@
 import shared from "./state.js";
 import registry from "./registry.js";
 import { t } from "./i18n.js";
+import { showAdaptation, showSourceErrors } from "./source_adapter.js";
 
 async function poll() {
   if (shared.polling) return;
@@ -45,6 +46,10 @@ async function poll() {
       shared.publishRenders.delete(s.job);
     }
     if (s.job === shared.lastJob && shared.activeOutput) {
+      if (shared.activeOutput.sourceContext) {
+        showAdaptation(shared.activeOutput, s.source_adapter);
+        showSourceErrors(shared.activeOutput, s);
+      }
       registry.applyConsoleClear(s);
       if (shared.activeOutput.out.textContent !== (s.output || "")) {
         shared.activeOutput.out.textContent = s.output || "";

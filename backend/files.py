@@ -20,7 +20,7 @@ class Workspace:
         raw=Path(name).expanduser()
         if '..' in raw.parts:raise PermissionError(tr('The file path cannot traverse a parent folder.'))
         p=(raw if raw.is_absolute() else self.current/raw).resolve()
-        if any(p.is_relative_to(root) for root in getattr(self,'workspace_private_roots',())):raise PermissionError(tr('Private MAT job files cannot be accessed.'))
+        if any(p.is_relative_to(Path(root).resolve()) for root in (*getattr(self,'workspace_private_roots',()),*getattr(self,'source_private_roots',()))):raise PermissionError(tr('Private MAT job files cannot be accessed.'))
         if not self._inside(p) or p==self.current:raise PermissionError(tr('The file is outside the allowed folder.'))
         return p
     def folder(self,name):
@@ -28,7 +28,7 @@ class Workspace:
         name=os.fspath(name)
         if not name or any(c in name for c in ('\x00','\n','\r')):raise ValueError(tr('Invalid folder path.'))
         raw=Path(name).expanduser();p=(raw if raw.is_absolute() else self.current/raw).resolve()
-        if any(p.is_relative_to(root) for root in getattr(self,'workspace_private_roots',())):raise PermissionError(tr('The private MAT job folder cannot be accessed.'))
+        if any(p.is_relative_to(Path(root).resolve()) for root in (*getattr(self,'workspace_private_roots',()),*getattr(self,'source_private_roots',()))):raise PermissionError(tr('The private MAT job folder cannot be accessed.'))
         if not self._inside(p):raise PermissionError(tr('The folder is outside the home directory.'))
         if not p.is_dir():raise FileNotFoundError(tr('Folder not found.'))
         return p

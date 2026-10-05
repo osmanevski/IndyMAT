@@ -1,5 +1,7 @@
 // Turkish translations owned by one feature lane; merged in i18n.js.
 export default {
+  "Adapt double-quoted editor literals": "Editördeki çift tırnaklı metin sabitlerini uyarla",
+  "Experimental: adapts MATLAB double-quoted text before Run Selection and Run Section, including Run and Advance and Run to End. Saved-file Run, Command Window, Publish, assistant code, and files loaded by Octave are not covered.": "Deneysel: Seçimi çalıştır ve Bölümü çalıştır öncesinde MATLAB çift tırnaklı metinlerini uyarlar; Çalıştır ve ilerle ile Bölümden sona çalıştır da kapsamdadır. Kayıtlı dosyayı çalıştırma, Konsol, Yayınla, asistan kodu ve Octave’ın yüklediği dosyalar kapsam dışındadır.",
   "Settings cannot be saved in the browser; they will stay in memory for this session.": "Ayarlar tarayıcıya yazılamıyor; bu oturumda bellekte korunacak.",
   "Change": "Değiştir",
   "Default": "Varsayılan",

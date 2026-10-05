@@ -97,6 +97,7 @@ function __mf_execute__(folder, mode, argument)
       endif
     catch err
       result.error = err.message;
+      result.error_frames = err.stack;
       for k = 1:min(numel(err.stack), 6)
         if isempty(strfind(err.stack(k).name, '__mf_'))
           result.error = sprintf('%s\n  %s:%d', result.error, err.stack(k).name, err.stack(k).line);
@@ -175,6 +176,14 @@ function __mf_execute__(folder, mode, argument)
     if fid>=0
       fputs(fid,jsonencode(result)); fclose(fid);
     endif
+    % Private verification facts, never editor code or a browser-supplied path.
+    % Keep this separate from result.json so native state payloads stay intact.
+    try
+      environment=struct('constructor',which('string'),'path',path(),'cwd',pwd());
+      fid=fopen([folder filesep() 'source-environment.json'],'w');
+      if fid>=0,fputs(fid,jsonencode(environment));fclose(fid);endif
+    catch
+    end_try_catch
     fprintf('\n__MF_DONE_%s__\n',job); fflush(stdout);
   end_unwind_protect
 endfunction
