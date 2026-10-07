@@ -239,7 +239,8 @@ button.primary:hover:not(:disabled){background:var(--accent-hover)}
 .figure-pinned-tip{position:absolute;max-width:calc(100% - 4px);padding:4px 6px;border:1px solid var(--plot-axis);border-radius:4px;background:var(--plot-bg);color:var(--plot-text);font:var(--mono-font-size)/1.35 var(--mono);white-space:pre-wrap;overflow-wrap:anywhere}
 .figure-3d canvas{position:absolute;inset:0;cursor:inherit}
 .figure-3d .figure-labels{pointer-events:none;background:transparent}
-.figure-expanded{width:min(76vw,1000px);display:flex;flex-direction:column}
+dialog:has(.figure-expanded){width:min(1040px,92vw)}
+.figure-expanded{width:100%;display:flex;flex-direction:column}
 .figure-expanded-stage{position:relative;height:min(58vh,650px);min-height:220px}
 
 .workspace-panel{width:var(--right);flex-shrink:0;display:flex;flex-direction:column;background:var(--surface-side)}

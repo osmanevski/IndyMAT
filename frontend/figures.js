@@ -2,6 +2,7 @@ import shared from "./state.js";
 import registry from "./registry.js";
 import { t, onLanguageChange } from "./i18n.js";
 import figureData from "./figure_data_utils.cjs";
+import shapes from "./figure_shape_utils.cjs";
 import { Figure3D, drawColorbars } from "./figure3d.js";
 import { figureReasonText, figureReductionText, unmountFigureTools } from "./figure_tools.js";
 
@@ -109,6 +110,12 @@ function plotColor(value, palette = plotTheme()) {
   // Keep Octave RGB unchanged unless contrast is below 3:1 on the themed canvas; then use plot ink. PNGs are untouched.
   return contrast < 3 ? palette.text : `rgb(${rgb.map((v) => v * 255).join(",")})`;
 }
+function rawColor(value) {
+  return `rgb(${value.map((v) => Math.max(0, Math.min(1, v)) * 255).join(",")})`;
+}
+const plotDash = (style) => ({ "--": [7, 4], ":": [2, 3], "-.": [7, 3, 2, 3] }[style] || []);
+const sansFont = (size, bold = false, italic = false) => `${italic ? "italic " : ""}${bold ? "600 " : ""}${size}px -apple-system, sans-serif`;
+const monoFont = (size) => `${size}px "JetBrains Mono", Menlo, "SF Mono", ui-monospace, monospace`;
 function plotFormat(v) {
   if (!Number.isFinite(v)) return String(v);
   let a = Math.abs(v);
@@ -132,6 +139,20 @@ class InteractiveFigure {
     this.ctx = this.canvas.getContext("2d");
     this.drag = null;
     this.hits = [];
+    this.faces = [];
+    this.texts = [];
+    // Read-only hook for the browser tests: what was drawn, and where.
+    this.wrap.figureTest = {
+      texts: () => this.texts.map((item) => ({ ...item })),
+      faces: () => this.faces.length,
+      axes: () => this.data.axes.map((axes) => axes.visible !== false),
+      box: (axis) => this.box(axis),
+      project: (axis, x, y) => ({ x: this.dataPixel(x, axis, "x"), y: this.dataPixel(y, axis, "y") }),
+      pixel: (x, y) => {
+        const d = devicePixelRatio || 1;
+        return [...this.ctx.getImageData(Math.round(x * d), Math.round(y * d), 1, 1).data];
+      }
+    };
     this.bind();
     this.observer = new ResizeObserver(() => this.resize());
     this.observer.observe(this.wrap);
@@ -222,6 +243,8 @@ class InteractiveFigure {
   }
   axisAt(p) {
     for (let i = this.data.axes.length - 1; i >= 0; i--) {
+      // An invisible axes (figure title, annotation overlay) is not a zoom target.
+      if (this.data.axes[i].visible === false) continue;
       let b = this.box(i);
       if (p.x >= b.x && p.x <= b.x + b.w && p.y >= b.y && p.y <= b.y + b.h) return i;
     }
@@ -267,6 +290,8 @@ class InteractiveFigure {
     c.fillStyle = p.background;
     c.fillRect(0, 0, this.width, this.height);
     this.hits = [];
+    this.faces = [];
+    this.texts = [];
     this.data.axes.forEach((a, i) => this.drawAxis(a, i));
     if (this.drag && !this.drag.pan) {
       let d = this.drag;
@@ -278,59 +303,109 @@ class InteractiveFigure {
     }
     this.canvas.dataset.view = JSON.stringify(this.views);
   }
+  runFont(run, size, bold, italic, mono) {
+    const scaled = run.script ? size * 0.7 : size;
+    return mono ? monoFont(scaled) : sansFont(scaled, bold || run.bold, italic || run.italic);
+  }
+  measureRuns(runs, size, bold = false, italic = false, mono = false) {
+    const c = this.ctx;
+    let width = 0;
+    for (const run of runs) {
+      c.font = this.runFont(run, size, bold, italic, mono);
+      width += c.measureText(run.text).width;
+    }
+    return width;
+  }
+  // Draws styled runs from the left edge x on the given baseline.
+  drawRuns(runs, x, baseline, size, bold = false, italic = false, mono = false) {
+    const c = this.ctx;
+    c.textAlign = "left";
+    for (const run of runs) {
+      c.font = this.runFont(run, size, bold, italic, mono);
+      c.fillText(run.text, x, baseline + (run.script > 0 ? -0.38 * size : run.script < 0 ? 0.18 * size : 0));
+      x += c.measureText(run.text).width;
+    }
+  }
+  label(text, interpreter, x, y, size, align, bold = false, mono = false) {
+    const runs = shapes.parseTex(text, interpreter === "none" ? "none" : "tex");
+    const width = this.measureRuns(runs, size, bold, false, mono);
+    this.drawRuns(runs, align === "center" ? x - width / 2 : align === "right" ? x - width : x, y, size, bold, false, mono);
+    return width;
+  }
+  axisTicks(a, i, which) {
+    const range = this.views[i][which], ticks = shapes.axisTicks(a, which, range, this.initial[i]?.[which]);
+    return ticks || this.ticks(range, a[which + "scale"]).map((value) => ({ value, label: null }));
+  }
   drawAxis(a, i) {
-    let c = this.ctx, p = this.palette, b = this.box(i), v = this.views[i], xt = this.ticks(v.x, a.xscale), yt = this.ticks(v.y, a.yscale);
+    let c = this.ctx, p = this.palette, b = this.box(i), visible = a.visible !== false;
+    const interpreters = a.interpreters || {};
     c.save();
-    c.fillStyle = p.background;
-    c.fillRect(b.x, b.y, b.w, b.h);
-    c.strokeStyle = p.grid;
-    c.lineWidth = 1;
-    c.font = '10px "JetBrains Mono", Menlo, "SF Mono", ui-monospace, monospace';
-    c.fillStyle = p.text;
-    for (let x of xt) {
-      let px = this.dataPixel(x, i, "x");
-      if (a.grid.x) {
-        c.beginPath();
-        c.moveTo(px, b.y);
-        c.lineTo(px, b.y + b.h);
-        c.stroke();
+    if (visible) {
+      c.fillStyle = p.background;
+      c.fillRect(b.x, b.y, b.w, b.h);
+      c.strokeStyle = p.grid;
+      c.lineWidth = 1;
+      c.fillStyle = p.text;
+      let edge = -Infinity;
+      for (let tick of this.axisTicks(a, i, "x")) {
+        let px = this.dataPixel(tick.value, i, "x");
+        if (px === null) continue;
+        if (a.grid.x) {
+          c.beginPath();
+          c.moveTo(px, b.y);
+          c.lineTo(px, b.y + b.h);
+          c.stroke();
+        }
+        // Skip a label that would run into the previous one.
+        const text = tick.label ?? plotFormat(tick.value), width = this.measureRuns(shapes.parseTex(text, interpreters.ticks), 10, false, false, true);
+        if (px - width / 2 < edge + 4) continue;
+        this.label(text, interpreters.ticks, px, b.y + b.h + 13, 10, "center", false, true);
+        edge = px + width / 2;
       }
-      c.textAlign = "center";
-      c.fillText(plotFormat(x), px, b.y + b.h + 13);
-    }
-    for (let y of yt) {
-      let py = this.dataPixel(y, i, "y");
-      if (a.grid.y) {
-        c.beginPath();
-        c.moveTo(b.x, py);
-        c.lineTo(b.x + b.w, py);
-        c.stroke();
+      edge = null;
+      for (let tick of this.axisTicks(a, i, "y")) {
+        let py = this.dataPixel(tick.value, i, "y");
+        if (py === null) continue;
+        if (a.grid.y) {
+          c.beginPath();
+          c.moveTo(b.x, py);
+          c.lineTo(b.x + b.w, py);
+          c.stroke();
+        }
+        if (edge !== null && Math.abs(py - edge) < 11) continue;
+        this.label(tick.label ?? plotFormat(tick.value), interpreters.ticks, b.x - 4, py + 3, 10, "right", false, true);
+        edge = py;
       }
-      c.textAlign = "right";
-      c.fillText(plotFormat(y), b.x - 4, py + 3);
+      c.strokeStyle = p.axis;
+      c.strokeRect(b.x, b.y, b.w, b.h);
     }
-    c.strokeStyle = p.axis;
-    c.strokeRect(b.x, b.y, b.w, b.h);
-    c.save();
-    c.beginPath();
-    c.rect(b.x, b.y, b.w, b.h);
-    c.clip();
-    a.series.forEach((s, j) => this.drawSeries(s, a, i, j));
-    c.restore();
+    // Octave's order: children in stacking order, then text in non-data units.
+    const late = (s) => s.kind === "text" && s.units !== "data";
+    for (const pass of [false, true]) {
+      a.series.forEach((s, j) => {
+        if (late(s) !== pass) return;
+        c.save();
+        // Text is not clipped to the axes unless its own clipping is on.
+        if (s.kind !== "text" || s.clipping) {
+          c.beginPath();
+          c.rect(b.x, b.y, b.w, b.h);
+          c.clip();
+        }
+        c.lineWidth = 1;
+        if (s.kind === "patch2d") this.drawPatch(s, i, j);
+        else if (s.kind === "text") this.drawText(s, i, j);
+        else this.drawSeries(s, a, i, j);
+        c.restore();
+      });
+    }
     c.fillStyle = p.text;
-    c.textAlign = "center";
-    c.font = "11px -apple-system, sans-serif";
-    if (a.title) {
-      c.font = "600 12px -apple-system, sans-serif";
-      c.fillText(a.title, b.x + b.w / 2, Math.max(12, b.y - 8));
-    }
-    c.font = "11px -apple-system, sans-serif";
-    if (a.xlabel) c.fillText(a.xlabel, b.x + b.w / 2, Math.min(this.height - 2, b.y + b.h + 27));
+    if (a.title) this.label(a.title, interpreters.title, b.x + b.w / 2, Math.max(12, b.y - 8), 12, "center", true);
+    if (a.xlabel) this.label(a.xlabel, interpreters.xlabel, b.x + b.w / 2, Math.min(this.height - 2, b.y + b.h + 27), 11, "center");
     if (a.ylabel) {
       c.save();
       c.translate(Math.max(9, b.x - 34), b.y + b.h / 2);
       c.rotate(-Math.PI / 2);
-      c.fillText(a.ylabel, 0, 0);
+      this.label(a.ylabel, interpreters.ylabel, 0, 0, 11, "center");
       c.restore();
     }
     this.drawLegend(a, i);
@@ -340,7 +415,88 @@ class InteractiveFigure {
     }
     c.restore();
   }
+  // Filled faces keep their serialised colour; only the edge follows the
+  // 3:1 contrast rule. The geometry is Octave's own patch, never recomputed.
+  drawPatch(s, i, j) {
+    const c = this.ctx, face = s.face_color === "none" ? null : rawColor(s.face_color);
+    const edge = s.edge_color === "none" || s.line_style === "none" ? null : plotColor(s.edge_color, this.palette);
+    c.lineWidth = Math.max(1, s.line_width);
+    c.lineJoin = "miter";
+    for (const polygon of shapes.facePolygons(s)) {
+      const points = [];
+      for (const [x, y] of polygon.points) {
+        const px = this.dataPixel(x, i, "x"), py = this.dataPixel(y, i, "y");
+        if (px === null || py === null) break;
+        points.push([px, py]);
+      }
+      if (points.length !== polygon.points.length) continue;
+      c.beginPath();
+      points.forEach(([px, py], n) => n ? c.lineTo(px, py) : c.moveTo(px, py));
+      c.closePath();
+      if (face && points.length > 2) {
+        c.fillStyle = face;
+        c.fill("evenodd");
+      }
+      if (edge) {
+        c.strokeStyle = edge;
+        c.setLineDash(plotDash(s.line_style));
+        c.stroke();
+        c.setLineDash([]);
+      }
+      if (s.role === "textbox") continue;
+      const tip = shapes.faceTip(s, polygon);
+      if (tip) this.faces.push({ axis: i, seriesIndex: j, series: s, points, tip });
+      else if (!s.bar) polygon.points.forEach(([x, y], n) => this.hits.push({ x: points[n][0], y: points[n][1], vx: x, vy: y, series: s, axis: i, seriesIndex: j }));
+    }
+  }
+  drawText(s, i, j) {
+    const c = this.ctx, a = this.data.axes[i], b = this.box(i);
+    let x, y;
+    if (s.units === "data") {
+      x = this.dataPixel(s.position[0], i, "x");
+      y = this.dataPixel(s.position[1], i, "y");
+      if (x === null || y === null) return;
+      // Unclipped text follows its anchor: it is shown while the anchor is in
+      // view, and always when it was placed outside the exported limits.
+      const inside = x >= b.x - 0.5 && x <= b.x + b.w + 0.5 && y >= b.y - 0.5 && y <= b.y + b.h + 0.5;
+      const within = (value, range) => value >= Math.min(...range) && value <= Math.max(...range);
+      const margin = !within(s.position[0], this.initial[i].x) || !within(s.position[1], this.initial[i].y);
+      if (!inside && !(margin && !s.clipping)) return;
+    } else {
+      x = b.x + s.position[0] * b.w;
+      y = b.y + (1 - s.position[1]) * b.h;
+    }
+    const size = s.font_size, bold = s.font_weight === "bold", italic = s.font_angle === "italic";
+    const lines = s.lines.map((line) => shapes.parseTex(line, s.interpreter));
+    if (!lines.some((runs) => runs.length)) return;
+    const layout = shapes.layoutText({ widths: lines.map((runs) => this.measureRuns(runs, size, bold, italic)), lineHeight: size * 1.2, ascent: size * 0.8, descent: size * 0.2, halign: s.horizontal_alignment, valign: s.vertical_alignment, margin: s.margin });
+    c.save();
+    c.translate(x, y);
+    c.rotate(-s.rotation * Math.PI / 180);
+    // An annotation textbox draws its background as the patch right before its text.
+    const frame = s.role === "textbox" ? a.series[j - 1] : null;
+    const boxed = s.background_color !== "none" || frame?.kind === "patch2d" && frame.role === "textbox" && frame.face_color !== "none";
+    if (s.background_color !== "none") {
+      c.fillStyle = rawColor(s.background_color);
+      c.fillRect(layout.box.x, layout.box.y, layout.box.w, layout.box.h);
+    }
+    if (s.edge_color !== "none" && s.line_style !== "none") {
+      c.strokeStyle = plotColor(s.edge_color, this.palette);
+      c.lineWidth = Math.max(1, s.line_width);
+      c.setLineDash(plotDash(s.line_style));
+      c.strokeRect(layout.box.x, layout.box.y, layout.box.w, layout.box.h);
+      c.setLineDash([]);
+    }
+    // On its own box the text keeps its colour; on the themed plot background
+    // it follows the same 3:1 contrast rule as lines.
+    c.fillStyle = boxed ? rawColor(s.color) : plotColor(s.color, this.palette);
+    const color = c.fillStyle;
+    lines.forEach((runs, n) => this.drawRuns(runs, layout.lines[n].x, layout.lines[n].baseline, size, bold, italic));
+    c.restore();
+    this.texts.push({ axis: i, id: j, text: s.lines.map((line) => shapes.plainText(line, s.interpreter)).join("\n"), x, y, rotation: s.rotation, box: { x: x + layout.box.x, y: y + layout.box.y, w: layout.box.w, h: layout.box.h }, boxed, color });
+  }
   seriesStyle(s) {
+    if (s.kind === "patch2d") return { line: null, edge: s.edge_color === "none" || s.line_style === "none" ? null : plotColor(s.edge_color, this.palette), face: s.face_color === "none" ? null : rawColor(s.face_color) };
     // Keep the exported source mode: an explicit RGB equal to Octave's axes
     // colour is not necessarily 'auto'. Only auto tracks the displayed canvas.
     return { line: s.kind !== "scatter" && s.line_style !== "none" && s.line_color !== "none" ? plotColor(s.line_color, this.palette) : null, edge: s.marker_edge_color === "none" ? null : plotColor(s.marker_edge_color, this.palette), face: s.marker_face_auto ? this.palette.background : s.marker_face_color === "none" ? null : plotColor(s.marker_face_color, this.palette) };
@@ -352,7 +508,21 @@ class InteractiveFigure {
       points.push(x === null || y === null ? null : { x, y, vx: s.x[n], vy: s.y[n], series: s });
     }
     c.lineWidth = 1.5;
-    c.setLineDash({ "--": [7, 4], ":": [2, 3], "-.": [7, 3, 2, 3] }[s.line_style] || []);
+    c.setLineDash(plotDash(s.line_style));
+    if (style.line && s.span) {
+      // A baseline or constant line crosses the whole current view.
+      const b = this.box(i), across = s.span === "horizontal", at = across ? points[0]?.y : points[0]?.x;
+      if (at !== undefined && at !== null) {
+        c.strokeStyle = style.line;
+        c.lineWidth = s.role === "bar" ? 1 : 1.5;
+        c.beginPath();
+        c.moveTo(across ? b.x : at, across ? at : b.y);
+        c.lineTo(across ? b.x + b.w : at, across ? at : b.y + b.h);
+        c.stroke();
+      }
+      c.setLineDash([]);
+      return;
+    }
     if (style.line) {
       c.strokeStyle = style.line;
       if (s.kind === "stem") {
@@ -436,9 +606,12 @@ class InteractiveFigure {
   }
   drawLegend(a, i) {
     if (!a.legend?.visible) return;
-    const p = this.palette, labels = a.legend.labels || [], items = a.series.map((s, j) => ({ label: s.display_name || labels[j], series: s, style: this.seriesStyle(s) })).filter((x2) => x2.label);
+    // Text and group baselines are never legend entries.
+    const p = this.palette, labels = a.legend.labels || [], items = a.series.filter((s) => s.kind !== "text" && !(s.span && s.role === "bar")).map((s, j) => ({ label: s.display_name || labels[j], series: s, style: this.seriesStyle(s) })).filter((x2) => x2.label);
     if (!items.length) return;
-    const c = this.ctx, b = this.box(i), width = Math.min(b.w * 0.55, Math.max(...items.map((x2) => c.measureText(x2.label).width)) + 35), height = items.length * 16 + 8, x = b.x + b.w - width - 6, y = b.y + 6;
+    const c = this.ctx, b = this.box(i);
+    c.font = sansFont(10);
+    const width = Math.min(b.w * 0.55, Math.max(...items.map((x2) => c.measureText(shapes.plainText(x2.label)).width)) + 35), height = items.length * 16 + 8, x = b.x + b.w - width - 6, y = b.y + 6;
     c.save();
     c.fillStyle = p.background;
     c.fillRect(x, y, width, height);
@@ -448,9 +621,22 @@ class InteractiveFigure {
     c.textAlign = "left";
     items.forEach((item, n) => {
       let yy = y + 13 + n * 16;
+      if (item.series.kind === "patch2d") {
+        if (item.style.face) {
+          c.fillStyle = item.style.face;
+          c.fillRect(x + 6, yy - 8, 17, 9);
+        }
+        if (item.style.edge) {
+          c.strokeStyle = item.style.edge;
+          c.strokeRect(x + 6, yy - 8, 17, 9);
+        }
+        c.fillStyle = p.text;
+        this.drawRuns(shapes.parseTex(item.label), x + 27, yy, 10);
+        return;
+      }
       if (item.style.line) {
         c.strokeStyle = item.style.line;
-        c.setLineDash({ "--": [7, 4], ":": [2, 3], "-.": [7, 3, 2, 3] }[item.series.line_style] || []);
+        c.setLineDash(plotDash(item.series.line_style));
         c.beginPath();
         c.moveTo(x + 6, yy - 3);
         c.lineTo(x + 23, yy - 3);
@@ -459,7 +645,7 @@ class InteractiveFigure {
       c.setLineDash([]);
       this.marker(x + 14.5, yy - 3, item.series.marker, item.style.edge, item.style.face);
       c.fillStyle = p.text;
-      c.fillText(item.label, x + 27, yy);
+      this.drawRuns(shapes.parseTex(item.label), x + 27, yy, 10);
     });
     c.restore();
   }
@@ -473,14 +659,23 @@ class InteractiveFigure {
       }
     }
     if (!nearest) {
+      // No sample nearby: the topmost filled face under the pointer.
+      for (let n = this.faces.length - 1; n >= 0 && !nearest; n--) {
+        const face = this.faces[n], b = this.box(face.axis);
+        if (p.x < b.x || p.x > b.x + b.w || p.y < b.y || p.y > b.y + b.h) continue;
+        if (shapes.pointInPolygon(face.points, p.x, p.y)) nearest = { ...face, x: p.x, y: p.y, vx: face.tip.x, vy: face.tip.y };
+      }
+    }
+    if (!nearest) {
       if (!this.pinned) this.tip.hidden = true;
       return;
     }
     this.pinned = pin;
-    let label = nearest.series.display_name || this.data.axes[nearest.axis].legend?.labels?.[nearest.seriesIndex] || "", name = label ? label + ": " : "";
-    this.tip.textContent = `${name}x = ${plotFormat(Number(nearest.vx))}, y = ${plotFormat(Number(nearest.vy))}`;
+    const value = (v) => Array.isArray(v) ? `[${plotFormat(Number(v[0]))}, ${plotFormat(Number(v[1]))}]` : plotFormat(Number(v));
+    let label = shapes.plainText(nearest.series.display_name || this.data.axes[nearest.axis].legend?.labels?.[nearest.seriesIndex] || ""), name = label ? label + ": " : "";
+    this.tip.textContent = `${name}x = ${value(nearest.vx)}, y = ${value(nearest.vy)}`;
     this.tip.hidden = false;
-    this.tip.style.left = Math.min(this.width - 190, nearest.x + 9) + "px";
+    this.tip.style.left = Math.max(2, Math.min(this.width - 190, nearest.x + 9)) + "px";
     this.tip.style.top = Math.max(2, nearest.y - 30) + "px";
   }
 }
@@ -508,8 +703,11 @@ function paint2D(ctx, axes, width, height) {
   plot.height = height;
   plot.palette = plotTheme();
   plot.hits = [];
+  plot.faces = [];
+  plot.texts = [];
   plot.data = { axes: [axes] };
   plot.views = [{ x: [...axes.xlim], y: [...axes.ylim] }];
+  plot.initial = [{ x: [...axes.xlim], y: [...axes.ylim] }];
   plot.drawAxis(axes, 0);
 }
 function renderFigures() {

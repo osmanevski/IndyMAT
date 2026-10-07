@@ -163,3 +163,90 @@ for (const file of files) check("real fixture " + file, () => {
 });
 if (!files.length) console.log("SKIP real fixture acceptance: no graphics toolkit in lane; run uret.m in Qt Octave.");
 console.log(`${count} validator cases passed; ${files.length} real fixtures checked.`);
+
+// 2D filled shapes and text (synthetic records; the real ones are the fixtures above).
+const flatAxis = copy(axis);
+flatAxis.dimension = 2;
+const patch = { id: 0, kind: "patch2d", role: "bar", vertices: descriptor([8, 2], [1, 1, 2, 2, 3, 3, 4, 4, 0, 5, 5, 0, 0, null, null, 0]),
+  faces: descriptor([2, 4], [0, 4, 1, 5, 2, 6, 3, 7]), index_base: 0, face_color: [0, .447, .741], edge_color: [0, 0, 0],
+  line_style: "-", line_width: .5, display_name: "a", decimated: false, original_points: 8, rendered_points: 8,
+  bar: { horizontal: false, layout: "grouped", width: .8, base_value: 0, positions: [1.5, 3.5], values: [5, null] } };
+const note = { id: 1, kind: "text", role: "text", units: "data", position: [1, 2], lines: ["a", "\\sigma"], interpreter: "tex",
+  horizontal_alignment: "left", vertical_alignment: "top", rotation: 0, font_size: 10, font_weight: "normal", font_angle: "normal",
+  color: [0, 0, 0], background_color: [1, 1, 1], edge_color: "none", margin: 3, line_style: "-", line_width: .5, clipping: false,
+  display_name: "", decimated: false, original_points: 0, rendered_points: 0 };
+const base = { id: 2, kind: "line", role: "bar", span: "horizontal", x: [.5, 4.5], y: [0, 0], line_color: [0, 0, 0], marker_edge_color: [0, 0, 0],
+  marker_face_color: "none", marker_face_auto: false, line_style: "-", line_width: .5, marker: "none", marker_size: 6, display_name: "",
+  base_value: 0, decimated: false, original_points: 2, rendered_points: 2, source_indices: [0, 1] };
+const flat = copy(scene);
+flat.axes = [{ ...flatAxis, visible: true, interpreters: { title: "tex", xlabel: "tex", ylabel: "tex", ticks: "tex" }, xtickmode: "auto", xticklabelmode: "manual", series: [patch, note, base] }];
+flat.vertex_count = 10;
+flat.limits = { ...LIMITS, text_lines: 256, text_chars: 65536 };
+check("2D shapes, text and span line", () => {
+  const before = copy(flat);
+  const result = validate(flat);
+  assert.equal(result.ok, true, JSON.stringify(result));
+  assert.equal(result.vertex_count, 10);
+  assert.deepEqual(flat, before);
+});
+check("older artifacts without the optional limits stay valid", () => {
+  const v = copy(flat);
+  v.limits = { ...LIMITS };
+  assert.equal(validate(v).ok, true);
+});
+function badFlat(name, mutate, code) {
+  check(name, () => {
+    const v = copy(flat);
+    mutate(v, v.axes[0].series);
+    const result = validate(v);
+    assert.equal(result.ok, false, name);
+    if (code) assert.equal(result.reason_code, code, name + " " + JSON.stringify(result));
+  });
+}
+badFlat("patch in a v2 record", (v) => { v.version = 2; }, "unsupported_object");
+badFlat("patch in 3D axes", (v) => { v.axes[0].dimension = 3; }, "unsupported_object");
+badFlat("text in 3D axes", (v, s) => { v.axes[0].dimension = 3; v.axes[0].series = [{ ...s[1], id: 0 }]; v.vertex_count = 0; }, "unsupported_object");
+badFlat("patch on a log axis", (v) => { v.axes[0].yscale = "log"; }, "unsupported_patch");
+badFlat("face index out of range", (v, s) => { s[0].faces.values[7] = 8; }, "invalid_index");
+badFlat("fractional face index", (v, s) => { s[0].faces.values[0] = .5; }, "invalid_index");
+badFlat("one-based patch indices", (v, s) => { s[0].index_base = 1; });
+badFlat("padding inside a face", (v, s) => { s[0].faces.values[2] = null; }, "invalid_index");
+badFlat("three vertex columns", (v, s) => { s[0].vertices.shape = [4, 4]; });
+badFlat("vertex count mismatch", (v, s) => { s[0].rendered_points = 7; });
+badFlat("patch vertex budget", (v, s) => { s[0].vertices.shape = [40001, 2]; }, "budget_exceeded");
+badFlat("patch face budget", (v, s) => { s[0].faces.shape = [40001, 4]; }, "budget_exceeded");
+badFlat("interpolated face colour word", (v, s) => { s[0].face_color = "interp"; }, "unsupported_color");
+badFlat("out of range face colour", (v, s) => { s[0].face_color = [0, 0, 2]; }, "unsupported_color");
+badFlat("unknown patch role", (v, s) => { s[0].role = "pie"; });
+badFlat("bar data of the wrong length", (v, s) => { s[0].bar.values.pop(); });
+badFlat("bar data on a plain patch", (v, s) => { s[0].role = "patch"; });
+badFlat("pixel text units", (v, s) => { s[1].units = "pixels"; }, "unsupported_text");
+badFlat("latex interpreter", (v, s) => { s[1].interpreter = "latex"; }, "unsupported_text");
+badFlat("nonfinite text position", (v, s) => { s[1].position = [1, null]; });
+badFlat("text line that is not a string", (v, s) => { s[1].lines = ["a", 3]; });
+badFlat("text line budget", (v, s) => { s[1].lines = Array(257).fill("x"); }, "budget_exceeded");
+badFlat("text character budget", (v, s) => { s[1].lines = ["x".repeat(65537)]; }, "budget_exceeded");
+badFlat("unnormalised rotation", (v, s) => { s[1].rotation = 360; });
+badFlat("unknown alignment", (v, s) => { s[1].vertical_alignment = "centre"; });
+badFlat("text without a colour", (v, s) => { s[1].color = "none"; }, "unsupported_color");
+badFlat("text counted as points", (v, s) => { s[1].rendered_points = 1; });
+badFlat("span on a longer line", (v, s) => { s[2].x = [1, 2, 3]; s[2].y = [0, 0, 0]; s[2].source_indices = [0, 1, 2]; s[2].original_points = 3; s[2].rendered_points = 3; v.vertex_count = 11; });
+badFlat("unknown span", (v, s) => { s[2].span = "diagonal"; });
+badFlat("span in a v2 record", (v) => { v.version = 2; v.axes[0].series = [v.axes[0].series[2]]; });
+badFlat("increased optional limit", (v) => { v.limits.text_lines = 1e6; });
+badFlat("non-boolean axes visibility", (v) => { v.axes[0].visible = "off"; });
+badFlat("unknown tick mode", (v) => { v.axes[0].xtickmode = "fixed"; });
+check("hidden axes that only carry text", () => {
+  const v = copy(flat);
+  v.axes[0].visible = false;
+  v.axes[0].series = [{ ...v.axes[0].series[1], id: 0 }];
+  v.vertex_count = 0;
+  assert.equal(validate(v).ok, true, JSON.stringify(validate(v)));
+});
+for (const [file, kinds] of Object.entries({ "bar_grouped.json": ["patch2d", "line", "patch2d"], "text_boxes.json": ["line", "text", "text", "text"], "group_lines.json": ["line", "line", "line", "text", "line"], "hist_flat.json": ["patch2d"] })) check("real 2D fixture " + file, () => {
+  const result = validate(JSON.parse(fs.readFileSync(path.join(folder, file), "utf8")));
+  assert.equal(result.supported, true, file);
+  assert.equal(result.version, 3);
+  assert.deepEqual(result.data.axes[0].series.map((s) => s.kind), kinds);
+});
+console.log(`${count} validator cases in total, including 2D shapes and text.`);

@@ -24,6 +24,9 @@ export function figureReasonText(code, args = {}) {
     case "manual_camera": return t("Only the PNG view is available: manual camera ({property}).", details);
     case "unsupported_units": return t("Only the PNG view is available: unsupported axes units or parent.");
     case "unsupported_colorbar": return t("Only the PNG view is available: unsupported colorbar configuration.");
+    case "patch_colors": return t("Only the PNG view is available: per-face or per-vertex patch colors.");
+    case "unsupported_patch": return t("Only the PNG view is available: unsupported filled shape ({property}).", details);
+    case "unsupported_text": return t("Only the PNG view is available: unsupported text ({property}).", details);
     case "json_budget": return t("Only the PNG view is available: figure JSON exceeds {limit} bytes.", details);
     case "unknown_version": return t("Only the PNG view is available: unknown figure data version.");
     case "invalid_index": return t("Only the PNG view is available: invalid figure data indices.");

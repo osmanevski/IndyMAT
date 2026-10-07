@@ -237,10 +237,12 @@ endfunction
         folder.mkdir(exist_ok=True)
         self.run_code(f"addpath({Kernel.quote(ROOT / 'tests/fixtures/figure_v3')}); uret({Kernel.quote(folder)});")
         files = list(folder.glob('*.json'))
-        self.assertEqual(len(files), 27)
+        self.assertEqual(len(files), 38)
         for file in files:
             data = json.loads(file.read_text())
-            if file.stem in ['line2d', 'plot3_gap', 'scatter3_sizes', 'surf_vector', 'surf_matrix_nan', 'mesh_default', 'surf_integer_clim', 'colorbar', 'reversed_view']:
+            if file.stem in ['line2d', 'plot3_gap', 'scatter3_sizes', 'surf_vector', 'surf_matrix_nan', 'mesh_default', 'surf_integer_clim', 'colorbar', 'reversed_view',
+                             'bar_grouped', 'barh_stacked', 'hist_flat', 'area_stacked', 'patch_missing_vertex',
+                             'text_boxes', 'group_lines', 'figure_title']:
                 self.assertTrue(data['supported'], file.name)
             else:
                 self.assertFalse(data['supported'], file.name)

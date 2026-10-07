@@ -4,7 +4,8 @@ function data = __mf_figure_data__(fig, source = struct('job','','figure',0))
   limits=struct('samples',2000,'surface_vertices',40000,'patch_vertices',40000,...
     'patch_triangles',80000,'vertices',100000,'triangles',200000,'axes',16,...
     'series',128,'colormap',4096,'json_bytes',8388608,'objects',1024,'depth',16,...
-    'source_samples',1000000,'ticks',4096,'global_objects',12289);
+    'source_samples',1000000,'ticks',4096,'global_objects',12289,...
+    'text_lines',256,'text_chars',65536);
   data=struct('version',2,'supported',true,'decimated',false,'point_limit',2000,...
     'axes',{{}},'reason','','reason_code','','reason_args',struct(),...
     'source',source,'limits',limits,'vertex_count',0,'triangle_count',0);
@@ -20,22 +21,40 @@ function data = __mf_figure_data__(fig, source = struct('job','','figure',0))
   endfor
   % Same bottom-to-top axes order as the old findall/reverse traversal.
   axes_handles=fliplr(axes_handles);
+  % The annotation overlay has a hidden handle, so its place in the child list
+  % is not its stacking position: Octave draws annotations over the plots.
+  overlay=false(size(axes_handles));
+  for k=1:numel(axes_handles),overlay(k)=strcmp(__mf_prop__(axes_handles(k),'tag',''),'scribeoverlay');endfor
+  axes_handles=[axes_handles(~overlay),axes_handles(overlay)];
   if numel(axes_handles)>limits.axes,data=__mf_fail__(data,'budget_exceeded',__mf_budget__('axes',numel(axes_handles),limits.axes));return;endif
   if isempty(axes_handles),data=__mf_fail__(data,'no_axes',struct());return;endif
   if ~isempty(bars),data.version=3;endif
   % Preflight aggregate upper bounds before conversion, grid expansion or sampling.
-  vertices=0;triangles=0;count=0;
-  for ax=axes_handles
+  vertices=0;triangles=0;count=0;leaves=cell(1,numel(axes_handles));
+  for k=1:numel(axes_handles)
+    ax=axes_handles(k);
     if ~isequal(get(ax,'view')(:).',[0 90]),data.version=3;endif
-    kids=__mf_axes_children__(ax,tree);baselines=__mf_baselines__(kids);
-    for h=kids
-      if any(h==baselines)||strcmp(__mf_prop__(h,'visible','on'),'off')||strcmp(__mf_prop__(h,'type',''),'light'),continue;endif
+    if strcmp(__mf_prop__(ax,'visible','on'),'off'),data.version=3;endif
+    [leaves{k},code,args,flattened]=__mf_leaves__(ax,tree);
+    if flattened,data.version=3;endif
+    if ~isempty(code),data=__mf_fail__(data,code,args);return;endif
+    for leaf=leaves{k}
+      h=leaf.h;type=__mf_prop__(h,'type','');
       count+=1;z=__mf_prop__(h,'zdata',[]);
       if ~isempty(z),data.version=3;endif
-      if strcmp(__mf_prop__(h,'type',''),'surface')
+      if strcmp(type,'surface')
         data.version=3;n=numel(z);
         if n>limits.surface_vertices,data=__mf_fail__(data,'budget_exceeded',__mf_budget__('surface_vertices',n,limits.surface_vertices));return;endif
         vertices+=n;sz=size(z);if numel(sz)==2,triangles+=2*max(0,sz(1)-1)*max(0,sz(2)-1);endif
+      elseif strcmp(type,'patch')
+        % Shape checks only: nothing is converted before the budgets pass.
+        data.version=3;n=rows(__mf_prop__(h,'vertices',[]));f=size(__mf_prop__(h,'faces',[]));
+        if n>limits.patch_vertices,data=__mf_fail__(data,'budget_exceeded',__mf_budget__('patch_vertices',n,limits.patch_vertices));return;endif
+        fan=f(1)*max(0,f(2)-2);
+        if fan>limits.patch_triangles,data=__mf_fail__(data,'budget_exceeded',__mf_budget__('patch_triangles',fan,limits.patch_triangles));return;endif
+        vertices+=n;
+      elseif strcmp(type,'text')
+        data.version=3;
       else
         vertices+=min(numel(__mf_prop__(h,'xdata',[])),limits.samples);
       endif
@@ -47,7 +66,7 @@ function data = __mf_figure_data__(fig, source = struct('job','','figure',0))
   count=0;
   for k=1:numel(axes_handles)
     ax=axes_handles(k);
-    [item,code,args]=__mf_axes__(ax,k-1,limits,tree);
+    [item,code,args]=__mf_axes__(ax,k-1,limits,tree,leaves{k});
     if item.dimension==3,data.version=3;endif
     if ~isempty(code),data=__mf_fail__(data,code,args);return;endif
     count+=numel(item.series);
@@ -122,12 +141,16 @@ function children=__mf_axes_children__(ax,tree)
   children=children(~ismember(children,labels));
 endfunction
 
-function [a,code,args]=__mf_axes__(ax,id,limits,tree)
+function [a,code,args]=__mf_axes__(ax,id,limits,tree,leaves)
   code='';args=struct();
   a=struct('id',id,'dimension',2,'supported',true,'reason','','position',[],...
     'xlabel',__mf_graphics_text__(get(ax,'xlabel')),'ylabel',__mf_graphics_text__(get(ax,'ylabel')),...
     'zlabel',__mf_graphics_text__(get(ax,'zlabel')),'title',__mf_graphics_text__(get(ax,'title')),...
     'grid',struct(),'legend',__mf_legend__(ax),'decimated',false,'series',{{}},'colorbars',{{}});
+  a.visible=strcmp(__mf_prop__(ax,'visible','on'),'on');
+  a.interpreters=struct('title',__mf_prop__(get(ax,'title'),'interpreter','tex'),...
+    'xlabel',__mf_prop__(get(ax,'xlabel'),'interpreter','tex'),'ylabel',__mf_prop__(get(ax,'ylabel'),'interpreter','tex'),...
+    'ticks',__mf_prop__(ax,'ticklabelinterpreter','tex'));
   [a.position,ok]=__mf_position__(ax);
   if ~ok,code='unsupported_units';args=struct('property','units');return;endif
   for axis='xyz'
@@ -138,6 +161,8 @@ function [a,code,args]=__mf_axes__(ax,id,limits,tree)
     if numel(ticks)>limits.ticks,code='budget_exceeded';args=__mf_budget__('ticks',numel(ticks),limits.ticks);return;endif
     a.([key 'tick'])=__mf_array__(ticks);
     a.([key 'ticklabel'])=__mf_labels__(get(ax,[key 'ticklabel']));
+    a.([key 'tickmode'])=__mf_prop__(ax,[key 'tickmode'],'auto');
+    a.([key 'ticklabelmode'])=__mf_prop__(ax,[key 'ticklabelmode'],'auto');
     a.grid.(key)=strcmp(get(ax,[key 'grid']),'on');
   endfor
   kids=__mf_axes_children__(ax,tree);baselines=__mf_baselines__(kids);
@@ -173,12 +198,64 @@ function [a,code,args]=__mf_axes__(ax,id,limits,tree)
   for h=kids
     if strcmp(__mf_prop__(h,'type',''),'light')&&strcmp(__mf_prop__(h,'visible','on'),'on'),lights(end+1)=h;endif
   endfor
-  for h=fliplr(kids)
-    if any(h==baselines)||strcmp(__mf_prop__(h,'visible','on'),'off')||strcmp(__mf_prop__(h,'type',''),'light'),continue;endif
-    [s,code,args]=__mf_series__(h,ax,limits,~isempty(lights),tree);
+  fixed_aspect=strcmp(a.data_aspect_ratio_mode,'manual')||strcmp(a.plot_box_aspect_ratio_mode,'manual');
+  for leaf=leaves
+    type=__mf_prop__(leaf.h,'type','');
+    if any(strcmp(type,{'patch','text'}))
+      % Filled shapes and free text exist only in the 2D viewer.
+      if a.dimension==3,code='unsupported_object';args=struct('type',type);return;endif
+      if strcmp(type,'patch')
+        if any(strcmp({a.xscale,a.yscale},'log')),code='unsupported_patch';args=struct('property','scale');return;endif
+        % The 2D viewer stretches axes to their box; a fixed aspect ratio
+        % (pie, axis equal) would visibly distort filled shapes.
+        if fixed_aspect&&~strcmp(leaf.role,'textbox'),code='unsupported_patch';args=struct('property','dataaspectratio');return;endif
+      endif
+    endif
+    [s,code,args]=__mf_series__(leaf,ax,limits,~isempty(lights),tree);
     if ~isempty(code),return;endif
     s.id=numel(a.series);a.series{end+1}=s;a.decimated=a.decimated||s.decimated;
   endfor
+endfunction
+
+function [leaves,code,args,flattened]=__mf_leaves__(ax,tree)
+  % Drawable leaves in Octave's drawing order (last child first). Known
+  % groups are flattened into their real children; nothing is recomputed.
+  leaves=struct('h',{},'role',{},'group',{});code='';args=struct();flattened=false;
+  kids=__mf_axes_children__(ax,tree);baselines=__mf_baselines__(kids);
+  overlay=strcmp(__mf_prop__(ax,'tag',''),'scribeoverlay');
+  for h=fliplr(kids)
+    type=__mf_prop__(h,'type','');
+    if any(h==baselines)||strcmp(__mf_prop__(h,'visible','on'),'off')||strcmp(type,'light'),continue;endif
+    kind='';creator='';
+    if strcmp(type,'hggroup')
+      try creator=getappdata(h,'__creator__');catch end_try_catch
+      if ~ischar(creator),creator='';endif
+      if __mf_has__(h,'bargroup'),kind='bar';allowed={'patch','line'};
+      elseif __mf_has__(h,'areagroup'),kind='area';allowed={'patch'};
+      elseif strcmp(creator,'__errplot__'),kind='errorbar';allowed={'line'};
+      elseif any(strcmp(creator,{'xline','yline'})),kind=creator;allowed={'line','text'};
+      elseif overlay&&__mf_has__(h,'fitboxtotext'),kind='textbox';allowed={'patch','text'};
+      endif
+    endif
+    if isempty(kind),leaves(end+1)=struct('h',h,'role',type,'group',NaN);continue;endif
+    flattened=true;
+    alpha=1;if isprop(h,'alpha'),alpha=get(h,'alpha');endif
+    if ~isnumeric(alpha)||~isscalar(alpha)||alpha~=1,code='transparency';return;endif
+    children=__mf_children__(h,tree);found=struct('h',{},'role',{},'group',{});
+    for wanted=allowed
+      for c=children
+        ctype=__mf_prop__(c,'type','');
+        if ~any(strcmp(ctype,allowed)),code='unsupported_group';args=struct('type',kind,'creator',creator);return;endif
+        if ~strcmp(ctype,wanted{1})||strcmp(__mf_prop__(c,'visible','on'),'off'),continue;endif
+        found(end+1)=struct('h',c,'role',kind,'group',h);
+      endfor
+    endfor
+    leaves=[leaves,found];
+  endfor
+endfunction
+
+function ok=__mf_has__(h,name)
+  ok=isprop(h,name); % exact names only; get() would accept abbreviations
 endfunction
 
 function baselines=__mf_baselines__(kids)
@@ -190,9 +267,11 @@ function baselines=__mf_baselines__(kids)
   endfor
 endfunction
 
-function [s,code,args]=__mf_series__(h,ax,limits,has_light,tree)
-  s=[];code='';args=struct();type=__mf_prop__(h,'type','');kind=type;
+function [s,code,args]=__mf_series__(leaf,ax,limits,has_light,tree)
+  h=leaf.h;s=[];code='';args=struct();type=__mf_prop__(h,'type','');kind=type;
   if strcmp(type,'surface'),[s,code,args]=__mf_surface__(h,limits,has_light,tree);return;endif
+  if strcmp(type,'patch'),[s,code,args]=__mf_patch__(leaf,ax,limits,has_light,tree);return;endif
+  if strcmp(type,'text'),[s,code,args]=__mf_text_record__(leaf,limits);return;endif
   if strcmp(type,'hggroup')
     children=__mf_children__(h,tree);creator='';
     try creator=getappdata(h,'__creator__');catch end_try_catch
@@ -232,6 +311,146 @@ function [s,code,args]=__mf_series__(h,ax,limits,has_light,tree)
       s.color_data=struct('encoding',encoding,'mapping','scaled','cdata_class',class(c),'data',__mf_descriptor__(c));
     endif
   endif
+  if ~isnan(leaf.group)
+    % A flattened group child: the group's name labels its first line only.
+    s.role=leaf.role;
+    s.display_name='';
+    if any(strcmp(leaf.role,{'errorbar','xline','yline'}))&&__mf_first_line__(leaf,tree)
+      s.display_name=__mf_prop__(leaf.group,'displayname','');
+    endif
+    % Baselines and constant lines cross the whole axes in Octave (listeners
+    % keep them at the limits); the viewer extends them over its own view.
+    if any(strcmp(leaf.role,{'bar','xline','yline'}))&&n==2&&~is3&&all(isfinite(x))&&all(isfinite(y))
+      if x(1)==x(2)&&y(1)~=y(2),s.span='vertical';
+      elseif y(1)==y(2)&&x(1)~=x(2),s.span='horizontal';endif
+    endif
+  endif
+endfunction
+
+function first=__mf_first_line__(leaf,tree)
+  first=false;
+  for c=__mf_children__(leaf.group,tree)
+    if strcmp(__mf_prop__(c,'type',''),'line')&&strcmp(__mf_prop__(c,'visible','on'),'on'),first=(c==leaf.h);return;endif
+  endfor
+endfunction
+
+function [s,code,args]=__mf_patch__(leaf,ax,limits,has_light,tree)
+  h=leaf.h;s=[];code='';args=struct();v=get(h,'vertices');f=get(h,'faces');
+  if ~__mf_real__(v)||ndims(v)~=2||isempty(v)||~any(columns(v)==[2 3]),code='invalid_data';args=struct('property','vertices');return;endif
+  n=rows(v);
+  if n>limits.patch_vertices,code='budget_exceeded';args=__mf_budget__('patch_vertices',n,limits.patch_vertices);return;endif
+  if ~__mf_real__(f)||ndims(f)~=2||isempty(f),code='invalid_data';args=struct('property','faces');return;endif
+  fan=rows(f)*max(0,columns(f)-2);
+  if fan>limits.patch_triangles,code='budget_exceeded';args=__mf_budget__('patch_triangles',fan,limits.patch_triangles);return;endif
+  if columns(v)==3&&~all(v(:,3)==0),code='unsupported_patch';args=struct('property','vertices');return;endif
+  f=double(f);used=~isnan(f);
+  % Indices are one-based integers; NaN is only trailing padding of a face.
+  if any(f(used)<1|f(used)>n|f(used)~=fix(f(used)))||any(any(diff(used,1,2)>0)),code='invalid_data';args=struct('property','faces');return;endif
+  if ~__mf_opaque__(h,tree),code='transparency';return;endif
+  if has_light,code='lighting';return;endif
+  if ~strcmp(__mf_prop__(h,'marker','none'),'none'),code='unsupported_patch';args=struct('property','marker');return;endif
+  [face,code]=__mf_patch_color__(get(h,'facecolor'),h,ax);
+  if ~isempty(code),return;endif
+  [edge,code]=__mf_patch_color__(get(h,'edgecolor'),h,ax);
+  if ~isempty(code),return;endif
+  name=__mf_prop__(h,'displayname','');
+  if ~isnan(leaf.group),name=__mf_prop__(leaf.group,'displayname','');endif
+  role=leaf.role;
+  s=struct('kind','patch2d','role',role,'vertices',__mf_descriptor__(v(:,1:2)),...
+    'faces',__mf_descriptor__(f-1),'index_base',0,'face_color',face,'edge_color',edge,...
+    'line_style',get(h,'linestyle'),'line_width',double(get(h,'linewidth')),...
+    'display_name',name,'decimated',false,'original_points',n,'rendered_points',n);
+  if strcmp(role,'bar')
+    % The group's own data describes each face for data tips; the drawn
+    % geometry stays the patch Octave computed.
+    g=leaf.group;x=__mf_prop__(g,'xdata',[]);y=__mf_prop__(g,'ydata',[]);
+    if __mf_vector__(x)&&__mf_vector__(y)&&numel(x)==rows(f)&&numel(y)==rows(f)
+      s.bar=struct('horizontal',strcmp(__mf_prop__(g,'horizontal','off'),'on'),...
+        'layout',__mf_prop__(g,'barlayout',''),'width',double(__mf_prop__(g,'barwidth',NaN)),...
+        'base_value',double(__mf_prop__(g,'basevalue',0)),...
+        'positions',{__mf_array__(x)},'values',{__mf_array__(y)});
+      if ~isfinite(s.bar.width),s.bar.width=0;endif
+      if ~isfinite(s.bar.base_value),s.bar.base_value=0;endif
+    endif
+  endif
+endfunction
+
+function [color,code]=__mf_patch_color__(value,h,ax)
+  % One colour for the whole patch, or the figure keeps its PNG.
+  code='';color='none';
+  if ~ischar(value)
+    [color,ok]=__mf_rgb_or_none__(value);
+    if ~ok,code='unsupported_color';endif
+    return;
+  endif
+  if strcmp(value,'none'),return;endif
+  if strcmp(value,'interp'),code='interpolated_color';return;endif
+  if ~strcmp(value,'flat'),code='unsupported_color';return;endif
+  c=get(h,'facevertexcdata');
+  if ~__mf_real__(c)||isempty(c),code='unsupported_color';return;endif
+  if rows(c)~=1||~any(columns(c)==[1 3]),code='patch_colors';return;endif
+  if columns(c)==3
+    [color,ok]=__mf_rgb_or_none__(double(c));
+    if ~ok||~isfloat(c),color='none';code='unsupported_color';endif
+    return;
+  endif
+  % Scalar scaled CData: the same colormap index rule as the 3D scatter.
+  map=get(ax,'colormap');clim=get(ax,'clim');c=double(c);
+  if ~strcmp(get(h,'cdatamapping'),'scaled')||~isfinite(c)||isempty(map)||columns(map)~=3||~(clim(2)>clim(1))
+    code='unsupported_color';return;
+  endif
+  index=min(rows(map),max(1,1+fix(rows(map)*(c-clim(1))/(clim(2)-clim(1)))));
+  [color,ok]=__mf_rgb_or_none__(map(index,:));
+  if ~ok,color='none';code='unsupported_color';endif
+endfunction
+
+function [s,code,args]=__mf_text_record__(leaf,limits)
+  h=leaf.h;s=[];code='';args=struct();
+  units=get(h,'units');
+  if ~any(strcmp(units,{'data','normalized'})),code='unsupported_text';args=struct('property','units');return;endif
+  if ~strcmp(get(h,'fontunits'),'points'),code='unsupported_text';args=struct('property','fontunits');return;endif
+  interpreter=get(h,'interpreter');
+  if ~any(strcmp(interpreter,{'tex','none'})),code='unsupported_text';args=struct('property','interpreter');return;endif
+  position=get(h,'position');rotation=get(h,'rotation');
+  if ~__mf_real__(position)||numel(position)<2||any(~isfinite(position(1:2))),code='invalid_data';args=struct('property','text.position');return;endif
+  if ~__mf_real__(rotation)||~isscalar(rotation)||~isfinite(rotation),code='invalid_data';args=struct('property','text.rotation');return;endif
+  [lines,ok]=__mf_text_lines__(get(h,'string'));
+  if ~ok,code='invalid_data';args=struct('property','text.string');return;endif
+  if numel(lines)>limits.text_lines,code='budget_exceeded';args=__mf_budget__('text_lines',numel(lines),limits.text_lines);return;endif
+  chars=sum(cellfun('numel',lines));
+  if chars>limits.text_chars,code='budget_exceeded';args=__mf_budget__('text_chars',chars,limits.text_chars);return;endif
+  [color,ok1]=__mf_rgb_or_none__(get(h,'color'));
+  [background,ok2]=__mf_rgb_or_none__(get(h,'backgroundcolor'));
+  [edge,ok3]=__mf_rgb_or_none__(get(h,'edgecolor'));
+  if ~(ok1&&ok2&&ok3)||ischar(color),code='unsupported_color';return;endif
+  size_value=double(get(h,'fontsize'));margin=double(get(h,'margin'));
+  if ~isscalar(size_value)||~isfinite(size_value)||size_value<=0||~isscalar(margin)||~isfinite(margin)||margin<0
+    code='invalid_data';args=struct('property','text.fontsize');return;
+  endif
+  weight='normal';if any(strcmp(get(h,'fontweight'),{'bold','demi'})),weight='bold';endif
+  angle='normal';if any(strcmp(get(h,'fontangle'),{'italic','oblique'})),angle='italic';endif
+  s=struct('kind','text','role',leaf.role,'units',units,'position',{__mf_array__(position(1:2))},...
+    'lines',{lines},'interpreter',interpreter,...
+    'horizontal_alignment',get(h,'horizontalalignment'),'vertical_alignment',get(h,'verticalalignment'),...
+    'rotation',mod(double(rotation),360),'font_size',size_value,'font_weight',weight,'font_angle',angle,...
+    'color',color,'background_color',background,'edge_color',edge,'margin',margin,...
+    'line_style',get(h,'linestyle'),'line_width',double(get(h,'linewidth')),...
+    'clipping',strcmp(get(h,'clipping'),'on'),'display_name','',...
+    'decimated',false,'original_points',0,'rendered_points',0);
+endfunction
+
+function [lines,ok]=__mf_text_lines__(value)
+  % Cell elements and char-matrix rows are lines; a newline splits further.
+  lines={};ok=true;
+  if isnumeric(value)&&isreal(value),value=num2str(value);endif
+  if ischar(value),value=cellstr(value);endif
+  if ~iscell(value),ok=false;return;endif
+  for k=1:numel(value)
+    item=value{k};
+    if isnumeric(item)&&isreal(item),item=num2str(item);endif
+    if ~ischar(item)||rows(item)>1,ok=false;lines={};return;endif
+    lines=[lines,strsplit(item,char(10))];
+  endfor
 endfunction
 
 function [s,code,args]=__mf_surface__(h,limits,has_light,tree)
@@ -370,6 +589,8 @@ endfunction
 function ok=__mf_opaque__(h,tree)
   ok=false;
   for name={'markeredgealpha','markerfacealpha','edgealpha','facealpha','alphadata'}
+    % get() accepts abbreviations: 'alphadata' would read a patch's alphadatamapping.
+    if ~isprop(h,name{1}),continue;endif
     value=__mf_prop__(h,name{1},1);
     if ~isnumeric(value)||~isscalar(value)||~isreal(value)||value~=1,return;endif
   endfor
@@ -452,6 +673,8 @@ function labels=__mf_labels__(value)
 endfunction
 function text=__mf_graphics_text__(h)
   text=__mf_prop__(h,'string','');
+  % A label whose own handle is invisible is not drawn by Octave either.
+  if strcmp(__mf_prop__(h,'visible','on'),'off'),text='';return;endif
   if iscell(text)
     parts={};for k=1:numel(text),if ischar(text{k}),parts{end+1}=text{k};else parts{end+1}=num2str(text{k});endif;endfor
     text=strjoin(parts,' ');

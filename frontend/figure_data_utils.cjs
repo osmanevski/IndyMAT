@@ -9,7 +9,10 @@ const REASON_CODES = Object.freeze(["no_axes", "budget_exceeded", "invalid_data"
   "unsupported_object", "unsupported_group", "unsupported_marker", "unsupported_color",
   "scatter_colors", "transparency", "lighting", "interpolated_color",
   "unsupported_surface", "log_3d", "perspective", "manual_camera", "unsupported_units",
-  "unsupported_colorbar", "json_budget"]);
+  "unsupported_colorbar", "json_budget", "patch_colors", "unsupported_patch", "unsupported_text"]);
+// Added with the 2D shapes/text records; older artifacts do not carry them.
+const OPTIONAL_LIMITS = Object.freeze({ text_lines: 256, text_chars: 65536 });
+const STYLES = ["-", "--", ":", "-.", "none"];
 const MARKERS = ["none", "o", "s", "square", "^", "v", ">", "<", ".", "+", "x", "*"];
 const CLASSES = ["double", "single", "int8", "uint8", "int16", "uint16", "int32", "uint32", "int64", "uint64"];
 const own = (o, k) => Object.prototype.hasOwnProperty.call(o, k);
@@ -155,8 +158,55 @@ function surface(s, path) {
   surfaceColor(s.face_color, s.shape, path + ".face_color");
   surfaceColor(s.edge_color, s.shape, path + ".edge_color", "vertex");
 }
+function patch2d(s, path) {
+  requireThat(["patch", "bar", "area", "textbox"].includes(s.role) && s.index_base === 0, path + ".role");
+  descriptor(s.vertices, path + ".vertices", LIMITS.patch_vertices * 2);
+  requireThat(s.vertices.shape.length === 2 && s.vertices.shape[1] === 2 && s.vertices.shape[0] > 0, path + ".vertices.shape");
+  const n = s.vertices.shape[0];
+  budget(n, "patch_vertices", path + ".vertices");
+  requireThat(record(s.faces) && Array.isArray(s.faces.shape) && s.faces.shape.length === 2 && s.faces.shape.every(integer), path + ".faces.shape");
+  const [rows, cols] = s.faces.shape;
+  requireThat(rows > 0 && cols > 0, path + ".faces.shape");
+  budget(rows * Math.max(0, cols - 2), "patch_triangles", path + ".faces");
+  descriptor(s.faces, path + ".faces", LIMITS.patch_triangles * 3);
+  // Zero-based vertex indices; null is only the trailing padding of a face.
+  for (let r = 0; r < rows; r++) {
+    let ended = false;
+    for (let c = 0; c < cols; c++) {
+      const v = s.faces.values[r + c * rows];
+      if (v === null) ended = true;
+      else requireThat(!ended && integer(v) && v < n, path + ".faces", "invalid_index");
+    }
+  }
+  requireThat(color(s.face_color) && color(s.edge_color), path + ".color", "unsupported_color");
+  requireThat(finite(s.line_width) && s.line_width >= 0, path + ".line_width");
+  requireThat(s.decimated === false && s.original_points === n && s.rendered_points === n, path + ".counts");
+  if (own(s, "bar")) {
+    const b = s.bar;
+    requireThat(s.role === "bar" && record(b) && typeof b.horizontal === "boolean" && typeof b.layout === "string" && finite(b.width) && finite(b.base_value), path + ".bar");
+    numbers(b.positions, rows, path + ".bar.positions", true);
+    numbers(b.values, rows, path + ".bar.values", true);
+  }
+}
+function textRecord(s, path) {
+  requireThat(typeof s.role === "string" && ["data", "normalized"].includes(s.units), path + ".units", "unsupported_text", { property: "units" });
+  numbers(s.position, 2, path + ".position");
+  requireThat(Array.isArray(s.lines) && s.lines.every((line) => typeof line === "string"), path + ".lines");
+  if (s.lines.length > OPTIONAL_LIMITS.text_lines) failure("budget_exceeded", path + ".lines", { budget: "text_lines", actual: s.lines.length, limit: OPTIONAL_LIMITS.text_lines });
+  const chars = s.lines.reduce((sum, line) => sum + line.length, 0);
+  if (chars > OPTIONAL_LIMITS.text_chars) failure("budget_exceeded", path + ".lines", { budget: "text_chars", actual: chars, limit: OPTIONAL_LIMITS.text_chars });
+  requireThat(["tex", "none"].includes(s.interpreter), path + ".interpreter", "unsupported_text", { property: "interpreter" });
+  requireThat(["left", "center", "right"].includes(s.horizontal_alignment) && ["top", "cap", "middle", "baseline", "bottom"].includes(s.vertical_alignment), path + ".alignment");
+  requireThat(finite(s.rotation) && s.rotation >= 0 && s.rotation < 360, path + ".rotation");
+  requireThat(finite(s.font_size) && s.font_size > 0 && finite(s.margin) && s.margin >= 0 && finite(s.line_width) && s.line_width >= 0, path + ".font_size");
+  requireThat(["normal", "bold"].includes(s.font_weight) && ["normal", "italic"].includes(s.font_angle) && typeof s.clipping === "boolean", path + ".font");
+  requireThat(rgb(s.color) && color(s.background_color) && color(s.edge_color), path + ".color", "unsupported_color");
+  requireThat(s.decimated === false && s.original_points === 0 && s.rendered_points === 0, path + ".counts");
+}
 function samples(s, version, path) {
   requireThat(["line", "scatter", "stem", "stairs"].includes(s.kind), path + ".kind", "unsupported_object");
+  if (own(s, "span")) requireThat(version === 3 && s.kind === "line" && ["horizontal", "vertical"].includes(s.span) && s.x.length === 2, path + ".span");
+  if (own(s, "role")) requireThat(version === 3 && typeof s.role === "string", path + ".role");
   numbers(s.x, undefined, path + ".x", true);
   budget(s.x.length, "samples", path);
   numbers(s.y, s.x.length, path + ".y", true);
@@ -282,6 +332,7 @@ function validate(payload) {
       requireThat(record(payload.source) && typeof payload.source.job === "string" && (payload.source.job === "" || /^[a-f0-9]{32}$/.test(payload.source.job)) && integer(payload.source.figure), "source");
       requireThat(record(payload.limits), "limits");
       for (const [key, value] of Object.entries(LIMITS)) requireThat(payload.limits[key] === value, "limits." + key);
+      for (const [key, value] of Object.entries(OPTIONAL_LIMITS)) requireThat(!own(payload.limits, key) || payload.limits[key] === value, "limits." + key);
       requireThat(payload.reason_code === "" && record(payload.reason_args), "reason_code");
     }
     // Reject aggregate upper bounds before constructing expected cells/edges.
@@ -298,7 +349,11 @@ function validate(payload) {
           budget(n, "surface_vertices", "surface.shape");
           estimatedVertices += n;
           estimatedTriangles += 2 * (s.shape[0] - 1) * (s.shape[1] - 1);
-        } else {
+        } else if (s.kind === "patch2d") {
+          requireThat(record(s.vertices) && Array.isArray(s.vertices.shape) && integer(s.vertices.shape[0]), "patch2d.vertices");
+          budget(s.vertices.shape[0], "patch_vertices", "patch2d.vertices");
+          estimatedVertices += s.vertices.shape[0];
+        } else if (s.kind !== "text") {
           requireThat(Array.isArray(s.x), "series.x");
           budget(s.x.length, "samples", "series.x");
           estimatedVertices += s.x.length;
@@ -324,6 +379,9 @@ function validate(payload) {
       requireThat(record(a.legend) && typeof a.legend.visible === "boolean", path + ".legend");
       labels(a.legend.labels, path + ".legend.labels");
       for (const key of ["title", "xlabel", "ylabel"]) text(a[key], path + "." + key);
+      if (own(a, "visible")) requireThat(typeof a.visible === "boolean", path + ".visible");
+      if (own(a, "interpreters")) requireThat(record(a.interpreters) && ["title", "xlabel", "ylabel", "ticks"].every((key) => typeof a.interpreters[key] === "string"), path + ".interpreters");
+      for (const key of ["xtickmode", "ytickmode", "xticklabelmode", "yticklabelmode"]) if (own(a, key)) requireThat(["auto", "manual"].includes(a[key]), path + "." + key);
       if (payload.version === 3) {
         requireThat(a.id === i, path + ".id", "invalid_index");
         range(a.clim, path + ".clim");
@@ -359,12 +417,20 @@ function validate(payload) {
           surface(s, p);
           triangles += s.triangle_count;
           vertices += s.rendered_points;
+        } else if (s.kind === "patch2d" || s.kind === "text") {
+          // Filled shapes and free text exist only in 2D axes of a v3 figure.
+          requireThat(payload.version === 3 && dimension === 2, p + ".kind", "unsupported_object", { type: s.kind });
+          if (s.kind === "patch2d") {
+            requireThat(a.xscale === "linear" && a.yscale === "linear", p, "unsupported_patch", { property: "scale" });
+            patch2d(s, p);
+            vertices += s.rendered_points;
+          } else textRecord(s, p);
         } else {
           samples(s, payload.version, p);
           requireThat(!own(s, "z") || dimension === 3, p + ".z");
           vertices += s.x.length;
         }
-        requireThat(["-", "--", ":", "-.", "none"].includes(s.line_style), p + ".line_style");
+        requireThat(STYLES.includes(s.line_style), p + ".line_style");
         text(s.display_name, p + ".display_name");
         axisReduced ||= s.decimated;
       }
@@ -380,4 +446,4 @@ function validate(payload) {
     return { ok: false, supported: false, reason_code: e.reason_code || "invalid_data", reason_args: e.reason_args || {}, path: e.path || "figure" };
   }
 }
-module.exports = { validate, decodeArray, LIMITS, REASON_CODES };
+module.exports = { validate, decodeArray, LIMITS, OPTIONAL_LIMITS, REASON_CODES };

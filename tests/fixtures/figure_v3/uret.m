@@ -9,7 +9,12 @@ function uret(output_dir = fileparts(mfilename('fullpath')))
     'no_axes','budget_exceeded','invalid_data','unsupported_object','unsupported_group',...
     'unsupported_marker','unsupported_color','scatter_colors','transparency','lighting',...
     'interpolated_color','unsupported_surface','log_3d','perspective','manual_camera',...
-    'unsupported_units','unsupported_colorbar','json_budget'};
+    'unsupported_units','unsupported_colorbar','json_budget',...
+    'bar_grouped','barh_stacked','hist_flat','area_stacked','patch_missing_vertex',...
+    'text_boxes','group_lines','figure_title',...
+    'patch_colors','unsupported_patch','unsupported_text'};
+  supported=[names(1:9),{'bar_grouped','barh_stacked','hist_flat','area_stacked',...
+    'patch_missing_vertex','text_boxes','group_lines','figure_title'}];
   for k=1:numel(names)
     close all;
     f=figure(1,'visible','off');name=names{k};
@@ -67,6 +72,33 @@ function uret(output_dir = fileparts(mfilename('fullpath')))
         panel=uipanel('parent',f);ax=axes('parent',panel);plot3(ax,1:3,4:6,7:9);
       case 'unsupported_colorbar'
         plot3(1:3,4:6,7:9);cb=colorbar();set(cb,'__axes_handle__',[]);
+      case 'bar_grouped'
+        bar([10 20 30],[1 2;3 4;2 5],0.6,'basevalue',0.5);legend('a','b');
+      case 'barh_stacked'
+        barh([1 2;3 4],'stacked');
+      case 'hist_flat'
+        hist([1 2 2 3 3 3],3);
+      case 'area_stacked'
+        area(1:3,[1 2;2 1;3 3]);
+      case 'patch_missing_vertex'
+        fill([0 1 1],[0 0 1],'r','linestyle','--');hold on;
+        patch([2 3 3 2;4 5 4.5 NaN]',[0 0 1 1;0 0 1 NaN]',[0 .6 0],'edgecolor','none');
+      case 'text_boxes'
+        plot(1:3);
+        text(1.5,2.5,{'two lines','\sigma_x^2'},'backgroundcolor','w','edgecolor','k','verticalalignment','top');
+        text(2,1.5,['ab ';'cde'],'rotation',90,'fontweight','bold','fontangle','italic','color',[0 .5 0],'fontsize',14);
+        text(.5,.9,'top','units','normalized','horizontalalignment','center','interpreter','none','margin',6);
+      case 'group_lines'
+        errorbar(1:3,[1 2 3],[.1 .2 .1]);hold on;xline(2,'--','L');yline(2.5,'r');
+      case 'figure_title'
+        plot(1:3);axes('position',[0 .94 1 .06],'visible','off');
+        text(.5,.5,'Figure title','horizontalalignment','center','fontweight','bold','fontsize',12);
+      case 'patch_colors'
+        patch([0 1 1;2 3 3]',[0 0 1;0 0 1]',[1;2]);
+      case 'unsupported_patch'
+        fill([0 1 1],[0 0 1],'r','marker','o');
+      case 'unsupported_text'
+        plot(1:3);text(40,40,'pixels','units','pixels');
       case 'json_budget'
         % The cap is deliberately tested through the real export entry point,
         % never by constructing a fallback record in this generator.
@@ -93,7 +125,7 @@ function uret(output_dir = fileparts(mfilename('fullpath')))
       assert(isequal(handles,sort(findall(f))));
       for j=1:numel(handles),assert(isequaln(before{j},get(handles(j))));endfor
       bytes=jsonencode(data);
-      if k<=9,assert(data.supported,name);
+      if any(strcmp(name,supported)),assert(data.supported,name);
       else assert(~data.supported&&strcmp(data.reason_code,name),name);endif
     endif
     fid=fopen(fullfile(output_dir,[name '.json']),'w');assert(fid>=0);fputs(fid,bytes);fclose(fid);

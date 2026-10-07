@@ -56,6 +56,8 @@ function buildScene(axesRecord) {
   for (let seriesIndex = 0; seriesIndex < axesRecord.series.length; seriesIndex++) {
     const s = axesRecord.series[seriesIndex];
     const series = s.id ?? seriesIndex;
+    // Filled 2D shapes and free text belong to the 2D painter, never to a 3D scene.
+    if (s.kind === "patch2d" || s.kind === "text") continue;
     if (s.kind === "surface") {
       const rows = s.shape[0];
       const { faceColors, edgeColors } = resolveSurfaceColors(s, axesRecord);
