@@ -1,5 +1,52 @@
 # datatypes 1.5.0 — IndyMAT string patches
 
+## Wave 19 string-function extension
+
+Patches 06–12 extend the original five-patch set. `manifest.json` still pins
+the same pristine `string.m`, and now pins the extended final bytes. The
+current patch script upgrades a recognised older registry directly; the manual
+registry/revert procedure in the historical wave 16 section below is obsolete.
+
+- 06 adds shape-preserving `str2double`, makes `double` parse numeric text
+  without evaluating it, inserts the character-width dimension in `char`,
+  normalises empty split payloads, and preserves `extractBetween` source axes.
+- 07 adds string methods for `bin2dec`, `hex2dec`, `strsplit`, `strjoin`,
+  `sprintf`, `regexp`, `regexpi`, and `regexprep`, and mixed numeric sort flags.
+  ASCII regexp result containers use `octave/compat/__mf_string_regexp__.m`.
+- 08 repairs later-string mixed dispatch for boundary queries and insertion/
+  extraction; accepts string option flags in `unique` and `ismember`; and fixes
+  the legacy split empty-input second output.
+- 09 formats character-format/string-data `compose` calls through the string
+  method and returns cellstr. Multiple data arguments require enough format
+  operators for their combined columns; single data matrices can reuse a format.
+- 10 validates `strjoin` delimiter arguments before propagating missing text.
+- 11 restores the character-width axis before constructing strings from N-D
+  char arrays, and returns canonical empty char payloads from `cellstr`.
+- 12 counts string lengths as UTF-16 code units, rejects array missing-to-char
+  and missing `compose` data, preserves missing values in `strcat`, and supports
+  bounded real integer numeric arrays in string `+`. It also returns canonical
+  0-by-0 empty regex match strings and treats missing source elements as empty
+  inputs to `regexp`/`regexpi`. Pattern-mode `extractBetween` appends match
+  results on a new trailing dimension, preserving the source dimensions.
+  `num2str` returns a char vector for string scalars and rejects string arrays;
+  string numeric conversion normalizes signed zero imaginary parts.
+
+Recorded MATLAB probes verify the conversion/layout/split fixes, the existing
+mixed compose error, and binary/hexadecimal fallback removal. New `yk-*` probes
+exercise documentation-based contracts with octave-cli only; their MATLAB
+results are intentionally unmeasured until the orchestrator runs them.
+
+Explicit remaining subsets: sprintf accepts nonmissing scalar formats and one
+string-array data argument; multiple data arrays remain unsupported. Legacy
+strsplit takes a nonmissing scalar source; bin/hex conversion
+rejects missing strings; regexp/regexpi reject missing/non-ASCII patterns and
+non-ASCII string-dispatch input text, and retain the Octave regexp engine.
+Numeric `double`/`str2double` handle
+missing values as NaN. Regexprep and strjoin preserve missing source text.
+UTF-8 char storage, supplementary Unicode/UTF-16 positions, object iteration,
+and datetime/duration property setters are unchanged. Unique/ismember class
+algorithms, including their existing missing-value/index limitations, remain.
+
 These small GPL-3.0-or-later patches modify the package's `string.m`, not Octave
 core or the kernel. They require the exact datatypes 1.5.0 file supplied in the
 wave 7 private package copy. `manifest.json` pins both its original SHA-256 and

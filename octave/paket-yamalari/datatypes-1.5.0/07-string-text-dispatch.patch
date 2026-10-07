@@ -1,0 +1,117 @@
+--- a/string.m
++++ b/string.m
+@@ -491,6 +491,101 @@
+     function out = str2double (this)
+       out = builtin ('str2double', this.strs);
+       out(this.isMissing) = NaN;
++    endfunction
++
++    ## IndyMAT BIN2DEC/HEX2DEC: elementwise text conversion with source shape.
++    ## Missing text is rejected; Octave's suffix/precision limits still apply.
++    function out = bin2dec (this)
++      if (any (this.isMissing(:)))
++        error ('bin2dec: missing string arguments are not supported');
++      endif
++      out = reshape (feval (__mf_original_function__ ('bin2dec'), ...
++                           this.strs), size (this.strs));
++    endfunction
++
++    function out = hex2dec (this)
++      if (any (this.isMissing(:)))
++        error ('hex2dec: missing string arguments are not supported');
++      endif
++      out = reshape (feval (__mf_original_function__ ('hex2dec'), ...
++                           this.strs), size (this.strs));
++    endfunction
++
++    ## IndyMAT legacy split: string scalars return row string arrays, while
++    ## char sources keep cellstr results. Missing sources are not supported.
++    function [out, matches] = strsplit (this, varargin)
++      if (isa (this, 'string'))
++        if (! isscalar (this) || this.isMissing)
++          error ('strsplit: input must be a nonmissing string scalar');
++        endif
++        value = char (this);
++      else
++        value = this;
++      endif
++      args = indymat_text_args (varargin, 'strsplit');
++      [out, matches] = feval (__mf_original_function__ ('strsplit'), value, args{:});
++      if (isa (this, 'string'))
++        out = string (out);
++        matches = string (matches);
++      endif
++    endfunction
++
++    ## IndyMAT legacy join: string vectors return a scalar string; the
++    ## original char/cellstr call forms retain their original result types.
++    function out = strjoin (this, varargin)
++      args = indymat_text_args (varargin, 'strjoin');
++      if (isa (this, 'string'))
++        if (! isvector (this) && ! isempty (this))
++          error ('strjoin: input must be a string vector');
++        endif
++        if (any (this.isMissing(:)))
++          out = string (missing);
++          return;
++        endif
++        out = string (feval (__mf_original_function__ ('strjoin'), this.strs(:).', args{:}));
++      else
++        out = feval (__mf_original_function__ ('strjoin'), this, args{:});
++      endif
++    endfunction
++
++    ## IndyMAT SPRINTF: scalar nonmissing string formats/data, standard
++    ## builtin formatting. Nonscalar string data and UTF-16 formats are left.
++    function varargout = sprintf (format, varargin)
++      result_string = isa (format, 'string');
++      args = [{format}, varargin];
++      for k = 1:numel (args)
++        if (isa (args{k}, 'string'))
++          if (! isscalar (args{k}) || any (ismissing (args{k})(:)))
++            error ('sprintf: string arguments must be nonmissing scalars');
++          endif
++          args{k} = char (args{k});
++        endif
++      endfor
++      [varargout{1:max(1,nargout)}] = builtin ('sprintf', args{:});
++      if (result_string), varargout{1} = string (varargout{1}); endif
++    endfunction
++
++    ## IndyMAT REGEXP/REGEXPI: documented ASCII string result containers;
++    ## the helper explicitly refuses missing/non-ASCII text positions.
++    function varargout = regexp (this, expression, varargin)
++      [varargout{1:nargout}] = __mf_string_regexp__ ('regexp', this, expression, varargin{:});
++    endfunction
++
++    function varargout = regexpi (this, expression, varargin)
++      [varargout{1:nargout}] = __mf_string_regexp__ ('regexpi', this, expression, varargin{:});
++    endfunction
++
++    ## IndyMAT REGEXPREP: string input preserves shape/type and missing source
++    ## elements. Later text arguments accept nonmissing scalar/array strings.
++    function out = regexprep (this, expression, replacement, varargin)
++      args = indymat_text_args ([{expression, replacement}, varargin], 'regexprep');
++      if (isa (this, 'string'))
++        out = string (builtin ('regexprep', this.strs, args{:}));
++        out.isMissing = this.isMissing;
++        out.strs(this.isMissing) = {''};
++      else
++        out = builtin ('regexprep', this, args{:});
++      endif
+     endfunction
+ 
+   endmethods
+@@ -3281,6 +3376,12 @@
+     ##
+     ## @end deftypefn
+     function [B, index] = sort (A, varargin)
++      ## IndyMAT: numeric source with string option flags retains numeric dispatch.
++      if (! isa (A, 'string'))
++        args = indymat_text_args (varargin, 'sort');
++        [B, index] = feval ('sort', A, args{:});
++        return;
++      endif
+       ## Parse and validate optional 'MissingPlacement' paired argument
+       optNames = {'MissingPlacement'};
+       dfValues = {'auto'};

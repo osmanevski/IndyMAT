@@ -21,7 +21,17 @@ function s = uy_ozet(x, derinlik)
     v = double(x(:)');
     if numel(v) > 60, v = [v(1:60)]; ek = '...'; else, ek = ''; end
     if isreal(x), icerik = [sprintf('%.12g,', v) ek];
-    else, icerik = [sprintf('%.12g%+.12gi,', [real(v); imag(v)]) ek]; end
+    else
+      parca = cell(1, numel(v));
+      for k = 1:numel(v)
+        if imag(v(k)) == 0
+          parca{k} = sprintf('%.12g+0i,', real(v(k)));
+        else
+          parca{k} = sprintf('%.12g%+.12gi,', real(v(k)), imag(v(k)));
+        end
+      end
+      icerik = [parca{:} ek];
+    end
   elseif iscell(x)
     parca = cell(1, min(numel(x), 40));
     for k = 1:numel(parca), parca{k} = uy_ozet(x{k}, derinlik + 1); end

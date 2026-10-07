@@ -1,0 +1,22 @@
+--- a/string.m
++++ b/string.m
+@@ -214,7 +214,9 @@
+           sz = size (in);
+           nr = prod (sz([1,3:end]));
+           nc = sz(2);
+-          in = reshape (in, nr, nc);
++          ## IndyMAT: move the char-width dimension after the element axes.
++          ## A plain reshape interleaves pages and corrupts N-D char rows.
++          in = reshape (permute (in, [1, 3:ndims(in), 2]), nr, nc);
+           in = num2cell (in, 2);
+           sz(2) = [];
+           this.strs = reshape (in, sz);
+@@ -412,6 +414,8 @@
+     ## @end deftypefn
+     function cstr = cellstr (this)
+       cstr = this.strs;
++      ## IndyMAT: canonical empty character payload, also after editing methods.
++      cstr(cellfun (@isempty, cstr)) = {''};
+     endfunction
+ 
+     ## -*- texinfo -*-

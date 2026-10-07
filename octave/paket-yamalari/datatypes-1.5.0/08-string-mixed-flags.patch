@@ -1,0 +1,133 @@
+--- a/string.m
++++ b/string.m
+@@ -523,7 +523,12 @@
+         value = this;
+       endif
+       args = indymat_text_args (varargin, 'strsplit');
+-      [out, matches] = feval (__mf_original_function__ ('strsplit'), value, args{:});
++      if (isempty (value))
++        out = {''};
++        matches = cell (1, 0);
++      else
++        [out, matches] = feval (__mf_original_function__ ('strsplit'), value, args{:});
++      endif
+       if (isa (this, 'string'))
+         out = string (out);
+         matches = string (matches);
+@@ -955,6 +960,12 @@
+     ##
+     ## @end deftypefn
+     function TF = endsWith (this, pattern, varargin)
++      ## IndyMAT: preserve char/cellstr source types in mixed text calls.
++      if (! isa (this, 'string'))
++        args = indymat_text_args ([{pattern}, varargin], 'endsWith');
++        TF = feval ('endsWith', this, args{:});
++        return;
++      endif
+       ## IndyMAT: scalar ASCII pattern support; literal calls keep their path.
+       if (nargin >= 2 && isa (pattern, 'pattern'))
+         TF = __mf_pattern_apply__ ('endsWith', this, pattern, varargin{:});
+@@ -1028,6 +1039,12 @@
+     ##
+     ## @end deftypefn
+     function TF = startsWith (this, pattern, varargin)
++      ## IndyMAT: preserve char/cellstr source types in mixed text calls.
++      if (! isa (this, 'string'))
++        args = indymat_text_args ([{pattern}, varargin], 'startsWith');
++        TF = feval ('startsWith', this, args{:});
++        return;
++      endif
+       ## IndyMAT: scalar ASCII pattern support; literal calls keep their path.
+       if (nargin >= 2 && isa (pattern, 'pattern'))
+         TF = __mf_pattern_apply__ ('startsWith', this, pattern, varargin{:});
+@@ -1213,6 +1230,12 @@
+     ##
+     ## @end deftypefn
+     function varargout = ismember (A, B, varargin)
++      ## IndyMAT: accept string option flags without changing numeric inputs.
++      varargin = indymat_text_args (varargin, 'ismember');
++      if (! isa (A, 'string') && ! isa (B, 'string'))
++        [varargout{1:nargout}] = feval ('ismember', A, B, varargin{:});
++        return;
++      endif
+       if (iscategorical (B))
+         A = categorical (A);
+         if (nargout > 1)
+@@ -2780,6 +2803,12 @@
+     ##
+     ## @end deftypefn
+     function out = extractAfter (this, pat)
++      ## IndyMAT: preserve char/cellstr source types in mixed text calls.
++      if (! isa (this, 'string'))
++        args = indymat_text_args ({pat}, 'extractAfter');
++        out = feval ('extractAfter', this, args{:});
++        return;
++      endif
+       if (nargin < 2)
+         error ("string.extractAfter: not enough input arguments.");
+       endif
+@@ -2815,6 +2844,12 @@
+     ##
+     ## @end deftypefn
+     function out = extractBefore (this, pat)
++      ## IndyMAT: preserve char/cellstr source types in mixed text calls.
++      if (! isa (this, 'string'))
++        args = indymat_text_args ({pat}, 'extractBefore');
++        out = feval ('extractBefore', this, args{:});
++        return;
++      endif
+       if (nargin < 2)
+         error ("string.extractBefore: not enough input arguments.");
+       endif
+@@ -2864,6 +2899,12 @@
+     ##
+     ## @end deftypefn
+     function out = extractBetween (this, start, stop, varargin)
++      ## IndyMAT: preserve char/cellstr source types in mixed text calls.
++      if (! isa (this, 'string'))
++        args = indymat_text_args ([{start, stop}, varargin], 'extractBetween');
++        out = feval ('extractBetween', this, args{:});
++        return;
++      endif
+       if (nargin < 3)
+         error ("string.extractBetween: not enough input arguments.");
+       endif
+@@ -3013,6 +3054,12 @@
+     ##
+     ## @end deftypefn
+     function out = insertAfter (this, pat, new)
++      ## IndyMAT: preserve char/cellstr source types in mixed text calls.
++      if (! isa (this, 'string'))
++        args = indymat_text_args ({pat, new}, 'insertAfter');
++        out = feval ('insertAfter', this, args{:});
++        return;
++      endif
+       ## IndyMAT: scalar ASCII pattern support; literal calls keep their path.
+       if (nargin >= 3 && isa (pat, 'pattern'))
+         out = __mf_pattern_apply__ ('insertAfter', this, pat, new);
+@@ -3058,6 +3105,12 @@
+     ##
+     ## @end deftypefn
+     function out = insertBefore (this, pat, new)
++      ## IndyMAT: preserve char/cellstr source types in mixed text calls.
++      if (! isa (this, 'string'))
++        args = indymat_text_args ({pat, new}, 'insertBefore');
++        out = feval ('insertBefore', this, args{:});
++        return;
++      endif
+       ## IndyMAT: scalar ASCII pattern support; literal calls keep their path.
+       if (nargin >= 3 && isa (pat, 'pattern'))
+         out = __mf_pattern_apply__ ('insertBefore', this, pat, new);
+@@ -4280,6 +4333,12 @@
+     ##
+     ## @end deftypefn
+     function [B, ixA, ixB] = unique (A, varargin)
++      ## IndyMAT: option flags are text; numeric source keeps native dispatch.
++      varargin = indymat_text_args (varargin, 'unique');
++      if (! isa (A, 'string'))
++        [B, ixA, ixB] = feval ('unique', A, varargin{:});
++        return;
++      endif
+       ## Handle 'rows' option
+       do_rows = false;
+       if (! isempty (varargin))

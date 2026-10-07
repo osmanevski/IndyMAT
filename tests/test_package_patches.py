@@ -223,19 +223,24 @@ class PackagePatchTests(unittest.TestCase):
         self.apply()
         calls = ["contains('abc', string(NaN))", "count('abc', string(NaN))",
                  "replace('abc', string(NaN), 'x')", "erase('abc', string(NaN))",
-                 "compose('%s', string(NaN))", "split('a,b', string(NaN))",
+                 "split('a,b', string(NaN))",
                  "join({'a', 'b'}, string(NaN))"]
         unsupported_plus = ["string('x') + 3.5", "string('x') + 10000",
                             "string('x') + Inf", "string('x') + true",
-                            "string('x') + [1 2]", "string('x') + ['ab'; 'cd']"]
+                            "string('x') + ['ab'; 'cd']"]
         code = "warning ('off', 'Octave:shadowed-function');\n"
-        for call in calls + unsupported_plus + ["compose('%s', string({'a', 'b'}))"]:
+        # Measured in MATLAB R2025b (wave 19): string + integer array and compose with
+        # string-array data are valid; compose with a missing element is an error.
+        missing_compose = ["compose('%s', string(NaN))"]
+        for call in calls + unsupported_plus + missing_compose:
             message = ('missing string arguments are not supported' if call in calls else
                        'non-string operands must be char' if call in unsupported_plus else
-                       'data must be real 2-D numeric/logical arrays or char row vectors')
+                       '<missing> string element not supported')
             code += (f"caught = false; try, {call}; catch e, "
                      f"caught = ! isempty(strfind(e.message, '{message}')); "
                      "end_try_catch; assert(caught);\n")
+        code += ("assert(isequal(cellstr(string('x') + [1 2]), {'x1', 'x2'}));\n"
+                 "assert(isequal(cellstr(compose('%s', string({'a', 'b'}))), {'a', 'b'}));\n")
         package = str(self.package).replace("'", "''")
         helpers = str(ROOT / 'octave' / 'compat').replace("'", "''")
         result = subprocess.run([exe, '--no-gui', '--quiet', '--no-init-file', '--no-site-file',

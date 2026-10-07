@@ -1,0 +1,24 @@
+--- a/string.m
++++ b/string.m
+@@ -543,11 +543,18 @@
+         if (! isvector (this) && ! isempty (this))
+           error ('strjoin: input must be a string vector');
+         endif
++        ## Validate delimiter/options even when a source element is missing.
++        if (numel (args) > 1 || (! isempty (args) && ...
++            ! ((ischar (args{1}) && (isrow (args{1}) || isempty (args{1}))) ...
++               || iscellstr (args{1}))))
++          error ('strjoin: delimiter must be text and at most one delimiter argument is accepted');
++        endif
++        text = feval (__mf_original_function__ ('strjoin'), this.strs(:).', args{:});
+         if (any (this.isMissing(:)))
+           out = string (missing);
+-          return;
+-        endif
+-        out = string (feval (__mf_original_function__ ('strjoin'), this.strs(:).', args{:}));
++        else
++          out = string (text);
++        endif
+       else
+         out = feval (__mf_original_function__ ('strjoin'), this, args{:});
+       endif

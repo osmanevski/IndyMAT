@@ -1,0 +1,71 @@
+--- a/string.m
++++ b/string.m
+@@ -450,7 +450,24 @@
+     ##
+     ## @end deftypefn
+     function c_mat = char (this)
+-      c_mat = char (this.strs{:});
++      ## IndyMAT: retain string dimensions, inserting character width at dim 2.
++      ## UTF-8 bytes remain Octave char storage; this is not UTF-16 emulation.
++      if (numel (this.strs) == 1 && isempty (this.strs{1}))
++        c_mat = '';
++        return;
++      endif
++      sz = size (this.strs);
++      width = max ([0; cellfun(@numel, this.strs(:))]);
++      c_mat = repmat (' ', [sz(1), width, sz(2:end)]);
++      flat = reshape (c_mat, sz(1), width, []);
++      values = reshape (this.strs, sz(1), []);
++      for page = 1:columns (values)
++        for row = 1:rows (values)
++          text = values{row, page};
++          flat(row, 1:numel (text), page) = text;
++        endfor
++      endfor
++      c_mat = reshape (flat, [sz(1), width, sz(2:end)]);
+     endfunction
+ 
+     ## -*- texinfo -*-
+@@ -465,11 +482,15 @@
+     ##
+     ## @end deftypefn
+     function out = double (this)
+-      out = NaN (size (this));
+-      fcn = @(x) str2num (char (x));
+-      c_out = cellfun (fcn, this.strs, "UniformOutput", false);
+-      t_num = ! cellfun (@isempty, c_out);
+-      out(t_num) = cell2mat (c_out(t_num));
++      ## IndyMAT: numeric parsing, never evaluation of string contents.
++      out = str2double (this);
++    endfunction
++
++    ## IndyMAT STR2DOUBLE supports real/complex numeric text elementwise,
++    ## including commas, empty text and missing values (NaN); preserves shape.
++    function out = str2double (this)
++      out = builtin ('str2double', this.strs);
++      out(this.isMissing) = NaN;
+     endfunction
+ 
+   endmethods
+@@ -2858,7 +2879,12 @@
+       for e = 1:ne
+         outc(e,:) = matches{e};
+       endfor
++      ## IndyMAT: matches extend the first singleton dimension of the source.
++      dim = find (sz == 1, 1);
++      if (isempty (dim)), dim = numel (sz) + 1; endif
++      [outc, outm] = split_place (outc, false (ne, ncol), sz, dim, ncol);
+       out = string (outc);
++      out.isMissing = outm;
+     endfunction
+ 
+     ## -*- texinfo -*-
+@@ -5328,6 +5354,8 @@
+     endif
+   endwhile
+   pieces{end+1} = s(last:end);
++  ## IndyMAT: canonical empty-string payload is a 0-by-0 character array.
++  pieces(cellfun (@isempty, pieces)) = {''};
+ endfunction
+ 
+ ## Lay out the per-element pieces (the columns of cell matrix PC, with logical

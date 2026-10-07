@@ -1,0 +1,26 @@
+--- a/string.m
++++ b/string.m
+@@ -2398,6 +2398,12 @@
+     function out = compose (this, varargin)
+       ## IndyMAT: later string arguments must not change the input/result type.
+       if (! isa (this, 'string'))
++        ## IndyMAT: format mixed string data without erasing object provenance.
++        ## Character formats return cellstr; string formats return strings.
++        if (ischar (this))
++          out = cellstr (compose (string (this), varargin{:}));
++          return;
++        endif
+         args = indymat_text_args (varargin, 'compose');
+         out = feval ('compose', this, args{:});
+         return;
+@@ -2471,6 +2477,10 @@
+       ## Combine all values per row, in column order across input arrays
+       vals = [C{:}];
+       V = columns (vals);
++      ## IndyMAT: several data arguments cannot leave conversion holes.
++      if (N > 1 && V > vpa)
++        error ('compose: format must have enough conversion operators for the data arguments');
++      endif
+ 
+       ## With zero data columns no formatting is applied (size preserved)
+       if (V == 0)

@@ -6,13 +6,20 @@
     "02-contains-empty.patch",
     "03-count-nonoverlapping.patch",
     "04-plus-coercion.patch",
-    "05-pattern-dispatch.patch"
+    "05-pattern-dispatch.patch",
+    "06-string-conversions-shapes.patch",
+    "07-string-text-dispatch.patch",
+    "08-string-mixed-flags.patch",
+    "09-compose-mixed-string.patch",
+    "10-strjoin-missing-validation.patch",
+    "11-string-char-roundtrip.patch",
+    "12-string-measured-rules.patch"
   ],
   "files": [
     {
       "path": "string.m",
       "pristine_sha256": "abccb42477dee58c330a31324d9e18b00570f276f401349c415d78cda2b58a61",
-      "patched_sha256": "c7c26e242f7602cbb2ab6e73b7a601d1d892c2347d3cb9c84eac684513b71960"
+      "patched_sha256": "878d99fe5dcda09e7caa38dd6cd6d791d9e3efc401f446a359ac3dee1f730e92"
     }
   ]
 }

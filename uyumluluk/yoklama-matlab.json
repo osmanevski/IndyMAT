@@ -1871,6 +1871,1206 @@
 "hash": "1f92f45f0478ef11",
 "matlab": "cell|1x3|{double|2x2|3,4,0,1,;double|1x3|-1000,0,1000,;double|1x3|0,1000,2000,;}"
 },
+"yk-append-array": {
+"hash": "5fd93edd40ba3230",
+"matlab": "string|1x2|{char|1x6|u97,98,99,32,88,32,;char|1x6|u120,121,122,32,88,32,;}"
+},
+"yk-append-empty": {
+"hash": "dbb6646bf2e56cb4",
+"matlab": "string|1x1|{char|1x3|u32,88,32,;}"
+},
+"yk-append-missing": {
+"hash": "85e3da7afa214e50",
+"matlab": "string|1x2|{char|1x6|u97,98,99,32,88,32,;<missing>;}"
+},
+"yk-append-mixed": {
+"hash": "42e4531ef7edb996",
+"matlab": "string|1x1|{char|1x6|u32,97,32,32,98,32,;}"
+},
+"yk-append-scalar": {
+"hash": "e495bb6705ec45f3",
+"matlab": "string|1x1|{char|1x6|u97,98,99,32,88,32,;}"
+},
+"yk-bin2dec-column": {
+"hash": "8e558a29d6165021",
+"matlab": "double|2x1|1,2,"
+},
+"yk-bin2dec-row": {
+"hash": "f6f7304fd6a8f03a",
+"matlab": "double|1x2|1,2,"
+},
+"yk-cellstr-array": {
+"hash": "b13516e52a167d2d",
+"matlab": "cell|1x2|{char|1x3|u97,98,99,;char|1x3|u120,121,122,;}"
+},
+"yk-cellstr-empty": {
+"hash": "63d9ca97fbd95ba2",
+"matlab": "cell|1x1|{char|0x0|u,;}"
+},
+"yk-cellstr-missing": {
+"hash": "e05c8d30ca26adc9",
+"matlab": "cell|1x2|{char|1x3|u97,98,99,;char|0x0|u,;}"
+},
+"yk-cellstr-mixed": {
+"hash": "9ad1139c7c0496c4",
+"matlab": "cell|1x3|{char|1x2|u97,32,;char|0x0|u,;char|0x0|u,;}"
+},
+"yk-cellstr-scalar": {
+"hash": "ecdf9c3e9e2ebc2a",
+"matlab": "cell|1x1|{char|1x3|u97,98,99,;}"
+},
+"yk-char-array": {
+"hash": "7f139a1661bb2144",
+"matlab": "char|1x3x2|u97,98,99,120,121,122,"
+},
+"yk-char-empty": {
+"hash": "17a5e43e87e13c89",
+"matlab": "char|0x0|u,"
+},
+"yk-char-missing": {
+"hash": "c569b26c809bed7e",
+"matlab": "HATA|MATLAB:string:CannotConvertMissingElementToChar|Conversion of element 2 from <missing> to character vector is not supported."
+},
+"yk-char-mixed": {
+"hash": "ee46ddd60254f35e",
+"matlab": "char|2x3x2|u97,99,32,99,32,99,98,100,98,32,32,32,"
+},
+"yk-char-scalar": {
+"hash": "547a949b01eec68d",
+"matlab": "char|1x3|u97,98,99,"
+},
+"yk-compose-array": {
+"hash": "6fb99a9ce499b204",
+"matlab": "string|1x2|{char|1x5|u60,97,98,99,62,;char|1x5|u60,120,121,122,62,;}"
+},
+"yk-compose-empty": {
+"hash": "a6f99739cb715e16",
+"matlab": "string|1x1|{char|1x2|u60,62,;}"
+},
+"yk-compose-missing": {
+"hash": "525bb16e625c1cf4",
+"matlab": "HATA|MATLAB:string:MissingNotSupported|<missing> string element not supported."
+},
+"yk-compose-mixed": {
+"hash": "758bd7b4192f6480",
+"matlab": "string|2x1|{char|1x5|u97,58,49,46,50,;char|1x5|u98,58,50,46,56,;}"
+},
+"yk-compose-scalar": {
+"hash": "ae8ee1527488766d",
+"matlab": "string|1x1|{char|1x5|u60,97,98,99,62,;}"
+},
+"yk-concatenation-array": {
+"hash": "ed3aeafc9fb8e948",
+"matlab": "string|1x4|{char|1x3|u97,98,99,;char|1x3|u120,121,122,;char|1x3|u97,98,99,;char|1x3|u120,121,122,;}"
+},
+"yk-concatenation-empty": {
+"hash": "9ae96316d18c1bb3",
+"matlab": "string|1x2|{char|0x0|u,;char|0x0|u,;}"
+},
+"yk-concatenation-missing": {
+"hash": "34c31f591f3af8a4",
+"matlab": "string|1x4|{char|1x3|u97,98,99,;<missing>;char|1x3|u97,98,99,;<missing>;}"
+},
+"yk-concatenation-mixed": {
+"hash": "67e2a644be9c8159",
+"matlab": "string|1x2|{char|1x1|u97,;char|1x1|u98,;}"
+},
+"yk-concatenation-scalar": {
+"hash": "059befbcf999ed95",
+"matlab": "string|1x2|{char|1x3|u97,98,99,;char|1x3|u97,98,99,;}"
+},
+"yk-contains-array": {
+"hash": "7e8d949ee11cc935",
+"matlab": "logical|1x2|10"
+},
+"yk-contains-empty": {
+"hash": "74d711e53f9f3774",
+"matlab": "logical|1x1|0"
+},
+"yk-contains-missing": {
+"hash": "a15b55e024b9d2cc",
+"matlab": "logical|1x2|10"
+},
+"yk-contains-mixed": {
+"hash": "81ed0062500652fa",
+"matlab": "logical|1x1|1"
+},
+"yk-contains-scalar": {
+"hash": "a3231476e0225572",
+"matlab": "logical|1x1|1"
+},
+"yk-convertcharstostrings-array": {
+"hash": "04559014b35e93e8",
+"matlab": "string|1x2|{char|1x3|u97,98,99,;char|1x3|u120,121,122,;}"
+},
+"yk-convertcharstostrings-empty": {
+"hash": "becf550659997d99",
+"matlab": "string|1x1|{char|0x0|u,;}"
+},
+"yk-convertcharstostrings-missing": {
+"hash": "b6855df149d8b8ea",
+"matlab": "string|1x2|{char|1x3|u97,98,99,;<missing>;}"
+},
+"yk-convertcharstostrings-mixed": {
+"hash": "5ca93c5ce27d770f",
+"matlab": "string|1x2|{char|1x1|u97,;char|1x1|u98,;}"
+},
+"yk-convertcharstostrings-scalar": {
+"hash": "19ad2228e01cc2ea",
+"matlab": "string|1x1|{char|1x3|u97,98,99,;}"
+},
+"yk-convertstringstochars-array": {
+"hash": "715bd7330b08893a",
+"matlab": "cell|1x2|{char|1x3|u97,98,99,;char|1x3|u120,121,122,;}"
+},
+"yk-convertstringstochars-empty": {
+"hash": "edfffe1ca2ad0fcd",
+"matlab": "char|0x0|u,"
+},
+"yk-convertstringstochars-missing": {
+"hash": "40070563737811d6",
+"matlab": "cell|1x2|{char|1x3|u97,98,99,;char|0x0|u,;}"
+},
+"yk-convertstringstochars-mixed": {
+"hash": "52f0e5b304a67a7c",
+"matlab": "cell|1x2|{string|1x1|{char|1x1|u97,;};string|1x1|{char|1x1|u98,;};}"
+},
+"yk-convertstringstochars-scalar": {
+"hash": "7a69522e02488f5c",
+"matlab": "char|1x3|u97,98,99,"
+},
+"yk-count-array": {
+"hash": "7fcb0e00fef3b3e0",
+"matlab": "double|1x2|1,0,"
+},
+"yk-count-empty": {
+"hash": "f4e0b22510716d50",
+"matlab": "double|1x1|0,"
+},
+"yk-count-missing": {
+"hash": "31e065a9a37a44e5",
+"matlab": "double|1x2|1,0,"
+},
+"yk-count-mixed": {
+"hash": "9217ba592a6214d3",
+"matlab": "double|1x1|2,"
+},
+"yk-count-scalar": {
+"hash": "4b4991c9d6497ebd",
+"matlab": "double|1x1|1,"
+},
+"yk-double-array": {
+"hash": "77fb84bf514e8e2d",
+"matlab": "double|1x2|NaN,NaN,"
+},
+"yk-double-empty": {
+"hash": "4384af69dd400ec4",
+"matlab": "double|1x1|NaN,"
+},
+"yk-double-missing": {
+"hash": "5f769b9995a7136b",
+"matlab": "double|1x2|NaN,NaN,"
+},
+"yk-double-mixed": {
+"hash": "a2f3cf1442ac7158",
+"matlab": "double|1x5|NaN+0i,1234+0i,2-3i,NaN+0i,NaN+0i,"
+},
+"yk-double-scalar": {
+"hash": "0add4569a9f37a7a",
+"matlab": "double|1x1|NaN,"
+},
+"yk-endswith-array": {
+"hash": "6afdc646139d32c6",
+"matlab": "logical|1x2|10"
+},
+"yk-endswith-empty": {
+"hash": "a5f738151f115d81",
+"matlab": "logical|1x1|0"
+},
+"yk-endswith-missing": {
+"hash": "1b005664229a3020",
+"matlab": "logical|1x2|10"
+},
+"yk-endswith-mixed": {
+"hash": "b14e8fb398140490",
+"matlab": "logical|1x1|1"
+},
+"yk-endswith-scalar": {
+"hash": "0450691cc2cfce66",
+"matlab": "logical|1x1|1"
+},
+"yk-eq-array": {
+"hash": "873964d008cdc017",
+"matlab": "logical|1x2|10"
+},
+"yk-eq-empty": {
+"hash": "314e3da0ada65d9d",
+"matlab": "logical|1x1|0"
+},
+"yk-eq-missing": {
+"hash": "918c312ea790bccf",
+"matlab": "logical|1x2|10"
+},
+"yk-eq-mixed": {
+"hash": "0332d743126943a1",
+"matlab": "logical|1x1|1"
+},
+"yk-eq-scalar": {
+"hash": "26fd964728d4ac34",
+"matlab": "logical|1x1|1"
+},
+"yk-erase-array": {
+"hash": "cc4e697fffaa16a2",
+"matlab": "string|1x2|{char|1x2|u97,99,;char|1x3|u120,121,122,;}"
+},
+"yk-erase-empty": {
+"hash": "f382d7445111d960",
+"matlab": "string|1x1|{char|0x0|u,;}"
+},
+"yk-erase-missing": {
+"hash": "e4959f7822c557e4",
+"matlab": "string|1x2|{char|1x2|u97,99,;<missing>;}"
+},
+"yk-erase-mixed": {
+"hash": "836e17e82ea884f2",
+"matlab": "char|1x2|u97,99,"
+},
+"yk-erase-scalar": {
+"hash": "631bb40db4b356b7",
+"matlab": "string|1x1|{char|1x2|u97,99,;}"
+},
+"yk-extractafter-array": {
+"hash": "0eefbc032a1fb1e9",
+"matlab": "string|1x2|{char|1x1|u99,;<missing>;}"
+},
+"yk-extractafter-empty": {
+"hash": "c702b1ecfe08334c",
+"matlab": "string|1x1|{<missing>;}"
+},
+"yk-extractafter-missing": {
+"hash": "719bfada3420ae38",
+"matlab": "string|1x2|{char|1x1|u99,;<missing>;}"
+},
+"yk-extractafter-mixed": {
+"hash": "1a5b03961c279410",
+"matlab": "string|1x2|{char|1x2|u98,99,;char|1x1|u102,;}"
+},
+"yk-extractafter-scalar": {
+"hash": "2a6d17534cbe3205",
+"matlab": "string|1x1|{char|1x1|u99,;}"
+},
+"yk-extractbefore-array": {
+"hash": "90ded11394d651f8",
+"matlab": "string|1x2|{char|1x1|u97,;<missing>;}"
+},
+"yk-extractbefore-empty": {
+"hash": "4fb87581bf573df0",
+"matlab": "string|1x1|{<missing>;}"
+},
+"yk-extractbefore-missing": {
+"hash": "e84d20466f8ad127",
+"matlab": "string|1x2|{char|1x1|u97,;<missing>;}"
+},
+"yk-extractbefore-mixed": {
+"hash": "932be1e29aba3e46",
+"matlab": "string|1x2|{char|1x1|u97,;char|1x2|u100,101,;}"
+},
+"yk-extractbefore-scalar": {
+"hash": "6f67adfd027ec6ab",
+"matlab": "string|1x1|{char|1x1|u97,;}"
+},
+"yk-extractbetween-array": {
+"hash": "3ddf1e10c627dc8e",
+"matlab": "HATA|MATLAB:string:MustHaveSameNumberOf|Element 2 of the text contains 0 substrings while the previous elements have 1. All elements must contain the same number of substrings."
+},
+"yk-extractbetween-empty": {
+"hash": "e04b0dcd3b19ab40",
+"matlab": "string|0x1|{}"
+},
+"yk-extractbetween-missing": {
+"hash": "489a436f409effb7",
+"matlab": "HATA|MATLAB:string:MustHaveSameNumberOf|Element 2 of the text contains 0 substrings while the previous elements have 1. All elements must contain the same number of substrings."
+},
+"yk-extractbetween-mixed": {
+"hash": "9a1657e12f10c206",
+"matlab": "string|1x2x2|{char|1x1|u97,;char|1x1|u99,;char|1x1|u98,;char|1x1|u100,;}"
+},
+"yk-extractbetween-scalar": {
+"hash": "885462f36c694b56",
+"matlab": "string|1x1|{char|1x1|u98,;}"
+},
+"yk-gt-array": {
+"hash": "9d9912dff85970d0",
+"matlab": "logical|1x2|01"
+},
+"yk-gt-empty": {
+"hash": "14619e660fbc6462",
+"matlab": "logical|1x1|0"
+},
+"yk-gt-missing": {
+"hash": "a5c8dbec3ab13d91",
+"matlab": "logical|1x2|00"
+},
+"yk-gt-mixed": {
+"hash": "0f3ed47ab634f41a",
+"matlab": "logical|1x2|01"
+},
+"yk-gt-scalar": {
+"hash": "91436708bfe010d5",
+"matlab": "logical|1x1|0"
+},
+"yk-hex2dec-column": {
+"hash": "90a2ff4fcf59e429",
+"matlab": "double|2x1|10,255,"
+},
+"yk-hex2dec-row": {
+"hash": "c1a3c047c38494bf",
+"matlab": "double|1x2|10,255,"
+},
+"yk-indexing-array": {
+"hash": "19b01d9f1c2cc947",
+"matlab": "string|1x1|{char|1x3|u97,98,99,;}"
+},
+"yk-indexing-empty": {
+"hash": "a6c6e2b1a28f229b",
+"matlab": "string|1x1|{char|0x0|u,;}"
+},
+"yk-indexing-missing": {
+"hash": "2ba57b2dafd1b231",
+"matlab": "string|1x1|{char|1x3|u97,98,99,;}"
+},
+"yk-indexing-mixed": {
+"hash": "e50ca06d2848c7ba",
+"matlab": "string|1x2|{char|1x1|u97,;char|1x1|u99,;}"
+},
+"yk-indexing-scalar": {
+"hash": "bd3abeeec77e3b14",
+"matlab": "string|1x1|{char|1x3|u97,98,99,;}"
+},
+"yk-insertafter-array": {
+"hash": "fdcedbf6961d0730",
+"matlab": "string|1x2|{char|1x4|u97,98,88,99,;char|1x3|u120,121,122,;}"
+},
+"yk-insertafter-empty": {
+"hash": "96b0169803299968",
+"matlab": "string|1x1|{char|0x0|u,;}"
+},
+"yk-insertafter-missing": {
+"hash": "ff38f7d239edf617",
+"matlab": "string|1x2|{char|1x4|u97,98,88,99,;<missing>;}"
+},
+"yk-insertafter-mixed": {
+"hash": "466bc613dd9f5d19",
+"matlab": "char|1x4|u97,98,88,99,"
+},
+"yk-insertafter-scalar": {
+"hash": "6af79ebea474f24a",
+"matlab": "string|1x1|{char|1x4|u97,98,88,99,;}"
+},
+"yk-insertbefore-array": {
+"hash": "bc7a35370e41b2a0",
+"matlab": "string|1x2|{char|1x4|u97,88,98,99,;char|1x3|u120,121,122,;}"
+},
+"yk-insertbefore-empty": {
+"hash": "47d1a0e85503899b",
+"matlab": "string|1x1|{char|0x0|u,;}"
+},
+"yk-insertbefore-missing": {
+"hash": "3000d5e7bd895016",
+"matlab": "string|1x2|{char|1x4|u97,88,98,99,;<missing>;}"
+},
+"yk-insertbefore-mixed": {
+"hash": "38f76eb6905313a8",
+"matlab": "char|1x4|u97,88,98,99,"
+},
+"yk-insertbefore-scalar": {
+"hash": "66874c4f63e0ee59",
+"matlab": "string|1x1|{char|1x4|u97,88,98,99,;}"
+},
+"yk-isempty-array": {
+"hash": "b009ee06e3f763c7",
+"matlab": "logical|1x1|0"
+},
+"yk-isempty-empty": {
+"hash": "e68ca2b479bb2f1f",
+"matlab": "logical|1x1|0"
+},
+"yk-isempty-missing": {
+"hash": "8b9d87c9e17eb188",
+"matlab": "logical|1x1|0"
+},
+"yk-isempty-mixed": {
+"hash": "62deecdbd3865ef8",
+"matlab": "logical|1x1|1"
+},
+"yk-isempty-scalar": {
+"hash": "759b7d815096b057",
+"matlab": "logical|1x1|0"
+},
+"yk-ismember-array": {
+"hash": "689d7661f4571d46",
+"matlab": "logical|1x2|11"
+},
+"yk-ismember-empty": {
+"hash": "45617847ee4e4dd1",
+"matlab": "logical|1x1|0"
+},
+"yk-ismember-missing": {
+"hash": "4d9166bef0d5008a",
+"matlab": "logical|1x2|10"
+},
+"yk-ismember-mixed": {
+"hash": "dd422c8595df569b",
+"matlab": "logical|1x2|11"
+},
+"yk-ismember-scalar": {
+"hash": "f89c2f7f4c865855",
+"matlab": "logical|1x1|1"
+},
+"yk-ismissing-array": {
+"hash": "f7f2ff40f99b103d",
+"matlab": "logical|1x2|00"
+},
+"yk-ismissing-empty": {
+"hash": "abc4f68cabe02c2c",
+"matlab": "logical|1x1|0"
+},
+"yk-ismissing-missing": {
+"hash": "0963434f5d1cc718",
+"matlab": "logical|1x2|01"
+},
+"yk-ismissing-mixed": {
+"hash": "4d5627c8789a6cce",
+"matlab": "logical|1x2|10"
+},
+"yk-ismissing-scalar": {
+"hash": "1ea80405958528a9",
+"matlab": "logical|1x1|0"
+},
+"yk-isstring-array": {
+"hash": "93795974db08fc19",
+"matlab": "logical|1x1|1"
+},
+"yk-isstring-empty": {
+"hash": "f872124182ea000d",
+"matlab": "logical|1x1|1"
+},
+"yk-isstring-missing": {
+"hash": "0b7f088122659b95",
+"matlab": "logical|1x1|1"
+},
+"yk-isstring-mixed": {
+"hash": "317116eb6a93149d",
+"matlab": "logical|1x1|0"
+},
+"yk-isstring-scalar": {
+"hash": "bd5a194a61eb20de",
+"matlab": "logical|1x1|1"
+},
+"yk-isstringscalar-array": {
+"hash": "f10d6bebb01966c8",
+"matlab": "logical|1x1|0"
+},
+"yk-isstringscalar-empty": {
+"hash": "802e6a7317d77c2c",
+"matlab": "logical|1x1|1"
+},
+"yk-isstringscalar-missing": {
+"hash": "6fec2aa08f323707",
+"matlab": "logical|1x1|0"
+},
+"yk-isstringscalar-mixed": {
+"hash": "a184178e68ac0dca",
+"matlab": "logical|1x1|0"
+},
+"yk-isstringscalar-scalar": {
+"hash": "3ed55e6ad5b054a4",
+"matlab": "logical|1x1|1"
+},
+"yk-join-array": {
+"hash": "2607c5d6b99f4797",
+"matlab": "string|1x1|{char|1x7|u97,98,99,44,120,121,122,;}"
+},
+"yk-join-empty": {
+"hash": "168e2297a0e181ff",
+"matlab": "string|1x1|{char|0x0|u,;}"
+},
+"yk-join-missing": {
+"hash": "6dd1d6a7374cdaa6",
+"matlab": "string|1x1|{<missing>;}"
+},
+"yk-join-mixed": {
+"hash": "77ce515a30836d52",
+"matlab": "string|2x1|{char|1x3|u97,45,98,;char|1x3|u99,45,100,;}"
+},
+"yk-join-scalar": {
+"hash": "e255de5b6f5a04d4",
+"matlab": "string|1x1|{char|1x3|u97,98,99,;}"
+},
+"yk-lower-array": {
+"hash": "570a406b13d02b21",
+"matlab": "string|1x2|{char|1x3|u97,98,99,;char|1x3|u120,121,122,;}"
+},
+"yk-lower-empty": {
+"hash": "67b0bf621a47bfe4",
+"matlab": "string|1x1|{char|0x0|u,;}"
+},
+"yk-lower-missing": {
+"hash": "adc45662057fedec",
+"matlab": "string|1x2|{char|1x3|u97,98,99,;<missing>;}"
+},
+"yk-lower-mixed": {
+"hash": "bc8ac2765e6f7798",
+"matlab": "string|1x1|{char|1x3|u97,98,233,;}"
+},
+"yk-lower-scalar": {
+"hash": "46306845c0b54d04",
+"matlab": "string|1x1|{char|1x3|u97,98,99,;}"
+},
+"yk-lt-array": {
+"hash": "74f19a443b76c412",
+"matlab": "logical|1x2|00"
+},
+"yk-lt-empty": {
+"hash": "ee4e35ecea1ab093",
+"matlab": "logical|1x1|1"
+},
+"yk-lt-missing": {
+"hash": "2ff3b6364b53a1ee",
+"matlab": "logical|1x2|00"
+},
+"yk-lt-mixed": {
+"hash": "d26a7658d2d8d76b",
+"matlab": "logical|1x2|10"
+},
+"yk-lt-scalar": {
+"hash": "0fbc35b2b1c4427e",
+"matlab": "logical|1x1|0"
+},
+"yk-ne-array": {
+"hash": "d19293eafa5c8c90",
+"matlab": "logical|1x2|01"
+},
+"yk-ne-empty": {
+"hash": "4b97ae48f11c9911",
+"matlab": "logical|1x1|1"
+},
+"yk-ne-missing": {
+"hash": "f470611ae4896382",
+"matlab": "logical|1x2|01"
+},
+"yk-ne-mixed": {
+"hash": "1663e12da91dde47",
+"matlab": "logical|1x2|01"
+},
+"yk-ne-scalar": {
+"hash": "d2e126e61e89306b",
+"matlab": "logical|1x1|0"
+},
+"yk-newline-mixed": {
+"hash": "76a31b057057dc2e",
+"matlab": "double|1x2|10,2,"
+},
+"yk-num2str-array": {
+"hash": "3f88d240c3f0805d",
+"matlab": "HATA|MATLAB:num2str:nonNumericInput|Input to num2str must be numeric."
+},
+"yk-num2str-empty": {
+"hash": "af092fe4ab961a5c",
+"matlab": "char|0x0|u,"
+},
+"yk-num2str-missing": {
+"hash": "38791904d30d0ad1",
+"matlab": "HATA|MATLAB:num2str:nonNumericInput|Input to num2str must be numeric."
+},
+"yk-num2str-mixed": {
+"hash": "489990141e76c5f1",
+"matlab": "char|1x8|u48,48,48,49,48,48,48,50,"
+},
+"yk-num2str-scalar": {
+"hash": "64ff1e32e7e18062",
+"matlab": "char|1x3|u97,98,99,"
+},
+"yk-numel-array": {
+"hash": "775cacd2e44e01bb",
+"matlab": "double|1x1|2,"
+},
+"yk-numel-empty": {
+"hash": "72ed7f6e9a88dbd2",
+"matlab": "double|1x1|1,"
+},
+"yk-numel-missing": {
+"hash": "ae35578d4c757c23",
+"matlab": "double|1x1|2,"
+},
+"yk-numel-mixed": {
+"hash": "1c18e678fce02d1c",
+"matlab": "double|1x1|0,"
+},
+"yk-numel-scalar": {
+"hash": "7588b3547d877a6a",
+"matlab": "double|1x1|1,"
+},
+"yk-pad-array": {
+"hash": "e0d3a511ed8a669a",
+"matlab": "string|1x2|{char|1x7|u32,32,32,32,97,98,99,;char|1x7|u32,32,32,32,120,121,122,;}"
+},
+"yk-pad-empty": {
+"hash": "f941dd00268ed550",
+"matlab": "string|1x1|{char|1x7|u32,32,32,32,32,32,32,;}"
+},
+"yk-pad-missing": {
+"hash": "c8c7804b85749f4c",
+"matlab": "string|1x2|{char|1x7|u32,32,32,32,97,98,99,;<missing>;}"
+},
+"yk-pad-mixed": {
+"hash": "722a9187bda30a9e",
+"matlab": "string|1x1|{char|1x4|u45,97,45,45,;}"
+},
+"yk-pad-scalar": {
+"hash": "3da131005b0fabd3",
+"matlab": "string|1x1|{char|1x7|u32,32,32,32,97,98,99,;}"
+},
+"yk-plus-array": {
+"hash": "c6a4f566cc62f133",
+"matlab": "string|1x2|{char|1x6|u97,98,99,32,88,32,;char|1x6|u120,121,122,32,88,32,;}"
+},
+"yk-plus-empty": {
+"hash": "68afc7a5b8739069",
+"matlab": "string|1x1|{char|1x3|u32,88,32,;}"
+},
+"yk-plus-missing": {
+"hash": "eafb28658c511941",
+"matlab": "string|1x2|{char|1x6|u97,98,99,32,88,32,;<missing>;}"
+},
+"yk-plus-mixed": {
+"hash": "e5f8bb9d67f24711",
+"matlab": "string|1x2|{char|1x2|u120,49,;char|1x2|u120,50,;}"
+},
+"yk-plus-scalar": {
+"hash": "ed765e066c8c6b17",
+"matlab": "string|1x1|{char|1x6|u97,98,99,32,88,32,;}"
+},
+"yk-regexp-array": {
+"hash": "29e07a4eb813d456",
+"matlab": "cell|1x2|{string|1x1|{char|1x3|u97,98,99,;};string|1x1|{char|1x3|u120,121,122,;};}"
+},
+"yk-regexp-empty": {
+"hash": "969a613826eab5e8",
+"matlab": "string|0x0|{}"
+},
+"yk-regexp-missing": {
+"hash": "51ec3d8f3f7578f7",
+"matlab": "cell|1x2|{string|1x1|{char|1x3|u97,98,99,;};string|0x0|{};}"
+},
+"yk-regexp-mixed": {
+"hash": "50682f0371f78f81",
+"matlab": "cell|1x1|{cell|1x1|{char|1x1|u98,;};}"
+},
+"yk-regexp-scalar": {
+"hash": "9495bd78c2d9892a",
+"matlab": "string|1x1|{char|1x3|u97,98,99,;}"
+},
+"yk-regexpi-array": {
+"hash": "0fe8bca8efa9c59b",
+"matlab": "cell|1x2|{string|1x1|{char|1x3|u97,98,99,;};string|1x1|{char|1x3|u120,121,122,;};}"
+},
+"yk-regexpi-empty": {
+"hash": "54478dd4db72809f",
+"matlab": "string|0x0|{}"
+},
+"yk-regexpi-missing": {
+"hash": "ed99e76390686b91",
+"matlab": "cell|1x2|{string|1x1|{char|1x3|u97,98,99,;};string|0x0|{};}"
+},
+"yk-regexpi-mixed": {
+"hash": "008a2300d28f763d",
+"matlab": "cell|1x1|{cell|1x1|{char|1x1|u66,;};}"
+},
+"yk-regexpi-scalar": {
+"hash": "eaf60eee20ecc119",
+"matlab": "string|1x1|{char|1x3|u97,98,99,;}"
+},
+"yk-regexprep-array": {
+"hash": "31ce4c3d6d92f246",
+"matlab": "string|1x2|{char|1x3|u88,88,88,;char|1x3|u88,88,88,;}"
+},
+"yk-regexprep-empty": {
+"hash": "251bf95fd5248148",
+"matlab": "string|1x1|{char|0x0|u,;}"
+},
+"yk-regexprep-missing": {
+"hash": "81a67c88b1aa57cf",
+"matlab": "string|1x2|{char|1x3|u88,88,88,;<missing>;}"
+},
+"yk-regexprep-mixed": {
+"hash": "74e00d0f7f4a2f85",
+"matlab": "char|1x6|u97,98,60,49,50,62,"
+},
+"yk-regexprep-scalar": {
+"hash": "d9694747d3752f0e",
+"matlab": "string|1x1|{char|1x3|u88,88,88,;}"
+},
+"yk-replace-array": {
+"hash": "033a669c5055090d",
+"matlab": "string|1x2|{char|1x4|u97,66,66,99,;char|1x3|u120,121,122,;}"
+},
+"yk-replace-empty": {
+"hash": "708fbe7ecabc64f1",
+"matlab": "string|1x1|{char|0x0|u,;}"
+},
+"yk-replace-missing": {
+"hash": "e970d638e089b393",
+"matlab": "string|1x2|{char|1x4|u97,66,66,99,;<missing>;}"
+},
+"yk-replace-mixed": {
+"hash": "e10a7a770f9ca3d4",
+"matlab": "char|1x3|u97,88,99,"
+},
+"yk-replace-scalar": {
+"hash": "00face4b74bfa19e",
+"matlab": "string|1x1|{char|1x4|u97,66,66,99,;}"
+},
+"yk-reverse-array": {
+"hash": "610aca342388cae9",
+"matlab": "string|1x2|{char|1x3|u99,98,97,;char|1x3|u122,121,120,;}"
+},
+"yk-reverse-empty": {
+"hash": "9f63ec737c24768b",
+"matlab": "string|1x1|{char|0x0|u,;}"
+},
+"yk-reverse-missing": {
+"hash": "a061ff6f5ab5e731",
+"matlab": "string|1x2|{char|1x3|u99,98,97,;<missing>;}"
+},
+"yk-reverse-mixed": {
+"hash": "5ff1c40cb80ac9e6",
+"matlab": "string|1x2|{char|1x2|u97,233,;char|1x3|u56832,55357,97,;}"
+},
+"yk-reverse-scalar": {
+"hash": "33034219a3b790fc",
+"matlab": "string|1x1|{char|1x3|u99,98,97,;}"
+},
+"yk-size-array": {
+"hash": "2bb892bee7f1f7b1",
+"matlab": "double|1x2|1,2,"
+},
+"yk-size-empty": {
+"hash": "26b9aea48d3c323b",
+"matlab": "double|1x2|1,1,"
+},
+"yk-size-missing": {
+"hash": "ffe7c47c613d758c",
+"matlab": "double|1x2|1,2,"
+},
+"yk-size-mixed": {
+"hash": "b590804982d0e741",
+"matlab": "double|1x3|2,1,2,"
+},
+"yk-size-scalar": {
+"hash": "63224a9ef055c8da",
+"matlab": "double|1x2|1,1,"
+},
+"yk-sort-array": {
+"hash": "1b27e6971e2f8501",
+"matlab": "string|1x2|{char|1x3|u97,98,99,;char|1x3|u120,121,122,;}"
+},
+"yk-sort-empty": {
+"hash": "2ec77d97237b1f5f",
+"matlab": "string|1x1|{char|0x0|u,;}"
+},
+"yk-sort-missing": {
+"hash": "a8aac4c45a869381",
+"matlab": "string|1x2|{char|1x3|u97,98,99,;<missing>;}"
+},
+"yk-sort-mixed": {
+"hash": "d84bea5c6b0a0c73",
+"matlab": "string|1x4|{<missing>;char|0x0|u,;char|1x1|u97,;char|1x1|u98,;}"
+},
+"yk-sort-scalar": {
+"hash": "010cfe698716def4",
+"matlab": "string|1x1|{char|1x3|u97,98,99,;}"
+},
+"yk-split-array": {
+"hash": "ce025705f07dcdcb",
+"matlab": "HATA|MATLAB:string:MustHaveSameNumberOf|Element 2 of the text contains 0 delimiters while the previous elements have 1. All elements must contain the same number of delimiters."
+},
+"yk-split-empty": {
+"hash": "76fbace59399cbc9",
+"matlab": "string|1x1|{char|0x0|u,;}"
+},
+"yk-split-missing": {
+"hash": "f9d3e44af5b06f83",
+"matlab": "HATA|MATLAB:string:MustHaveSameNumberOf|Element 2 of the text contains 0 delimiters while the previous elements have 1. All elements must contain the same number of delimiters."
+},
+"yk-split-mixed": {
+"hash": "20fa7e314316e5f3",
+"matlab": "string|2x2|{char|1x1|u97,;char|1x1|u99,;char|1x1|u98,;char|1x1|u100,;}"
+},
+"yk-split-scalar": {
+"hash": "02d3e07c23f21e77",
+"matlab": "string|2x1|{char|1x1|u97,;char|1x1|u99,;}"
+},
+"yk-splitlines-array": {
+"hash": "f460f6836f073863",
+"matlab": "string|1x2|{char|1x3|u97,98,99,;char|1x3|u120,121,122,;}"
+},
+"yk-splitlines-empty": {
+"hash": "bc56d7385288527e",
+"matlab": "string|1x1|{char|0x0|u,;}"
+},
+"yk-splitlines-missing": {
+"hash": "5d6c1b9738a68d8e",
+"matlab": "string|1x2|{char|1x3|u97,98,99,;<missing>;}"
+},
+"yk-splitlines-mixed": {
+"hash": "2f9c5c45a57d14c9",
+"matlab": "string|2x1|{char|1x1|u97,;char|1x1|u98,;}"
+},
+"yk-splitlines-scalar": {
+"hash": "2a06ac4aba6d6d2d",
+"matlab": "string|1x1|{char|1x3|u97,98,99,;}"
+},
+"yk-sprintf-array": {
+"hash": "5052e4125009a9b5",
+"matlab": "string|1x1|{char|1x10|u60,97,98,99,62,60,120,121,122,62,;}"
+},
+"yk-sprintf-empty": {
+"hash": "3aa97f4b0a97811f",
+"matlab": "string|1x1|{char|1x2|u60,62,;}"
+},
+"yk-sprintf-missing": {
+"hash": "192868ec8b445e1d",
+"matlab": "HATA|MATLAB:string:MissingNotSupported|<missing> string element not supported."
+},
+"yk-sprintf-mixed": {
+"hash": "d87fea7f99a6a101",
+"matlab": "char|1x5|u97,98,99,58,50,"
+},
+"yk-sprintf-scalar": {
+"hash": "d2bb8137410ce40d",
+"matlab": "string|1x1|{char|1x5|u60,97,98,99,62,;}"
+},
+"yk-startswith-array": {
+"hash": "e0052569aa39b474",
+"matlab": "logical|1x2|10"
+},
+"yk-startswith-empty": {
+"hash": "22e418c96d342369",
+"matlab": "logical|1x1|0"
+},
+"yk-startswith-missing": {
+"hash": "930989b9834cbb46",
+"matlab": "logical|1x2|10"
+},
+"yk-startswith-mixed": {
+"hash": "2c5b08f7062be62d",
+"matlab": "logical|1x1|1"
+},
+"yk-startswith-scalar": {
+"hash": "90e346a0028be47e",
+"matlab": "logical|1x1|1"
+},
+"yk-str2double-array": {
+"hash": "e8667ed4dc24714b",
+"matlab": "double|1x2|NaN,NaN,"
+},
+"yk-str2double-empty": {
+"hash": "57035f481a61550e",
+"matlab": "double|1x1|NaN,"
+},
+"yk-str2double-missing": {
+"hash": "9d91e3affd669695",
+"matlab": "double|1x2|NaN,NaN,"
+},
+"yk-str2double-mixed": {
+"hash": "12309a71dae1eb08",
+"matlab": "double|1x5|1000+0i,1234+0i,2-3i,NaN+0i,NaN+0i,"
+},
+"yk-str2double-scalar": {
+"hash": "903029b0fb417c74",
+"matlab": "double|1x1|NaN,"
+},
+"yk-strcat-array": {
+"hash": "16fcd99f22b5905a",
+"matlab": "string|1x2|{char|1x5|u97,98,99,32,88,;char|1x5|u120,121,122,32,88,;}"
+},
+"yk-strcat-empty": {
+"hash": "187c376395bac873",
+"matlab": "string|1x1|{char|1x2|u32,88,;}"
+},
+"yk-strcat-missing": {
+"hash": "94b07485c24ffcad",
+"matlab": "string|1x2|{char|1x5|u97,98,99,32,88,;<missing>;}"
+},
+"yk-strcat-mixed": {
+"hash": "ba96d3d4f6050958",
+"matlab": "string|1x1|{char|1x5|u32,97,32,98,32,;}"
+},
+"yk-strcat-scalar": {
+"hash": "d189a87066d7052b",
+"matlab": "string|1x1|{char|1x5|u97,98,99,32,88,;}"
+},
+"yk-strcmp-array": {
+"hash": "72a88b794488c46f",
+"matlab": "logical|1x2|10"
+},
+"yk-strcmp-empty": {
+"hash": "12b7771aa119d5e9",
+"matlab": "logical|1x1|0"
+},
+"yk-strcmp-missing": {
+"hash": "a8f1352c8e4d6c62",
+"matlab": "logical|1x2|10"
+},
+"yk-strcmp-mixed": {
+"hash": "a873b99c20f840dc",
+"matlab": "logical|1x2|10"
+},
+"yk-strcmp-scalar": {
+"hash": "38b9da22b1dbc064",
+"matlab": "logical|1x1|1"
+},
+"yk-strcmpi-array": {
+"hash": "1f24bb2847dec23b",
+"matlab": "logical|1x2|10"
+},
+"yk-strcmpi-empty": {
+"hash": "d9489f1f6754153b",
+"matlab": "logical|1x1|0"
+},
+"yk-strcmpi-missing": {
+"hash": "77d9fd81c0dc0196",
+"matlab": "logical|1x2|10"
+},
+"yk-strcmpi-mixed": {
+"hash": "f97b3313fb586ca6",
+"matlab": "logical|1x2|10"
+},
+"yk-strcmpi-scalar": {
+"hash": "f1ccd70be3a20236",
+"matlab": "logical|1x1|1"
+},
+"yk-string-array": {
+"hash": "3294a7e6e92e20d8",
+"matlab": "string|1x2|{char|1x3|u97,98,99,;char|1x3|u120,121,122,;}"
+},
+"yk-string-empty": {
+"hash": "ad89c2aa9adfdc21",
+"matlab": "string|1x1|{char|0x0|u,;}"
+},
+"yk-string-missing": {
+"hash": "4570ee1b7215d3ce",
+"matlab": "string|1x2|{char|1x3|u97,98,99,;<missing>;}"
+},
+"yk-string-mixed": {
+"hash": "7d4828fa97b34939",
+"matlab": "string|1x4|{char|1x1|u97,;char|1x1|u98,;char|1x1|u51,;char|1x4|u116,114,117,101,;}"
+},
+"yk-string-scalar": {
+"hash": "b2f5bf1b1345ba61",
+"matlab": "string|1x1|{char|1x3|u97,98,99,;}"
+},
+"yk-strings-array": {
+"hash": "5127ca357d866e64",
+"matlab": "string|1x2|{char|0x0|u,;char|0x0|u,;}"
+},
+"yk-strings-empty": {
+"hash": "f86be1a9940f71d7",
+"matlab": "string|1x1|{char|0x0|u,;}"
+},
+"yk-strings-missing": {
+"hash": "2713d2bbf2aa00f9",
+"matlab": "string|1x2|{char|0x0|u,;char|0x0|u,;}"
+},
+"yk-strings-mixed": {
+"hash": "fe330fe5e19fc296",
+"matlab": "string|0x3|{}"
+},
+"yk-strings-scalar": {
+"hash": "2201122b3c46d28a",
+"matlab": "string|1x1|{char|0x0|u,;}"
+},
+"yk-strip-array": {
+"hash": "4eb2ef3903af3d91",
+"matlab": "string|1x2|{char|1x3|u97,98,99,;char|1x3|u120,121,122,;}"
+},
+"yk-strip-empty": {
+"hash": "08dbd9b3a10363e0",
+"matlab": "string|1x1|{char|0x0|u,;}"
+},
+"yk-strip-missing": {
+"hash": "b168b6430b920fa0",
+"matlab": "string|1x2|{char|1x3|u97,98,99,;<missing>;}"
+},
+"yk-strip-mixed": {
+"hash": "815ad399092d95c3",
+"matlab": "string|1x1|{char|1x1|u97,;}"
+},
+"yk-strip-scalar": {
+"hash": "b34b93157148dc2f",
+"matlab": "string|1x1|{char|1x3|u97,98,99,;}"
+},
+"yk-strjoin-array": {
+"hash": "587488589e393657",
+"matlab": "string|1x1|{char|1x7|u97,98,99,44,120,121,122,;}"
+},
+"yk-strjoin-empty": {
+"hash": "125fbd64238ebbff",
+"matlab": "string|1x1|{char|0x0|u,;}"
+},
+"yk-strjoin-missing": {
+"hash": "cf1c8c7da8a86856",
+"matlab": "string|1x1|{<missing>;}"
+},
+"yk-strjoin-mixed": {
+"hash": "4497558be94159a7",
+"matlab": "string|1x1|{char|1x3|u97,45,98,;}"
+},
+"yk-strjoin-scalar": {
+"hash": "4e266fd337e30f0e",
+"matlab": "string|1x1|{char|1x3|u97,98,99,;}"
+},
+"yk-strlength-array": {
+"hash": "41d319236d33b66e",
+"matlab": "double|1x2|3,3,"
+},
+"yk-strlength-empty": {
+"hash": "4717ec0f79eca715",
+"matlab": "double|1x1|0,"
+},
+"yk-strlength-missing": {
+"hash": "ec116205a5808ded",
+"matlab": "double|1x2|3,NaN,"
+},
+"yk-strlength-mixed": {
+"hash": "12e2212b2128c4f3",
+"matlab": "double|1x3|1,2,3,"
+},
+"yk-strlength-scalar": {
+"hash": "ca567961914ddd5e",
+"matlab": "double|1x1|3,"
+},
+"yk-strncmp-array": {
+"hash": "f4d5f544aa988c9f",
+"matlab": "logical|1x2|10"
+},
+"yk-strncmp-empty": {
+"hash": "fbef0c3113cd8844",
+"matlab": "logical|1x1|0"
+},
+"yk-strncmp-missing": {
+"hash": "687e938e1e34dde9",
+"matlab": "logical|1x2|10"
+},
+"yk-strncmp-mixed": {
+"hash": "b108e25a7e92bcca",
+"matlab": "logical|1x2|10"
+},
+"yk-strncmp-scalar": {
+"hash": "a38789cc82ad2992",
+"matlab": "logical|1x1|1"
+},
+"yk-strncmpi-array": {
+"hash": "6997dbe7988c8899",
+"matlab": "logical|1x2|10"
+},
+"yk-strncmpi-empty": {
+"hash": "7983e3ad1ff01106",
+"matlab": "logical|1x1|0"
+},
+"yk-strncmpi-missing": {
+"hash": "a08c65861eca859a",
+"matlab": "logical|1x2|10"
+},
+"yk-strncmpi-mixed": {
+"hash": "cedd1c75544ef797",
+"matlab": "logical|1x2|10"
+},
+"yk-strncmpi-scalar": {
+"hash": "a1ba6510ed8bc058",
+"matlab": "logical|1x1|1"
+},
+"yk-strsplit-array": {
+"hash": "70b0f9c17f4fd1b0",
+"matlab": "HATA|MATLAB:strsplit:InvalidStringType|First input must be either a character vector or a string scalar."
+},
+"yk-strsplit-empty": {
+"hash": "bc70a96d90897ad1",
+"matlab": "string|1x1|{char|0x0|u,;}"
+},
+"yk-strsplit-missing": {
+"hash": "8341263577153a5a",
+"matlab": "HATA|MATLAB:strsplit:InvalidStringType|First input must be either a character vector or a string scalar."
+},
+"yk-strsplit-mixed": {
+"hash": "4ac70730807c393a",
+"matlab": "string|1x3|{char|1x1|u97,;char|0x0|u,;char|1x1|u98,;}"
+},
+"yk-strsplit-scalar": {
+"hash": "181837f085c9d715",
+"matlab": "string|1x2|{char|1x1|u97,;char|1x1|u99,;}"
+},
+"yk-strtrim-array": {
+"hash": "f074cbc2fd0cd9a3",
+"matlab": "string|1x2|{char|1x3|u97,98,99,;char|1x3|u120,121,122,;}"
+},
+"yk-strtrim-empty": {
+"hash": "445ade809aaa6cd8",
+"matlab": "string|1x1|{char|0x0|u,;}"
+},
+"yk-strtrim-missing": {
+"hash": "4575c5d9975b4b7c",
+"matlab": "string|1x2|{char|1x3|u97,98,99,;<missing>;}"
+},
+"yk-strtrim-mixed": {
+"hash": "0e0f5757078ba0d1",
+"matlab": "string|1x1|{char|1x1|u97,;}"
+},
+"yk-strtrim-scalar": {
+"hash": "72a06da30d8fe139",
+"matlab": "string|1x1|{char|1x3|u97,98,99,;}"
+},
+"yk-unique-array": {
+"hash": "b4bd75a9b21fee9d",
+"matlab": "string|1x2|{char|1x3|u97,98,99,;char|1x3|u120,121,122,;}"
+},
+"yk-unique-empty": {
+"hash": "20c8c90cc26cb294",
+"matlab": "string|1x1|{char|0x0|u,;}"
+},
+"yk-unique-missing": {
+"hash": "a2a89567098ad328",
+"matlab": "string|1x2|{char|1x3|u97,98,99,;<missing>;}"
+},
+"yk-unique-mixed": {
+"hash": "d0dc4feea327e8f3",
+"matlab": "string|1x2|{char|1x1|u98,;char|1x1|u97,;}"
+},
+"yk-unique-scalar": {
+"hash": "683668bb962796c4",
+"matlab": "string|1x1|{char|1x3|u97,98,99,;}"
+},
+"yk-upper-array": {
+"hash": "80f65f75c85f822c",
+"matlab": "string|1x2|{char|1x3|u65,66,67,;char|1x3|u88,89,90,;}"
+},
+"yk-upper-empty": {
+"hash": "f261d659d81bfb3b",
+"matlab": "string|1x1|{char|0x0|u,;}"
+},
+"yk-upper-missing": {
+"hash": "f717ef8066a18bbb",
+"matlab": "string|1x2|{char|1x3|u65,66,67,;<missing>;}"
+},
+"yk-upper-mixed": {
+"hash": "f98949b24f131d48",
+"matlab": "string|1x1|{char|1x3|u65,66,201,;}"
+},
+"yk-upper-scalar": {
+"hash": "ce2d47e65c2efa5d",
+"matlab": "string|1x1|{char|1x3|u65,66,67,;}"
+},
 "ym-abs-complex": {
 "hash": "a0f56441bb23d15c",
 "matlab": "double|1x2|5,5,"

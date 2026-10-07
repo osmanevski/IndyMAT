@@ -1,0 +1,161 @@
+--- a/string.m
++++ b/string.m
+@@ -454,6 +454,10 @@
+     ##
+     ## @end deftypefn
+     function c_mat = char (this)
++      if (numel (this) > 1 && any (this.isMissing(:)))
++        error ('MATLAB:string:CannotConvertMissingElementToChar', ...
++               'Conversion of a missing string element to character vector is not supported.');
++      endif
+       ## IndyMAT: retain string dimensions, inserting character width at dim 2.
+       ## UTF-8 bytes remain Octave char storage; this is not UTF-16 emulation.
+       if (numel (this.strs) == 1 && isempty (this.strs{1}))
+@@ -490,11 +494,23 @@
+       out = str2double (this);
+     endfunction
+ 
++    function out = num2str (this)
++      ## MATLAB accepts a string scalar and rejects string arrays.
++      if (! isscalar (this) || any (this.isMissing(:)))
++        error ('MATLAB:num2str:nonNumericInput', ...
++               'Input to num2str must be numeric.');
++      endif
++      out = char (this);
++    endfunction
++
+     ## IndyMAT STR2DOUBLE supports real/complex numeric text elementwise,
+     ## including commas, empty text and missing values (NaN); preserves shape.
+     function out = str2double (this)
+       out = builtin ('str2double', this.strs);
+       out(this.isMissing) = NaN;
++      zero_imaginary = (imag (out) == 0);
++      out(zero_imaginary) = complex (real (out(zero_imaginary)), ...
++                                     zeros (size (out(zero_imaginary))));
+     endfunction
+ 
+     ## IndyMAT BIN2DEC/HEX2DEC: elementwise text conversion with source shape.
+@@ -569,6 +585,28 @@
+     function varargout = sprintf (format, varargin)
+       result_string = isa (format, 'string');
+       args = [{format}, varargin];
++      array_data = find (cellfun (@(x) isa (x, 'string') && ! isscalar (x), args));
++      if (! isempty (array_data))
++        if (numel (array_data) != 1 || array_data(1) != 2 || numel (args) != 2)
++          error ('sprintf: only one string-array data argument is supported');
++        endif
++        if (result_string)
++          if (! isscalar (format) || ismissing (format))
++            error ('sprintf: format must be a nonmissing string scalar');
++          endif
++          format = char (format);
++        endif
++        values = args{2};
++        if (any (ismissing (values)(:)))
++          error ('MATLAB:string:MissingNotSupported', '<missing> string element not supported.');
++        endif
++        text = cellstr (values);
++        pieces = cellfun (@(value) builtin ('sprintf', format, value), ...
++                          text, 'UniformOutput', false);
++        varargout{1} = [pieces{:}];
++        if (result_string), varargout{1} = string (varargout{1}); endif
++        return;
++      endif
+       for k = 1:numel (args)
+         if (isa (args{k}, 'string'))
+           if (! isscalar (args{k}) || any (ismissing (args{k})(:)))
+@@ -722,7 +760,9 @@
+     ## @end deftypefn
+     function out = strlength (this)
+       out = NaN (size (this));
+-      fcn = @(x) __unicode_length__ (x);
++      ## MATLAB counts UTF-16 code units, including both units of a
++      ## supplementary character.  Octave stores these strings as UTF-8.
++      fcn = @(x) numel (unicode2native (x, "UTF-16LE")) / 2;
+       TF = ! this.isMissing;
+       out(TF) = cell2mat (cellfun (fcn, this.strs(TF), "UniformOutput", false));
+     endfunction
+@@ -2461,6 +2501,9 @@
+         if (ischar (A))
+           Cn = cellstr (A);
+         elseif (isa (A, 'string'))
++          if (any (ismissing (A)(:)))
++            error ('MATLAB:string:MissingNotSupported', '<missing> string element not supported.');
++          endif
+           Cn = cellstr (A);
+         elseif (isnumeric (A) || islogical (A))
+           Cn = num2cell (A);
+@@ -3032,16 +3075,20 @@
+       if (ne > 0)
+         ncol = counts(1);
+       endif
+-      outc = cell (ne, ncol);
++      if (ncol == 0)
++        out = string (cell (0, 1));
++        return;
++      endif
++      ## MATLAB appends match index as a new trailing dimension.  Preserve
++      ## source linear order within each match page.
++      outc = cell ([sz, ncol]);
+       for e = 1:ne
+-        outc(e,:) = matches{e};
++        for m = 1:ncol
++          outc{e + (m - 1) * ne} = matches{e}{m};
++        endfor
+       endfor
+-      ## IndyMAT: matches extend the first singleton dimension of the source.
+-      dim = find (sz == 1, 1);
+-      if (isempty (dim)), dim = numel (sz) + 1; endif
+-      [outc, outm] = split_place (outc, false (ne, ncol), sz, dim, ncol);
+       out = string (outc);
+-      out.isMissing = outm;
++      out.isMissing = false (size (outc));
+     endfunction
+ 
+     ## -*- texinfo -*-
+@@ -3883,11 +3930,13 @@
+     ##
+     ## @end deftypefn
+     function out = strcat (varargin)
++      missing = {};
+       args = cell (size (varargin));
+       for i = 1:numel (args)
+         if (ischar (varargin{i}))
+           args{i} = cellstr (varargin{i});
+         elseif (isstring (varargin{i}))
++          missing{i} = ismissing (varargin{i});
+           args{i} = cellstr (varargin{i});
+         elseif (iscellstr (varargin{i}))
+           args{i} = varargin{i};
+@@ -3897,6 +3946,17 @@
+         endif
+       endfor
+       out = string (strcat (args{:}));
++      if (! isempty (missing))
++        shape = size (out.strs);
++        mask = false (shape);
++        for i = 1:numel (missing)
++          if (isempty (missing{i})), continue; endif
++          if (numel (missing{i}) == 1), mask |= missing{i};
++          elseif (isequal (size (missing{i}), shape)), mask |= missing{i};
++          else, error ('string.strcat: inputs must be scalar or the same size'); endif
++        endfor
++        out.isMissing |= mask;
++      endif
+     endfunction
+ 
+     ## -*- texinfo -*-
+@@ -4273,9 +4333,10 @@
+           continue;
+         elseif (ischar (x) && (isrow (x) || isempty (x)))
+           args{k} = string (x);
+-        elseif (isnumeric (x) && isreal (x) && isscalar (x) ...
+-                && isfinite (x) && x == fix (x) && abs (double (x)) <= 9999)
+-          args{k} = string (x);
++        elseif (isnumeric (x) && isreal (x) && all (isfinite (x(:))) ...
++                && all (x(:) == fix (x(:))) && all (abs (double (x(:))) <= 9999))
++          if (isscalar (x)), args{k} = string (x);
++          else, args{k} = string (arrayfun (@num2str, x, 'UniformOutput', false)); endif
+         else
+           error (strcat ("string.plus: non-string operands must be char", ...
+                          " vectors or finite integer numeric scalars", ...

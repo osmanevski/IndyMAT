@@ -17,20 +17,25 @@ import time
 
 from backend.source_lexer import Diagnostic, MAX_BYTES, lex_source
 
-ADAPTER_VERSION = 'editor-literals-1a.2'
-CONSTRUCTOR_SHA256 = 'c7c26e242f7602cbb2ab6e73b7a601d1d892c2347d3cb9c84eac684513b71960'
+ADAPTER_VERSION = 'editor-literals-1b.3'
+CONSTRUCTOR_SHA256 = '878d99fe5dcda09e7caa38dd6cd6d791d9e3efc401f446a359ac3dee1f730e92'
 MAX_MAP_PIECES = 100_000
 TIME_LIMIT = 1.0
 
-# Published stage-1 dispatch table. Values are recorded MATLAB probe IDs whose
-# summaries were reproduced with octave-cli and object arguments. This is a
+# Published string dispatch table. Non-yk IDs refer to recorded MATLAB probes
+# reproduced with octave-cli and object arguments. This is a
 # lexical allowlist, not a claim that every overload/options/shape is supported.
+# yk-* entries cite probes now measured against MATLAB R2025b by the
+# orchestrator. They establish only the listed lexical call positions and
+# test shapes; they do not imply unmeasured overloads/options are equivalent.
 # Additions require measured evidence; existence of a method is insufficient.
 STRING_AWARE = {
     'string': ('yd-string-char-empty',),
     'char': ('yd-cast-char-row', 'ym-sortrows-char', 'ym-bin2dec-char-matrix'),
     'cellstr': ('yd-string-cellstr-convert',),
     'double': ('yd-string-double-convert',),
+    'str2double': ('ym-str2double-empty', 'ym-str2double-special', 'ym-str2double-exponents'),
+    'extractBetween': ('ys-extractbetween-string',),
     'isempty': ('yd-string-isempty',),
     'ismissing': ('yd-string-is-missing', 'ys-string-missing'),
     'strlength': ('yd-string-strlength', 'ys-strlength-string'),
@@ -56,12 +61,38 @@ STRING_AWARE = {
     'reverse': ('ys-reverse-string',),
     'insertBefore': ('ys-insertbefore-string', 'ys-insertbefore-pattern'),
     'insertAfter': ('ys-insertafter-string', 'ys-insertafter-pattern'),
+    'bin2dec': ('ym-bin2dec-space',),
+    'hex2dec': ('ym-hex2dec-case', 'ym-hex2dec-leading'),
+    'sort': ('ym-sort-missing-last', 'ym-sort-missing-first', 'ym-sort-stable', 'yk-sort-mixed'),
+    'sprintf': ('ym-sprintf-float', 'ym-sprintf-matrix', 'ym-sprintf-width', 'ym-sprintf-integer-precision'),
+    'compose': ('ys-compose-mixed', 'yk-compose-scalar', 'yk-compose-mixed'),
+    'upper': ('yk-upper-scalar', 'yk-upper-array'),
+    'strtrim': ('yk-strtrim-scalar', 'yk-strtrim-array'),
+    'strip': ('yk-strip-scalar', 'yk-strip-mixed'),
+    'erase': ('yk-erase-array', 'yk-erase-mixed'),
+    'strsplit': ('yk-strsplit-scalar', 'yk-strsplit-empty', 'yk-strsplit-mixed'),
+    'strjoin': ('yk-strjoin-array', 'yk-strjoin-empty', 'yk-strjoin-mixed'),
+    'strcat': ('yk-strcat-array', 'yk-strcat-mixed'),
+    'append': ('yk-append-array', 'yk-append-mixed'),
+    'strcmpi': ('yk-strcmpi-array', 'yk-strcmpi-mixed'),
+    'strncmp': ('yk-strncmp-array', 'yk-strncmp-mixed'),
+    'strncmpi': ('yk-strncmpi-array', 'yk-strncmpi-mixed'),
+    'regexp': ('yk-regexp-scalar', 'yk-regexp-array', 'yk-regexp-mixed'),
+    'regexpi': ('yk-regexpi-scalar', 'yk-regexpi-array', 'yk-regexpi-mixed'),
+    'regexprep': ('yk-regexprep-scalar', 'yk-regexprep-array', 'yk-regexprep-mixed'),
+    'isStringScalar': ('yk-isstringscalar-scalar', 'yk-isstringscalar-empty', 'yk-isstringscalar-array'),
+    'isstring': ('yk-isstring-scalar', 'yk-isstring-array'),
+    'strings': ('yk-strings-empty', 'yk-strings-array'),
+    'convertStringsToChars': ('yk-convertstringstochars-scalar', 'yk-convertstringstochars-array'),
+    'convertCharsToStrings': ('yk-convertcharstostrings-scalar', 'yk-convertcharstostrings-mixed'),
+    'unique': ('yk-unique-array', 'yk-unique-mixed', 'ym-unique-stable-outs'),
+    'ismember': ('yk-ismember-array', 'yk-ismember-mixed', 'ym-ismember-rows'),
 }
 
-# Known text/flag callees, distinct from unresolved handles, fields, indexing
-# and user functions. Their direct literals become single-quoted char payloads.
-# str2double has no object method: its measured cell-of-strings case retains
-# objects inside the cell, whereas a direct string array must fall back.
+# Other known text/flag callees, distinct from unresolved handles, fields,
+# indexing and user functions. STRING_AWARE takes precedence over this set;
+# sprintf retains its measured char-payload/result-wrapper exception.
+# Unverified callees retain direct char flags and whole-unit expression fallback.
 CHAR_CALLEES = frozenset('''
 idivide sort sortrows sum prod cumsum cumprod mean median std var max min range any
 unique union intersect setdiff setxor ismember issorted histcounts movmean
@@ -284,7 +315,10 @@ def _literal_plan(tokens, deadline):
     # measured converter, but must not consume a newly string-valued result.
     string_results = {'string', 'join', 'split', 'lower', 'extract', 'replace',
                       'pad', 'extractBefore', 'extractAfter', 'splitlines',
-                      'reverse', 'insertBefore', 'insertAfter', 'sprintf'}
+                      'reverse', 'insertBefore', 'insertAfter', 'extractBetween', 'sprintf',
+                      'upper', 'strtrim', 'strip', 'erase', 'strsplit', 'strjoin',
+                      'strcat', 'append', 'compose', 'regexprep', 'unique',
+                      'sort', 'convertCharsToStrings', 'strings'}
     call_results = {}
     calls = []
     for opening in sorted(pairs, reverse=True):
@@ -312,7 +346,9 @@ def _literal_plan(tokens, deadline):
         unresolved = not known or callee in assigned
         if unresolved:
             callee = None
-        aware = callee in STRING_AWARE
+        # sprintf keeps the stage-1 char literal payload/result wrapper rule;
+        # its verified object method now also admits stored scalar formats/data.
+        aware = callee in STRING_AWARE and callee != 'sprintf'
         arguments = []
         a = opening + 1
         i = a
@@ -417,7 +453,9 @@ def _literal_plan(tokens, deadline):
                 # Known char/numeric converters suppress argument provenance.
                 if ts[j].value in {'char', 'double', 'cellstr', 'numel', 'isempty',
                                     'ismissing', 'strlength', 'size', 'strcmp', 'contains',
-                                    'endsWith', 'startsWith', 'count', 'optionalPattern'}:
+                                    'endsWith', 'startsWith', 'count', 'str2double', 'bin2dec', 'hex2dec',
+                                    'strcmpi', 'strncmp', 'strncmpi', 'isstring', 'isStringScalar',
+                                    'ismember', 'convertStringsToChars', 'optionalPattern'}:
                     j = pairs[j + 1] + 1
                     continue
             if ts[j].kind == 'identifier' and ts[j].value in tainted:
@@ -446,6 +484,10 @@ def _literal_plan(tokens, deadline):
             return failure('string-iteration', 'String-valued iteration needs an unsupported object iteration protocol.', a, b)
     for opening, closing, callee, unresolved, arguments in calls:
         if callee in STRING_AWARE:
+            continue
+        # MATLAB rejects a string object passed through a variable to num2str.
+        # Direct literals still follow the measured char-literal rule above.
+        if callee == 'num2str':
             continue
         for a, b in arguments:
             # Literal cells retain their element types by rule (b); don't
