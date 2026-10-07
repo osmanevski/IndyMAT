@@ -116,8 +116,8 @@ class KernelTests(unittest.TestCase):
   series=[item for axis in data['axes'] for item in axis['series']];exact=next(item for item in series if item['display_name']=='ölçüm');self.assertEqual(exact['x'],[1,2,4]);self.assertEqual(exact['y'],[3,5,4]);self.assertEqual(exact['marker'],'o')
   large=next(item for item in series if item['display_name']=='uzun');self.assertLessEqual(len(large['x']),2000);self.assertEqual(max(large['y']),999);self.assertEqual(large['original_points'],5001)
   log_axis=next(axis for axis in data['axes'] if axis['xscale']=='log');self.assertEqual(log_axis['xlabel'],'f');self.assertEqual(log_axis['ylabel'],'g');self.assertTrue(any(axis['legend']['visible'] for axis in data['axes']));self.assertTrue(all(len(axis['position'])==4 for axis in data['axes']))
-  s=self.run_code('close all; figure(32); surf(peaks(8));');self.assertFalse(s['error'],s);figure=s['figures'][0];self.assertFalse(figure['interactive'],figure);self.assertIn('surface',figure['fallback_reason'])
-  data=json.loads((Path(self.temp.name)/'runtime'/figure['job']/figure['data_file']).read_text());self.assertFalse(data['supported']);self.assertIn('surface',data['reason']);self.run_code('close all;')
+  s=self.run_code("close all; figure(32); surf(peaks(8),'facecolor','interp');");self.assertFalse(s['error'],s);figure=s['figures'][0];self.assertFalse(figure['interactive'],figure);self.assertTrue(figure['fallback_reason'])
+  data=json.loads((Path(self.temp.name)/'runtime'/figure['job']/figure['data_file']).read_text());self.assertFalse(data['supported']);self.assertEqual(data['reason_code'],'interpolated_color');self.run_code('close all;')
  def test_23_profile_saved_script(self):
   folder=Path(self.temp.name)/'profile-case';folder.mkdir()
   script=folder/'profile_script.m';helper=folder/'profile_helper.m'

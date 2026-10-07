@@ -145,10 +145,21 @@ function __mf_execute__(folder, mode, argument)
         try
           datafile=sprintf('figure-%d.json',k); interactive=false; decimated=false; fallback_reason=__mf_text__('Could not generate interactive plot data.', 'Etkileşim verisi üretilemedi.'); datafid=-1;
           try
-            figure_data=__mf_figure_data__(f); interactive=logical(figure_data.supported); decimated=logical(figure_data.decimated); fallback_reason=figure_data.reason;
+            figure_data=__mf_figure_data__(f,struct('job',job,'figure',k));
+            encoded=jsonencode(figure_data);
+            encoded_bytes=numel(unicode2native(encoded,'UTF-8'));
+            if encoded_bytes>8388608
+              figure_data.supported=false; figure_data.axes={}; figure_data.decimated=false;
+              figure_data.vertex_count=0; figure_data.triangle_count=0;
+              figure_data.reason_code='json_budget';
+              figure_data.reason_args=struct('actual',encoded_bytes,'limit',8388608);
+              figure_data.reason=__mf_text__('Interactive figure data exceeds 8 MiB.', 'Etkileşimli grafik verisi 8 MiB sınırını aşıyor.');
+              encoded=jsonencode(figure_data);
+            endif
+            interactive=logical(figure_data.supported); decimated=logical(figure_data.decimated); fallback_reason=figure_data.reason;
             datafid=fopen(fullfile(folder,datafile),'w');
             if datafid<0,error(__mf_text__('Could not write interactive plot data', 'Etkileşim verisi yazılamadı'));endif
-            fputs(datafid,jsonencode(figure_data)); fclose(datafid);
+            fputs(datafid,encoded); fclose(datafid);
           catch dataerr
             if exist('datafid','var')&&datafid>=0,fclose(datafid);endif
             fallback_reason=sprintf(__mf_text__('Could not generate interactive plot data: %s', 'Etkileşim verisi üretilemedi: %s'),dataerr.message);

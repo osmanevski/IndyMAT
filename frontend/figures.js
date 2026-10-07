@@ -1,24 +1,94 @@
 import shared from "./state.js";
 import registry from "./registry.js";
 import { t, onLanguageChange } from "./i18n.js";
+import figureData from "./figure_data_utils.cjs";
+import { Figure3D, drawColorbars } from "./figure3d.js";
+import { figureReasonText, figureReductionText, unmountFigureTools } from "./figure_tools.js";
+
+let manifestRevision = 0;
+let manifestPending = false;
+let requestRevision = 0;
+let activeRequestKey = "";
+let figureEpoch = null;
+let enlarged = null;
+const cameraStates = new Map();
 
 async function updateFigures(s) {
-  const generation = shared.uiGeneration, key = s.epoch + ":" + JSON.stringify(s.figures);
+  const generation = shared.uiGeneration;
+  const figures = (s.figures || []).map((figure) => ({ ...figure, job: figure.job || s.job }));
+  const key = s.epoch + ":" + JSON.stringify(figures);
   if (key === shared.lastFiguresKey) return;
   shared.lastFiguresKey = key;
-  shared.figures = s.figures || [];
-  let urls = await Promise.all(shared.figures.map((f) => registry.blobAPI(`figure?job=${f.job || s.job}&file=${encodeURIComponent(f.file)}`))), data = await Promise.all(shared.figures.map((f) => f.data_file ? registry.api(`figure?job=${f.job || s.job}&file=${encodeURIComponent(f.data_file)}`).catch(() => ({ supported: false, reasonSource: "Interactive data could not be read." })) : Promise.resolve({ supported: false, reason: f.fallback_reason, reasonSource: f.fallback_reason ? null : "Interactive data is unavailable." })));
-  if (generation !== shared.uiGeneration) {
-    urls.forEach(URL.revokeObjectURL);
+  const revision = ++manifestRevision;
+  manifestPending = true;
+  ++requestRevision;
+  activeRequestKey = "";
+  closeEnlarged(false);
+  shared.interactivePlot?.destroy();
+  shared.interactivePlot = null;
+  // PNGs remain available for downloads and fallback. JSON is active-only.
+  const results = await Promise.allSettled(figures.map((figure) => registry.blobAPI(`figure?job=${figure.job}&file=${encodeURIComponent(figure.file)}`)));
+  const urls = results.map((result) => result.status === "fulfilled" ? result.value : "");
+  if (generation !== shared.uiGeneration || revision !== manifestRevision) {
+    urls.filter(Boolean).forEach(URL.revokeObjectURL);
+    if (revision === manifestRevision) manifestPending = false;
     return;
   }
-  shared.figureURLs.forEach(URL.revokeObjectURL);
+  shared.figureURLs.filter(Boolean).forEach(URL.revokeObjectURL);
   shared.figureURLs = urls;
-  shared.figureData = data;
-  let persistedFigure = shared.settings?.activeTabs?.figureName;
-  if (persistedFigure && shared.figures.some((figure) => figure.name === persistedFigure)) shared.figureIndex = shared.figures.findIndex((figure) => figure.name === persistedFigure);
-  shared.figureIndex = Math.min(shared.figureIndex, Math.max(0, shared.figures.length - 1));
+  shared.figures = figures;
+  shared.figureData = [];
+  figureEpoch = s.epoch;
+  manifestPending = false;
+  const identities = new Set(figures.map((figure, i) => stateKey(i)));
+  for (const identity of cameraStates.keys()) if (!identities.has(identity)) cameraStates.delete(identity);
+  const persisted = shared.settings?.activeTabs?.figureName;
+  if (persisted && figures.some((figure) => figure.name === persisted)) shared.figureIndex = figures.findIndex((figure) => figure.name === persisted);
+  shared.figureIndex = Math.min(shared.figureIndex, Math.max(0, figures.length - 1));
   renderFigures();
+}
+function identityAt(index) {
+  const figure = shared.figures[index];
+  const ordinal = /^figure-(\d+)\.(?:json|png)$/.exec(figure?.data_file || figure?.file || "");
+  return { epoch: figureEpoch, job: figure?.job, figure: ordinal ? Number(ordinal[1]) : index + 1 };
+}
+function stateKey(index) {
+  return JSON.stringify(identityAt(index));
+}
+function loadActiveData() {
+  const index = shared.figureIndex;
+  const figure = shared.figures[index];
+  const key = stateKey(index);
+  if (activeRequestKey !== key) {
+    ++requestRevision;
+    activeRequestKey = key;
+  }
+  if (!figure) return;
+  const cached = shared.figureData[index];
+  if (cached && (!cached.loading || cached.revision === requestRevision)) return;
+  const revision = ++requestRevision;
+  const generation = shared.uiGeneration;
+  shared.figureData[index] = { loading: true, supported: false, revision };
+  if (!figure.data_file) {
+    shared.figureData[index] = { supported: false, reason: figure.fallback_reason };
+    return;
+  }
+  registry.api(`figure?job=${figure.job}&file=${encodeURIComponent(figure.data_file)}`).then((payload) => {
+    if (generation !== shared.uiGeneration || revision !== requestRevision || key !== stateKey(shared.figureIndex)) return null;
+    // Validate before any geometry, renderer, or legacy normalization reads it.
+    const result = figureData.validate(payload);
+    if (!result.ok || !result.supported) return { supported: false, reason_code: result.reason_code, reason_args: result.reason_args };
+    if (result.version === 3 && (result.data.source.job !== figure.job || result.data.source.figure !== identityAt(index).figure)) return { supported: false, reason_code: "invalid_data" };
+    return result.data;
+  }).catch((error) => ({ supported: false, reason_code: error.details?.reason_code || "invalid_data", reason_args: error.details?.reason_args || {} })).then((data) => {
+    if (generation !== shared.uiGeneration || revision !== requestRevision || key !== stateKey(shared.figureIndex)) {
+      // A cancelled tab request must be retryable when the tab is revisited.
+      if (key === stateKey(index) && shared.figureData[index]?.revision === revision) shared.figureData[index] = null;
+      return;
+    }
+    shared.figureData[index] = data;
+    renderFigures();
+  });
 }
 const emptyPlot = { value: null };
 const plotNumber = (n) => n !== null && n !== "" && Number.isFinite(Number(n)) ? Number(n) : null;
@@ -264,6 +334,10 @@ class InteractiveFigure {
       c.restore();
     }
     this.drawLegend(a, i);
+    if (this.data.version === 3) {
+      const decode = (hex) => hex.slice(1).match(/../g).map((value) => parseInt(value, 16) / 255);
+      drawColorbars(c, a, this.width, this.height, { background: decode(p.background), text: decode(p.text), axis: decode(p.axis) });
+    }
     c.restore();
   }
   seriesStyle(s) {
@@ -411,42 +485,83 @@ class InteractiveFigure {
   }
 }
 function figureDetail(data, supported) {
-  if (data?.decimated) return " " + t("· Interactive data limited to 2000 points; endpoints were preserved.");
-  if (!supported) {
-    const reason = data?.reason || shared.figures[shared.figureIndex]?.fallback_reason || (data?.reasonSource ? t(data.reasonSource) : t("Only the PNG view is available."));
+  if (data?.decimated) {
+    if (data.version === 3) {
+      const series = data.axes.flatMap((axes) => axes.series);
+      return " · " + figureReductionText(series.reduce((sum, item) => sum + item.original_points, 0), series.reduce((sum, item) => sum + item.rendered_points, 0));
+    }
+    return " " + t("· Interactive data limited to 2000 points; endpoints were preserved.");
+  }
+  if (!supported && !data?.loading) {
+    const reason = data?.reason_code ? figureReasonText(data.reason_code, data.reason_args) : data?.reason || shared.figures[shared.figureIndex]?.fallback_reason || t("Only the PNG view is available.");
     return ` · ${reason}`;
   }
   return "";
 }
+function supportedData(data) {
+  return !!data?.supported && [2, 3].includes(data.version);
+}
+function paint2D(ctx, axes, width, height) {
+  const plot = Object.create(InteractiveFigure.prototype);
+  plot.ctx = ctx;
+  plot.width = width;
+  plot.height = height;
+  plot.palette = plotTheme();
+  plot.hits = [];
+  plot.data = { axes: [axes] };
+  plot.views = [{ x: [...axes.xlim], y: [...axes.ylim] }];
+  plot.drawAxis(axes, 0);
+}
 function renderFigures() {
+  if (manifestPending) return;
+  closeEnlarged(false);
   shared.interactivePlot?.destroy();
   shared.interactivePlot = null;
-  let list = registry.$("#figure-tabs");
+  unmountFigureTools();
+  loadActiveData();
+  const list = registry.$("#figure-tabs");
   list.replaceChildren();
-  shared.figures.forEach((f, i) => {
-    let b = registry.el("button", i === shared.figureIndex ? "active" : "", f.name);
-    b.onclick = () => {
+  shared.figures.forEach((figure, i) => {
+    const button = registry.el("button", i === shared.figureIndex ? "active" : "", figure.name);
+    button.onclick = () => {
       shared.figureIndex = i;
-      registry.persistActiveTab("figureName", f.name);
+      registry.persistActiveTab("figureName", figure.name);
       renderFigures();
     };
-    list.append(b);
+    list.append(button);
   });
   registry.$("#figure-count").textContent = shared.figures.length;
-  let area = registry.$("#plot-area");
+  const area = registry.$("#plot-area");
   area.classList.remove("zoomed");
   area.replaceChildren();
-  let data = shared.figureData[shared.figureIndex], supported = !!data?.supported && data.version === 2, showInteractive = !!shared.figures.length && supported && shared.plotMode === "interactive";
+  const index = shared.figureIndex;
+  let data = shared.figureData[index];
+  let supported = supportedData(data);
+  let showInteractive = !!shared.figures.length && supported && shared.plotMode === "interactive";
+  const is3D = showInteractive && data.version === 3 && data.axes.some((axes) => axes.dimension === 3);
+  const fallback = (code) => {
+    shared.figureData[index] = { supported: false, reason_code: code };
+    renderFigures();
+  };
   if (shared.figures.length) {
-    if (showInteractive) shared.interactivePlot = new InteractiveFigure(area, data);
-    else {
-      let img = registry.el("img");
-      img.src = shared.figureURLs[shared.figureIndex];
-      img.alt = shared.figures[shared.figureIndex].name;
+    if (is3D) {
+      try {
+        const key = stateKey(index);
+        shared.interactivePlot = new Figure3D(area, data, { identity: identityAt(index), saved: cameraStates.get(key), save: (state) => cameraStates.set(key, state), failed: fallback, paint2D });
+      } catch (error) {
+        data = shared.figureData[index] = { supported: false, reason_code: error.reason_code || "shader_failure" };
+        supported = false;
+        showInteractive = false;
+      }
+    } else if (showInteractive) shared.interactivePlot = new InteractiveFigure(area, data);
+    if (!showInteractive) {
+      const img = registry.el("img");
+      img.src = shared.figureURLs[index];
+      img.alt = shared.figures[index].name;
       img.onclick = () => area.classList.toggle("zoomed");
       area.append(img);
     }
-    registry.$("#figure-caption").textContent = shared.figures[shared.figureIndex].name + figureDetail(data, supported);
+    registry.$("#figure-caption").textContent = shared.figures[index].name + figureDetail(data, supported);
   } else {
     area.innerHTML = emptyPlot.value;
     registry.$("#figure-caption").textContent = "";
@@ -458,9 +573,70 @@ function renderFigures() {
   registry.$("#plot-download").disabled = !shared.figures.length;
   registry.$("#plot-expand").disabled = !shared.figures.length;
   registry.$("#plot-fit").disabled = !shared.figures.length;
-  registry.$("#rotate-left").disabled = registry.$("#rotate-right").disabled = !shared.figures.length || showInteractive || supported;
+  registry.$("#rotate-left").disabled = registry.$("#rotate-right").disabled = !shared.figures.length;
+}
+function resetFigure() {
+  if (shared.interactivePlot instanceof Figure3D) shared.interactivePlot.tools.reset();
+  else if (shared.interactivePlot) shared.interactivePlot.reset();
+  else registry.$("#plot-area").classList.remove("zoomed");
+}
+function closeEnlarged(redraw = true) {
+  if (!enlarged) return;
+  const current = enlarged;
+  enlarged = null;
+  current.observer.disconnect();
+  registry.$("#modal").removeEventListener("close", current.close);
+  if (current.controls) registry.$("#plot-area").before(current.controls);
+  // A 3D camera is kept by its identity-scoped state; the 2D viewer's limits
+  // are carried over to the viewer rebuilt in the panel for the same data.
+  const plot = shared.interactivePlot;
+  const kept = plot instanceof InteractiveFigure ? { data: plot.data, views: plot.views } : null;
+  plot?.destroy();
+  shared.interactivePlot = null;
+  if (current.host.isConnected && registry.$("#modal").open) registry.$("#modal").close();
+  current.host.remove();
+  if (!redraw) return;
+  renderFigures();
+  const restored = shared.interactivePlot;
+  if (kept && restored instanceof InteractiveFigure && restored.data === kept.data) {
+    restored.views = kept.views.map((view) => ({ x: [...view.x], y: [...view.y] }));
+    restored.draw();
+  }
+}
+function expandFigure() {
+  if (!shared.figures.length) return;
+  const viewer = shared.interactivePlot;
+  if (!viewer) {
+    // PNG mode, or no interactive data for this figure.
+    const img = registry.el("img");
+    img.src = shared.figureURLs[shared.figureIndex];
+    img.alt = shared.figures[shared.figureIndex].name;
+    registry.modal(shared.figures[shared.figureIndex].name, img);
+    return;
+  }
+  // The live viewer itself moves into the modal (2D and 3D): same state, no second canvas.
+  const is3D = viewer instanceof Figure3D;
+  const host = registry.el("div", "figure-expanded");
+  const controls = is3D ? registry.$("#figure-tools") : null;
+  const stage = registry.el("div", "figure-expanded-stage");
+  stage.append(viewer.wrap);
+  if (controls) host.append(controls);
+  host.append(stage);
+  const close = () => closeEnlarged();
+  const observer = new MutationObserver(() => {
+    if (!host.isConnected) closeEnlarged();
+  });
+  enlarged = { host, controls, close, observer };
+  registry.modal(shared.figures[shared.figureIndex].name, host);
+  registry.$("#modal").addEventListener("close", close);
+  observer.observe(registry.$("#modal-body"), { childList: true });
+  viewer.resize();
 }
 async function rotate(angle) {
+  if (shared.interactivePlot instanceof Figure3D) {
+    shared.interactivePlot.rotateAzimuth(angle);
+    return;
+  }
   registry.requireIdle();
   if (!shared.figures.length) return;
   let result = await registry.api("execute", { mode: "rotate", argument: JSON.stringify({ figure: shared.figures[shared.figureIndex].number, angle }) });
@@ -473,13 +649,17 @@ async function rotate(angle) {
 registry.captureEmptyPlot = () => {
   emptyPlot.value = registry.$("#plot-area").innerHTML;
 };
-Object.assign(registry, { updateFigures, emptyPlot, plotNumber, cssColor, plotTheme, plotLuminance, plotColor, plotFormat, InteractiveFigure, figureDetail, renderFigures, rotate });
+Object.assign(registry, { updateFigures, emptyPlot, plotNumber, cssColor, plotTheme, plotLuminance, plotColor, plotFormat, InteractiveFigure, figureDetail, renderFigures, rotate, resetFigure, expandFigure });
 
 onLanguageChange(() => {
-  const canvas = registry.$("#plot-area canvas");
-  if (canvas) canvas.setAttribute("aria-label", t("Interactive plot. Zoom with the wheel or dragging, pan by dragging with Shift, and reset by double-clicking."));
+  if (shared.interactivePlot instanceof Figure3D) shared.interactivePlot.requestRender();
+  else {
+    const canvas = registry.$("#plot-area canvas");
+    if (canvas) canvas.setAttribute("aria-label", t("Interactive plot. Zoom with the wheel or dragging, pan by dragging with Shift, and reset by double-clicking."));
+    shared.interactivePlot?.draw();
+  }
   const figure = shared.figures[shared.figureIndex];
   if (!figure) return;
-  const data = shared.figureData[shared.figureIndex], supported = !!data?.supported && data.version === 2;
-  registry.$("#figure-caption").textContent = figure.name + figureDetail(data, supported);
+  const data = shared.figureData[shared.figureIndex];
+  registry.$("#figure-caption").textContent = figure.name + figureDetail(data, supportedData(data));
 });

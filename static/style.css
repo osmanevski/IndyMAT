@@ -218,6 +218,30 @@ button.primary:hover:not(:disabled){background:var(--accent-hover)}
 .plot-footer>div{display:flex}
 .plot-footer button{height:22px;padding:0 7px;font-size:12px}
 
+/* Local 3D figure tools; panel width determines the compact selector. */
+#figure-tools{container-type:inline-size;container-name:figure-tools;flex-shrink:0;padding:5px 8px;background:var(--plot-bg);color:var(--plot-text);border-bottom:1px solid var(--plot-grid)}
+#figure-tools[hidden]{display:none!important}
+#figure-tool-modes{display:flex;gap:3px;flex-wrap:wrap}
+#figure-tool-modes label{position:relative;cursor:pointer}
+#figure-tool-modes input{position:absolute;opacity:0;width:1px;height:1px}
+#figure-tool-modes span{display:block;padding:3px 6px;border:1px solid var(--plot-axis);border-radius:4px;font-size:11px;white-space:nowrap}
+#figure-tool-modes input:checked+span{background:var(--plot-selection);color:var(--plot-bg)}
+#figure-tool-modes input:focus-visible+span,#figure-tool-select:focus-visible,.figure-tool-viewer:focus-visible{outline:2px solid var(--plot-selection);outline-offset:2px}
+#figure-tool-select{display:none;max-width:100%;padding:3px 6px;background:var(--plot-bg);color:var(--plot-text);border:1px solid var(--plot-axis);border-radius:4px;font:inherit;font-size:11px}
+#figure-tool-instructions{margin:4px 0 0;font-size:10px;line-height:1.4;overflow-wrap:anywhere}
+@container figure-tools (max-width:360px){#figure-tool-modes{display:none}#figure-tool-select{display:block}}
+.figure-tool-viewer{touch-action:none}
+.figure-tool-viewer[data-figure-mode="rotate"],.figure-tool-viewer[data-figure-mode="rotate"] canvas{cursor:grab}
+.figure-tool-viewer[data-figure-mode="pan"],.figure-tool-viewer[data-figure-mode="pan"] canvas{cursor:move}
+.figure-tool-viewer[data-figure-mode="zoom"],.figure-tool-viewer[data-figure-mode="zoom"] canvas{cursor:ns-resize}
+.figure-tool-viewer[data-figure-mode="tips"],.figure-tool-viewer[data-figure-mode="tips"] canvas{cursor:crosshair}
+.figure-pinned-tips{position:absolute;inset:0;pointer-events:none;z-index:2}
+.figure-pinned-tip{position:absolute;max-width:calc(100% - 4px);padding:4px 6px;border:1px solid var(--plot-axis);border-radius:4px;background:var(--plot-bg);color:var(--plot-text);font:var(--mono-font-size)/1.35 var(--mono);white-space:pre-wrap;overflow-wrap:anywhere}
+.figure-3d canvas{position:absolute;inset:0;cursor:inherit}
+.figure-3d .figure-labels{pointer-events:none;background:transparent}
+.figure-expanded{width:min(76vw,1000px);display:flex;flex-direction:column}
+.figure-expanded-stage{position:relative;height:min(58vh,650px);min-height:220px}
+
 .workspace-panel{width:var(--right);flex-shrink:0;display:flex;flex-direction:column;background:var(--surface-side)}
 .workspace-table-wrap{flex:1;overflow:auto;min-height:80px}
 .workspace-table{width:100%;border-collapse:collapse;text-align:left;table-layout:fixed;font-size:12px}

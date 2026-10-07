@@ -152,13 +152,7 @@ registry.bootstrap = () => {
   registry.on("#plot-download", () => {
     if (shared.figures.length) registry.download(shared.figureURLs[shared.figureIndex], shared.figures[shared.figureIndex].name + ".png");
   });
-  registry.on("#plot-expand", () => {
-    if (!shared.figures.length) return;
-    let img = registry.el("img");
-    img.src = shared.figureURLs[shared.figureIndex];
-    img.alt = shared.figures[shared.figureIndex].name;
-    registry.modal(shared.figures[shared.figureIndex].name, img);
-  });
+  registry.on("#plot-expand", () => registry.expandFigure());
   registry.on("#plot-interactive", () => {
     shared.plotMode = "interactive";
     registry.renderFigures();
@@ -167,10 +161,7 @@ registry.bootstrap = () => {
     shared.plotMode = "png";
     registry.renderFigures();
   });
-  registry.on("#plot-fit", () => {
-    if (shared.interactivePlot) shared.interactivePlot.reset();
-    else registry.$("#plot-area").classList.remove("zoomed");
-  });
+  registry.on("#plot-fit", () => registry.resetFigure());
   registry.on("#rotate-left", () => registry.rotate(-15));
   registry.on("#rotate-right", () => registry.rotate(15));
   registry.on("#toggle-files", () => {

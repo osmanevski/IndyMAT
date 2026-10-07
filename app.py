@@ -393,11 +393,15 @@ class Handler(BaseHTTPRequestHandler):
                 return self.send(200,{'packages':self.app.octave_services.packages(loaded)})
             if path=='/api/package-job':return self.send(200,self.app.octave_services.status(params.get('id',[''])[0]))
             if path=='/api/figure':
+                from backend.figure_artifacts import read_figure_artifact, FigureJSONTooLarge
                 job=params.get('job',[''])[0];file=params.get('file',[''])[0]
                 import re
                 if not re.fullmatch('[a-f0-9]{32}',job) or not re.fullmatch(r'figure-\d+\.(?:png|json)',file):raise ValueError(tr('Invalid figure.'))
                 kind='application/json; charset=utf-8' if file.endswith('.json') else 'image/png'
-                return self.send(200,(self.app.runtime/'jobs'/job/file).read_bytes(),kind)
+                try:data=read_figure_artifact(self.app.runtime/'jobs',job,file)
+                except FigureJSONTooLarge as e:
+                    return self.send(413,{'error':'Figure JSON exceeds the byte limit.','reason_code':'json_budget','reason_args':e.reason_args})
+                return self.send(200,data,kind)
             if path=='/api/download':
                 with self.app.file_lock:f=self.app.workspace.path(params.get('path',[''])[0]);data=f.read_bytes()
                 return self.send(200,data,'application/octet-stream')

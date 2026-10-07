@@ -288,7 +288,9 @@ for kind = 1:2
   end_try_catch
   assert(caught);
   data=__mf_figure_data__(0);
-  assert(strcmp(data.reason, 'Etkileşimli eksen bulunamadı.'));
+  % Figure data v3: the legacy reason is one localized template carrying the stable code.
+  assert(strcmp(data.reason, 'Yalnızca PNG görünümü kullanılabilir: no_axes.'));
+  assert(strcmp(data.reason_code, 'no_axes'));
   __mf_debug_inspect__(pwd(), '1invalid');
   inspection=jsondecode(fileread('debug-inspect.json'));
   assert(strcmp(inspection.error, 'Geçersiz veya ayrılmış değişken adı.'));
