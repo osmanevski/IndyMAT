@@ -27,10 +27,12 @@ function ax = nexttile(varargin)
     if any(isgraphics(state.axes(covered),'axes')), error('nexttile: requested span overlaps an occupied tile'); endif
     ax=axes('parent',f,'position',p,'tag','__mf_tiledlayout_axes__');
     state.axes(covered)=ax;
-    if isfield(state,'sgtitle_reserve')
-      base=p;base([2 4])/=1-state.sgtitle_reserve;
-      setappdata(ax,'__mf_sgtitle_layout__',struct('base',base,'last',p,'subplot',[],'outer',[]));
-    endif
+    % Own the created geometry before any title, including multi-cell spans.
+    % Reusing a tile must not replace this record after a user geometry edit.
+    last=get(ax,'position');base=last;
+    if isfield(state,'sgtitle_reserve'),base([2 4])/=1-state.sgtitle_reserve;endif
+    setappdata(ax,'__mf_sgtitle_layout__',struct('base',base,'last',last,...
+      'units',get(ax,'units'),'subplot',[],'outer',[]));
   endif
   setappdata(f,'__mf_tiledlayout_state__',state); axes(ax);
 endfunction

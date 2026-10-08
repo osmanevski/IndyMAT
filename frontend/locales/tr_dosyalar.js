@@ -1,5 +1,6 @@
 // Turkish translations owned by one feature lane; merged in i18n.js.
 export default {
+  "Restart the application to enable saved-file adaptation. Your current session has not been reset.": "Kayıtlı dosya uyarlamasını etkinleştirmek için uygulamayı yeniden başlatın. Mevcut oturumunuz sıfırlanmadı.",
   "— Click to download": "— İndirmek için tıkla",
   "No supported files were found in this folder.": "Bu klasörde desteklenen dosya bulunamadı.",
   "Showing the first 1000 items. The list was limited.": "İlk 1000 öğe gösteriliyor. Liste sınırlandı.",

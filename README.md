@@ -38,6 +38,8 @@ Uygulamanın teknik yapısı:
 - Fonksiyon yardımı, paket yönetimi, açık ve koyu tema, boyutlanabilir paneller ve değiştirilebilir klavye kısayolları.
 - Türkçe ve İngilizce arayüz; Türkçe arayüzde çalıştırma ve hata ayıklama düğmelerinin ipucunda MATLAB'daki adı da görünür.
 
+Ayarlar'daki deneysel metin uyarlaması varsayılan olarak kapalıdır. Editör seçimleri/bölümleri ve kayıtlı giriş betikleri için ayrı ayrı açılabilir. Desteklenen çift tırnaklı metin ifadeleri çalıştırma sırasında uyarlanır; kayıtlı `.m` dosyası değiştirilmez. Belirsiz sözdizimi, yerel fonksiyonlar, özel/paket dizinleri veya etkin hata ayıklama/profil durumu varsa dosyanın tamamı değiştirilmeden çalışır. Bu seçenek tam dil ya da Toolbox uyumluluğu sağlamaz; uyarlanan giriş betiğinde `mfilename` ve ham çağrı yığını geçici yürütme dosyasını gösterir.
+
 `control`, `signal`, `datatypes` ve `statistics` paketleri kuruluysa oturum başlarken yüklenir. Paketler depoya dahil değildir; ayrı kurulurlar.
 
 `datatypes` paketinin string sınıfındaki bazı karışık char/string çağrıları için sürümlü yamalar `octave/paket-yamalari/` altındadır. `python3 scripts/patch_packages.py` bunları kurulu pakete uygular (`--check` yalnızca durumu gösterir, `--revert` geri alır); betik tanımadığı bir paket sürümüne dokunmaz.

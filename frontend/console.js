@@ -31,11 +31,13 @@ function scrollConsole() {
   let c = registry.$("#console");
   c.scrollTop = c.scrollHeight;
 }
-async function execute(code, mode = "code", argument = "", label, recordHistory = false, source = "", onAccepted, sourceContext = null) {
+async function execute(code, mode = "code", argument = "", label, recordHistory = false, source = "", onAccepted, sourceContext = null, fileHash = null) {
   registry.requireIdle();
   const generation = shared.uiGeneration;
+  if (fileHash !== null && shared.engine.source_file_adapter_version !== 1) throw new Error(t("Restart the application to enable saved-file adaptation. Your current session has not been reset."));
   const payload = { code, mode, argument, history: recordHistory };
   if (sourceContext) Object.assign(payload, { adapt_editor_literals: true, source_context: sourceContext });
+  if (fileHash !== null) Object.assign(payload, { adapt_file_literals: true, file_hash: fileHash });
   let result = await registry.api("execute", payload);
   if (generation !== shared.uiGeneration) return;
   shared.publishRenders.clear();
@@ -46,10 +48,10 @@ async function execute(code, mode = "code", argument = "", label, recordHistory 
   entry.wrap.dataset.job = result.job;
   entry.wrap.dataset.epoch = String(entry.epoch);
   entry.wrap.dataset.cwd = shared.engine.cwd || shared.currentFolder || "";
-  if (sourceContext) {
-    entry.sourceContext = sourceContext;
+  if (sourceContext || result.source_context) {
+    entry.sourceContext = result.source_context || sourceContext;
     entry.wrap.sourceEntry = entry;
-    const original = registry.el("pre", "console-source", code);
+    const original = registry.el("pre", "console-source", result.source_context ? result.source_context.document : code);
     entry.wrap.querySelector(".console-command").after(original);
     showAdaptation(entry, result.source_adapter);
   }
@@ -71,7 +73,7 @@ async function runFile() {
   if (t.dirty || !t.hash) {
     if (!await registry.saveActive()) return;
   }
-  await execute("", "file", t.path, "run " + t.path.split("/").pop());
+  await execute("", "file", t.path, "run " + t.path.split("/").pop(), false, "", null, null, registry.getSetting("preferences", "adaptFileLiterals") ? t.hash : null);
 }
 async function runFileMode(mode, label) {
   registry.requireIdle();

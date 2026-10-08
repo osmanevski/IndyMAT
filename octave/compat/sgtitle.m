@@ -49,23 +49,18 @@ function local_layout(f,reserve)
     endif
   endif
   for ax=findall(f,'type','axes')(:)'
-    if ~strcmp(get(ax,'units'),'normalized'),continue;endif
-    pos=get(ax,'position');state=[];
+    units=get(ax,'units');pos=get(ax,'position');state=[];
     if isappdata(ax,'__mf_sgtitle_layout__')
       state=getappdata(ax,'__mf_sgtitle_layout__');
       if isfield(state,'manual') && state.manual,continue;endif
-      if ~isequal(pos,state.last)
+      if ~strcmp(units,'normalized') || ~isequal(pos,state.last) || ...
+          (isfield(state,'units') && ~strcmp(units,state.units))
         % A user edit ends automatic ownership of this axes.
         state.manual=true;setappdata(ax,'__mf_sgtitle_layout__',state);continue;
       endif
-    elseif isappdata(ax,'__subplotposition__')
+    elseif strcmp(units,'normalized') && isappdata(ax,'__subplotposition__')
       state=struct('base',pos,'last',pos,'subplot',getappdata(ax,'__subplotposition__'),...
                    'outer',getappdata(ax,'__subplotouterposition__'));
-    elseif strcmp(get(ax,'tag'),'__mf_tiledlayout_axes__') && isappdata(f,'__mf_tiledlayout_state__')
-      if ~any(all(abs(tiles.positions-pos)<eps,2)),continue;endif
-      base=pos;
-      if isfield(tiles,'sgtitle_reserve'),base([2 4])/=1-tiles.sgtitle_reserve;endif
-      state=struct('base',base,'last',pos,'subplot',[],'outer',[]);
     endif
     if isempty(state),continue;endif
     target=state.base;target([2 4])*=1-reserve;

@@ -104,6 +104,7 @@ export class Figure3D {
     try {
       this.renderer = new FigureWebGL(this.canvas, this.scenes, failed);
     } catch (error) {
+      this.unmountWindowControls?.();
       this.wrap.remove();
       throw error;
     }
@@ -164,18 +165,9 @@ export class Figure3D {
   }
   frames() {
     const figureViewport = viewports.fitFigureViewport(this.data.source?.figure_size, this.width, this.height);
-    return this.data.axes.map((axes, i) => {
-      const base = axes.title_layout_position;
-      let reserve = 0;
-      if (base) {
-        const sourceReserve = Math.max(0, 1 - axes.position[3] / base[3]);
-        const title = this.data.axes.flatMap((item) => item.series).find((series) => series.figure_title);
-        const textHeight = title ? title.font_size * 1.2 * Math.max(1, title.lines.length) + title.margin * 2 + 36 : 0;
-        reserve = Math.max(sourceReserve, figureViewport.height > 0 ? textHeight / figureViewport.height : 0);
-      }
-      return { scene: this.scenes[i], camera: this.cameras[i], viewport: viewport(base || axes.position, this.width, this.height, this.data.source?.figure_size, reserve) };
-    });
+    return this.data.axes.map((axes, i) => ({ scene: this.scenes[i], camera: this.cameras[i], viewport: viewports.fitFigureAxes(axes, figureViewport, this.data.axes) }));
   }
+
   axisAt(x, y) {
     const frames = this.frames();
     for (let i = frames.length - 1; i >= 0; i--) {
@@ -245,7 +237,7 @@ export class Figure3D {
     ctx.clearRect(0, 0, this.width, this.height);
     this.data.axes.forEach((axes, i) => {
       if (axes.dimension === 3) this.drawAxes(axes, frames[i], palette);
-      else this.paint2D?.(ctx, axes, this.width, this.height, this.data.source?.figure_size);
+      else this.paint2D?.(ctx, axes, this.width, this.height, this.data.source?.figure_size, this.data.axes);
       drawColorbars(ctx, axes, this.width, this.height, palette, this.data.source?.figure_size);
     });
   }

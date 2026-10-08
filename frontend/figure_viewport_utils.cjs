@@ -16,4 +16,15 @@ function fitAxes(position, viewport, reserve = 0) {
   return { x: viewport.x + fitted[0] * viewport.width, y: viewport.y + (1 - fitted[1] - fitted[3]) * viewport.height, width: fitted[2] * viewport.width, height: fitted[3] * viewport.height };
 }
 
-module.exports = { fitFigureViewport, fitAxes };
+// Both renderers use the complete figure to reserve shared-title space.
+function fitFigureAxes(axes, viewport, figureAxes) {
+  const base = axes.title_layout_position;
+  if (!base) return fitAxes(axes.position, viewport);
+  const sourceReserve = Math.max(0, 1 - axes.position[3] / base[3]);
+  const title = figureAxes.flatMap((item) => item.series).find((series) => series.figure_title);
+  const textHeight = title ? title.font_size * 1.2 * Math.max(1, title.lines.length) + title.margin * 2 + 36 : 0;
+  const viewportReserve = viewport.height > 0 ? textHeight / viewport.height : 0;
+  return fitAxes(base, viewport, Math.max(sourceReserve, viewportReserve));
+}
+
+module.exports = { fitFigureViewport, fitAxes, fitFigureAxes };

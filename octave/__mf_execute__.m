@@ -34,24 +34,70 @@ function __mf_execute__(folder, mode, argument)
       elseif strcmp(mode, 'code')
         evalin('base', fileread(fullfile(folder, 'code.m')));
       elseif strcmp(mode, 'file')
-        try,bp=dbstatus();catch,bp=[];end_try_catch
-        debug_file=false;
-        for b=1:numel(bp),if strcmp(bp(b).file,argument),debug_file=true;break;endif,endfor
-        if debug_file
-          [parent,name]=fileparts(argument);previous=pwd();changed=~strcmp(previous,parent);
+        file_request=[folder filesep() 'file-source.json'];
+        adapted_file=false;
+        if exist(file_request,'file') == 2
+          file_source=jsondecode(fileread(file_request));
+          % Hash the actual saved bytes, including a UTF-8 BOM, before any user code.
+          fid=fopen(file_source.path,'rb');
+          if fid<0,error(__mf_text__('Saved source is unavailable. Reload or save it before running.', 'Kayıtlı kaynak kullanılamıyor. Çalıştırmadan önce yeniden yükleyin veya kaydedin.'));endif
           unwind_protect
-            if changed,cd(parent);dbstop(bp);endif
-            evalin('base',[name ';']);
+            saved_bytes=fread(fid,2000001,'*uint8');
           unwind_protect_cleanup
-            if changed,cd(previous);endif
+            fclose(fid);
+          end_unwind_protect
+          if !strcmp(hash('sha256',char(saved_bytes')),file_source.sha256)
+            error(__mf_text__('The saved source changed. Reload or save it before running.', 'Kayıtlı kaynak değişti. Çalıştırmadan önce yeniden yükleyin veya kaydedin.'));
+          endif
+          adapted_file=file_source.adapted;
+          if adapted_file
+            % Console dbstop/profile can bypass Python bookkeeping. Any active
+            % breakpoint (including stop-on-error) makes this whole unit native.
+            try,active_breakpoints=dbstatus();catch,active_breakpoints=1;end_try_catch
+            if !isempty(active_breakpoints)
+              adapted_file=false;result.file_source_fallback='file-debug';
+            else
+              try,profile_state=profile('status');catch,profile_state=struct('ProfilerStatus','on');end_try_catch
+              if !strcmp(profile_state.ProfilerStatus,'off')
+                adapted_file=false;result.file_source_fallback='file-profile';
+              endif
+            endif
+          endif
+        endif
+        if adapted_file
+          original_dir=fileparts(argument);previous=pwd();
+          unwind_protect
+            cd(original_dir);
+            % source executes the immutable same-basename entry in base scope.
+            % It exposes its physical identity; dependencies resolve natively.
+            source(file_source.physical_path,'base');
+          unwind_protect_cleanup
+            % Preserve a deliberate cd, including on error or interrupt.
+            if strcmp(pwd(),original_dir),cd(previous);endif
           end_unwind_protect
         else
-          evalin('base', sprintf('(@run)(''%s'');', strrep(argument, '''', '''''')));
+          try,bp=dbstatus();catch,bp=[];end_try_catch
+          debug_file=false;file_breakpoints=bp;
+          if isstruct(bp) && isfield(bp,'bkpt'),file_breakpoints=bp.bkpt;endif
+          if isstruct(file_breakpoints) && isfield(file_breakpoints,'file')
+            for b=1:numel(file_breakpoints),if strcmp(file_breakpoints(b).file,argument),debug_file=true;break;endif,endfor
+          endif
+          if debug_file
+            [parent,name]=fileparts(argument);previous=pwd();changed=~strcmp(previous,parent);
+            unwind_protect
+              if changed,cd(parent);dbstop(bp);endif
+              evalin('base',[name ';']);
+            unwind_protect_cleanup
+              if changed && strcmp(pwd(),parent),cd(previous);endif
+            end_unwind_protect
+          else
+            __mf_run_base__(argument);
+          endif
         endif
       elseif strcmp(mode, 'profile')
         profile clear; profile on;
         unwind_protect
-          evalin('base', sprintf('(@run)(''%s'');', strrep(argument, '''', '''''')));
+          __mf_run_base__(argument);
         unwind_protect_cleanup
           profile off;
         end_unwind_protect
@@ -197,6 +243,14 @@ function __mf_execute__(folder, mode, argument)
     end_try_catch
     fprintf('\n__MF_DONE_%s__\n',job); fflush(stdout);
   end_unwind_protect
+endfunction
+
+% Let Octave's run retain its native path and error behavior. Its caller-side
+% source/rethrow expressions must resolve in a private workspace, while the
+% source builtin explicitly executes user code in the persistent base workspace.
+function __mf_run_base__(argument)
+  source=@(script) builtin('source',script,'base');
+  run(argument);
 endfunction
 
 % Breakpoint helpers are subfunctions of this file on purpose: relocation jobs are

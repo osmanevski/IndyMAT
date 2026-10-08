@@ -674,6 +674,6 @@ body.resizing-rows,body.resizing-rows *{cursor:row-resize!important;user-select:
 /* Editor source adaptation: compact metadata beside original submitted code. */
 .source-adapter-note { color: var(--muted); font-size: 11px; margin: 4px 0; }
 .console-source { white-space: pre-wrap; font: inherit; margin: 4px 0; }
-.settings-note { color: var(--muted); font-size: 12px; line-height: 1.5; }
+.settings-note, .file-source-settings-note { color: var(--muted); font-size: 12px; line-height: 1.5; }
 .source-error-location { font: inherit; color: var(--danger); margin: 4px 0; }
 .source-snapshot { width: 100%; min-height: 300px; white-space: pre; font-family: monospace; }

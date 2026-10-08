@@ -13,6 +13,12 @@ other, so a wrong belief about MATLAB cannot enter the list.
   python3 scripts/fark.py --octave-only --adapted  also measure adapted bodies; write only farklar-uyarlanmis.json
   Add --output /tmp/measurement.json to keep adapted measurements outside the repository.
 Short-lived helper processes only; the user's session is never touched.
+
+Serializer/reference/measurement schema 2: bounded summaries with omitted
+content are partial evidence. Totals partition into successful matches,
+both-error matches, observed remaining differences, partial and unmeasured.
+Old probe caches require a fresh full run; --octave-only rejects them.
+Fixture changes also require scripts/compat.py --matlab-reference.
 """
 from __future__ import annotations
 import argparse, hashlib, json, re, shutil, sys, tempfile
@@ -24,6 +30,12 @@ from backend.source_adapter import ADAPTER_VERSION, AdapterProfile, adapt_source
 from backend.kernel import cli_executable
 
 BASE=root/'uyumluluk'
+SERIALIZER_SCHEMA = 2
+REFERENCE_SCHEMA = 2
+MEASUREMENT_SCHEMA = 2
+PARTIAL_KIND = 'kısmi ölçüm'
+DIFFERENCE_KINDS = ('Octave hata verir', 'yalnız MATLAB hata verir',
+                    'sınıf farklı', 'boyut farklı', 'değer farklı')
 LINE=re.compile(r'^([a-z0-9][a-z0-9-]*)\s*\|\s*(.+)$')
 
 def load(folder,prefix=''):
@@ -77,9 +89,12 @@ NUMBER=re.compile(r'(?<![A-Za-z_])[-+]?(?:\d+\.?\d*(?:e[-+]?\d+)?|Inf|NaN)')
 def close(matlab,octave,tolerance=1e-9):
     """True when two summaries differ only by rounding noise or the sign of zero.
 
-    Character codes ('u65,66,') and everything that is not a number must match exactly.
+    Character codes, integer/logical values and dimensions match exactly.
+    Finite floating-point payloads alone receive numerical tolerance.
     """
-    protect=lambda text:re.sub(r'u(?:\d+,)*',lambda match:match.group(0).replace(',',';'),text)
+    # Character codes, integer/logical payloads and dimensions are exact.
+    protect=lambda text:re.sub(r'(?:u?int(?:8|16|32|64))\|[0-9x]+\|(?:-?\d+,)*|logical\|[0-9x]+\|[01]*|u(?:\d+,)*|i-?\d+,|\|(?:\d+x)*\d+\|',
+        lambda match:re.sub(r'\d',lambda d:chr(97+int(d.group())),match.group()),text)
     left,right=protect(matlab),protect(octave)
     if NUMBER.sub('#',left)!=NUMBER.sub('#',right):return False
     for a,b in zip(NUMBER.findall(left),NUMBER.findall(right)):
@@ -88,8 +103,26 @@ def close(matlab,octave,tolerance=1e-9):
         except ValueError:return False
         if x!=x or y!=y:
             if not (x!=x and y!=y):return False
+        elif abs(x)==float('inf') or abs(y)==float('inf'):
+            if x!=y:return False
         elif abs(x-y)>tolerance*max(1.0,abs(x),abs(y)):return False
     return True
+
+def coverage(summary):
+    """Serialized value coverage; errors measure rejection only.
+
+    Schema 2 has explicit <partial:reason> markers. Legacy opaque/truncated
+    summaries remain partial evidence, never complete value equality.
+    """
+    if summary == 'CALISMADI':return {'status': 'missing', 'complete': False, 'reasons': ['not-run']}
+    if summary.startswith('HATA|'):return {'status': 'error', 'complete': True, 'reasons': []}
+    reasons = re.findall(r'<partial:([^>]+)>', summary)
+    if '<nesne>' in summary:reasons.append('legacy-object')
+    if '...' in summary:reasons.append('legacy-truncation')
+    if re.search(r'(?:^|[={;])struct\|(?!1x1\|)[0-9x]+\|', summary):
+        reasons.append('structure-array')
+    return {'status': 'partial' if reasons else 'complete', 'complete': not reasons,
+            'reasons': sorted(set(reasons))}
 
 def kind(matlab,octave):
     m_error,o_error=matlab.startswith('HATA|'),octave.startswith('HATA|')
@@ -97,15 +130,22 @@ def kind(matlab,octave):
     if matlab=='CALISMADI' or octave=='CALISMADI':return 'ölçülemedi'
     if o_error:return 'Octave hata verir'
     if m_error:return 'yalnız MATLAB hata verir'
-    if matlab==octave:return 'aynı'
-    if close(matlab,octave):return 'aynı'
     m,o=matlab.split('|',2),octave.split('|',2)
     if m[0]!=o[0]:return 'sınıf farklı'
     if m[1]!=o[1]:return 'boyut farklı'
+    mc,oc=coverage(matlab),coverage(octave)
+    equal = matlab==octave or close(matlab,octave)
+    if not mc['complete'] or not oc['complete']:
+        # Unequal equally bounded samples prove an observed gap. Different
+        # coverage boundaries cannot be compared as complete values.
+        if not equal and mc['status']==oc['status']=='partial' and mc['reasons']==oc['reasons']:
+            return 'değer farklı'
+        return PARTIAL_KIND
+    if equal:return 'aynı'
     return 'değer farklı'
 
 def report(rows,path):
-    order=['Octave hata verir','sınıf farklı','boyut farklı','değer farklı','yalnız MATLAB hata verir','ölçülemedi']
+    order=['Octave hata verir','sınıf farklı','boyut farklı','değer farklı','yalnız MATLAB hata verir',PARTIAL_KIND,'ölçülemedi']
     counts={name:sum(row['kind']==name for row in rows) for name in order+['aynı','ikisi de hata']}
     lines=['# MATLAB ve Octave farkları','',
            '`python3 scripts/fark.py` ile üretilir; elle düzenlenmez. Aynı kod gerçek MATLAB R2025b ve projenin Octave kurulumunda koşulur, sonuçlar birbiriyle karşılaştırılır.','',
@@ -113,9 +153,11 @@ def report(rows,path):
     for name in order:
         chosen=[row for row in rows if row['kind']==name]
         if not chosen:continue
-        lines+=[f'## {name[0].upper()+name[1:]} ({len(chosen)})','','| Yoklama | Kod | MATLAB | Octave |','|---|---|---|---|']
+        lines+=[f'## {name[0].upper()+name[1:]} ({len(chosen)})','','| Yoklama | Kod | MATLAB | Octave | Kapsam |','|---|---|---|---|---|']
         clip=lambda value:value.replace('|','¦')[:160]
-        for row in chosen:lines.append(f"| `{row['id']}` | `{clip(row['code'])}` | {clip(row['matlab'])} | {clip(row['octave'])} |")
+        for row in chosen:
+            scope = json.dumps({'matlab': coverage(row['matlab']), 'octave': coverage(row['octave'])}, ensure_ascii=False)
+            lines.append(f"| `{row['id']}` | `{clip(row['code'])}` | {clip(row['matlab'])} | {clip(row['octave'])} | {scope} |")
         lines.append('')
     Path(path).write_text('\n'.join(lines),encoding='utf-8')
 
@@ -123,10 +165,36 @@ RECORD=BASE/'yoklama-matlab.json'
 
 def code_hash(probe):return hashlib.sha256(probe['code'].encode('utf-8')).hexdigest()[:16]
 
+def reference_context(fixtures=None):
+    return {'schema': REFERENCE_SCHEMA, 'serializer_schema': SERIALIZER_SCHEMA,
+            'reference_fixture_fingerprint': compat.fixture_hash(fixtures or BASE/'yardimcilar')}
+
+def source_identity(probe, context):
+    """Full digest binds exact executable source, id, schema and all fixtures."""
+    value = {**context, 'id': probe['id'], 'code': probe['code']}
+    return hashlib.sha256(json.dumps(value, ensure_ascii=False, sort_keys=True,
+                                    separators=(',', ':')).encode('utf-8')).hexdigest()
+
+def reference_data(probes, matlab, fixtures=None):
+    if len(probes) != len(matlab):raise ValueError('Reference result count differs from probe count.')
+    context = reference_context(fixtures)
+    return {**context, 'records': {p['id']: {'code': p['code'],
+            'source_identity': source_identity(p, context), 'matlab': m}
+            for p, m in zip(probes, matlab)}}
+
 def recorded(probes):
-    """MATLAB summaries recorded by the last full run; a probe whose code changed since has no record."""
+    """Reject legacy schema, stale serializer/fixtures and changed exact source."""
     data=json.loads(RECORD.read_text(encoding='utf-8')) if RECORD.exists() else {}
-    return [data[probe['id']]['matlab'] if data.get(probe['id'],{}).get('hash')==code_hash(probe) else 'CALISMADI' for probe in probes]
+    context = reference_context()
+    if any(data.get(k) != v for k,v in context.items()):return ['CALISMADI'] * len(probes)
+    records = data.get('records', {})
+    values = []
+    for probe in probes:
+        record = records.get(probe['id'], {})
+        valid = record.get('code') == probe['code'] and record.get('source_identity') == source_identity(probe, context)
+        value = record.get('matlab')
+        values.append(value if valid and isinstance(value, str) else 'CALISMADI')
+    return values
 
 MATCH_KINDS = ('aynı', 'ikisi de hata')
 
@@ -147,39 +215,48 @@ def adapted_measurement(probes, matlab, raw, adapted, adaptations):
     if len({len(probes), len(matlab), len(raw), len(adapted), len(adaptations)}) != 1:
         raise ValueError('Adapted measurement result counts do not match probe count.')
     rows = []
+    context = reference_context()
     for probe, m, o, a, adaptation in zip(probes, matlab, raw, adapted, adaptations):
         raw_kind, adapted_kind = kind(m, o), kind(m, a)
         rows.append({**probe, 'matlab': m, 'octave_raw': o, 'octave_adapted': a,
                      'raw_kind': raw_kind, 'adapted_kind': adapted_kind,
                      'original_hash': code_hash(probe),
+                     'source_identity': source_identity(probe, context),
+                     'coverage': {'matlab': coverage(m), 'octave_raw': coverage(o), 'octave_adapted': coverage(a)},
                      'generated_hash': code_hash({'code': adaptation.generated_text}),
                      'adaptation': adaptation.metadata()})
     # A fallback executed the original unit. Second-run noise is recorded in
     # the row but cannot be credited/blamed as an adapter gain/regression.
     gained = [r for r in rows if r['adaptation']['status'] != 'fallback'
-              and r['raw_kind'] not in MATCH_KINDS and r['adapted_kind'] in MATCH_KINDS]
+              and r['raw_kind'] in DIFFERENCE_KINDS and r['adapted_kind'] in MATCH_KINDS]
     regressions = [r for r in rows if r['adaptation']['status'] != 'fallback'
-                   and r['raw_kind'] in MATCH_KINDS and r['adapted_kind'] not in MATCH_KINDS]
+                   and r['raw_kind'] in MATCH_KINDS and r['adapted_kind'] in DIFFERENCE_KINDS]
     for row in regressions:
         names = sorted({d['message'].split(':', 1)[0] for d in row['adaptation']['diagnostics'] if d['code'] == 'semantic-limit'})
         row['regression_reason'] = ('String object behavior differs in ' + ', '.join(names) + '. '
                                     if names else 'String object dispatch differs. ') + row['octave_adapted']
         row['suggested_action'] = 'Verify the lexical callee/argument rule or use whole-unit fallback for unsupported object semantics; never coerce an expression or string array to char.'
-    remaining = [r for r in rows if r['adapted_kind'] not in MATCH_KINDS]
+    remaining = [r for r in rows if r['adapted_kind'] in DIFFERENCE_KINDS]
+    partial = [r for r in rows if r['adapted_kind'] == PARTIAL_KIND]
+    unmeasured = [r for r in rows if r['adapted_kind'] == 'ölçülemedi']
     fallbacks = [r for r in rows if r['adaptation']['status'] == 'fallback']
-    return {'adapter_version': ADAPTER_VERSION, 'probes': len(rows),
+    return {**context, 'measurement_schema': MEASUREMENT_SCHEMA,
+            'adapter_version': ADAPTER_VERSION, 'probes': len(rows),
             'gained': len(gained), 'gained_successful': sum(r['adapted_kind'] == 'aynı' for r in gained),
             'gained_expected_error': sum(r['adapted_kind'] == 'ikisi de hata' for r in gained),
             'successful_matches': sum(r['adapted_kind'] == 'aynı' for r in rows),
             'expected_error_matches': sum(r['adapted_kind'] == 'ikisi de hata' for r in rows),
             'remaining': len(remaining), 'regressions': len(regressions), 'fallbacks': len(fallbacks),
+            'partial': len(partial), 'unmeasured': len(unmeasured),
+            'coverage_losses': sum(r['raw_kind'] in MATCH_KINDS and r['adapted_kind'] in (PARTIAL_KIND, 'ölçülemedi') for r in rows),
             'regression_ids': [r['id'] for r in regressions], 'rows': rows}
 
 
 def print_adapted(measurement):
     print(f"{measurement['probes']} probes: gained {measurement['gained']} "
           f"(successful {measurement['gained_successful']}, both-error {measurement['gained_expected_error']}), "
-          f"remaining {measurement['remaining']}, NEW regressions {measurement['regressions']}, "
+          f"remaining differences {measurement['remaining']}, partial {measurement['partial']}, "
+          f"unmeasured {measurement['unmeasured']}, NEW regressions {measurement['regressions']}, "
           f"fallbacks {measurement['fallbacks']}")
     print(f"Matches: successful {measurement['successful_matches']}, both-error {measurement['expected_error_matches']}")
     for row in measurement['rows']:
@@ -188,6 +265,7 @@ def print_adapted(measurement):
                   f"raw: {row['octave_raw']}; adapted: {row['octave_adapted']}; action: {row['suggested_action']}")
         elif row['adapted_kind'] not in MATCH_KINDS:
             print(f"REMAINING {row['id']}: {row['adapted_kind']}; M: {row['matlab']}; adapted: {row['octave_adapted']}")
+            print('COVERAGE ' + json.dumps(row['coverage'], ensure_ascii=False))
         if row['adaptation']['status'] == 'fallback':
             print(f"FALLBACK {row['id']}: " + '; '.join(d['message'] for d in row['adaptation']['diagnostics']))
 
@@ -210,13 +288,17 @@ def main():
         (arguments.output or BASE/'farklar-uyarlanmis.json').write_text(json.dumps(measurement, ensure_ascii=False, indent=1)+'\n', encoding='utf-8')
         print_adapted(measurement)
         return 0
-    rows=[{**probe,'matlab':m,'octave':o,'kind':kind(m,o)} for probe,m,o in zip(probes,matlab,octave)]
+    rows=[{**probe,'matlab':m,'octave':o,'kind':kind(m,o),
+           'coverage': {'matlab': coverage(m), 'octave': coverage(o)}} for probe,m,o in zip(probes,matlab,octave)]
     different=[row for row in rows if row['kind'] not in ('aynı','ikisi de hata')]
     if not arguments.only and not arguments.octave_only:
-        RECORD.write_text(json.dumps({probe['id']:{'hash':code_hash(probe),'matlab':value} for probe,value in zip(probes,matlab)},ensure_ascii=False,indent=0,sort_keys=True)+'\n',encoding='utf-8')
-        (BASE/'farklar.json').write_text(json.dumps({'yoklama':len(rows),'farklar':[{key:row[key] for key in ('id','code','group','kind','matlab','octave')} for row in different]},ensure_ascii=False,indent=1)+'\n',encoding='utf-8')
+        RECORD.write_text(json.dumps(reference_data(probes,matlab),ensure_ascii=False,indent=0,sort_keys=True)+'\n',encoding='utf-8')
+        (BASE/'farklar.json').write_text(json.dumps({**reference_context(), 'measurement_schema': MEASUREMENT_SCHEMA,
+            'yoklama':len(rows), 'counts': {k: sum(r['kind']==k for r in rows) for k in (*MATCH_KINDS, *DIFFERENCE_KINDS, PARTIAL_KIND, 'ölçülemedi')},
+            'farklar':[{key:row[key] for key in ('id','code','group','kind','matlab','octave','coverage')} for row in different]},ensure_ascii=False,indent=1)+'\n',encoding='utf-8')
         (root/'docs').mkdir(exist_ok=True);report(rows,root/'docs'/'Farklar.md')
-    print(f'{len(rows)} yoklama, {len(different)} fark')
+    print(f"{len(rows)} yoklama, {sum(r['kind'] in DIFFERENCE_KINDS for r in rows)} fark, "
+          f"{sum(r['kind']==PARTIAL_KIND for r in rows)} kısmi ölçüm, {sum(r['kind']=='ölçülemedi' for r in rows)} ölçülemedi")
     for row in different:print(f"{row['kind']:<26} {row['id']:<28} M: {row['matlab'][:70]}  O: {row['octave'][:70]}")
     return 0
 

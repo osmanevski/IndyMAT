@@ -47,6 +47,7 @@ class Node extends Target {
   const renderers = [];
   class Renderer {
     constructor(canvas, scenes, failed) {
+      if (global.figure3dHarness.failRenderer) throw new Error("WebGL unavailable");
       this.canvas = canvas;
       this.scenes = scenes;
       this.failed = failed;
@@ -187,14 +188,31 @@ class Node extends Target {
     const mixed = fixture("colorbar");
     const two = fixture("line2d").axes[0];
     two.dimension = 2;
+    mixed.axes[0].title_layout_position = [.1, .11, .35, .815];
+    mixed.axes[0].position = [.1, .099, .35, .7335];
+    two.title_layout_position = [.55, .11, .35, .815];
+    two.position = [.55, .099, .35, .7335];
+    two.series.push({ kind: "text", figure_title: true, font_size: 12, lines: ["Shared", "Second line"], margin: 2 });
     mixed.axes.push(two);
     let painted = 0;
-    viewer = new Figure3D(root, mixed, { identity, save: () => {}, failed: () => {}, paint2D: () => painted++ });
+    viewer = new Figure3D(root, mixed, { identity, save: () => {}, failed: () => {}, paint2D: (ctx, axes, width, height, size, allAxes) => { assert.equal(allAxes, mixed.axes); painted++; } });
     viewer.renderer.flush();
     assert.equal(painted, 1);
     assert.equal(viewer.scenes[1].lines.length, 0);
+    const frames = viewer.frames();
+    assert.equal(frames[0].viewport.y, frames[1].viewport.y);
+    assert.equal(frames[0].viewport.height, frames[1].viewport.height);
+    assert(frames[1].viewport.height < two.position[3] * viewer.height, "mixed frames failed to reserve extra shared-title space");
     viewer.dispose();
     passed("mixed admitted figure delegates 2D axes without silently dropping them");
+    global.figure3dHarness.failRenderer = true;
+    for (let attempt = 0; attempt < 3; attempt++) {
+      assert.throws(() => create("plot3_gap"), /WebGL unavailable/);
+      assert.equal(document.listenerCount, 0, "failed renderer leaked fullscreen listener");
+      assert.equal(subscribers.size, 0, "failed renderer leaked language subscriber");
+      assert.equal(root.children.length, 0, "failed renderer left viewer DOM behind");
+    }
+    passed("repeated failed WebGL startup cleans window controls and subscriptions");
     console.log(`${count} viewer API/overlay/lifecycle cases passed. Canvas, tools and WebGL boundaries are mocked; browser behavior remains unverified.`);
   } finally {
     for (const key of ["figure3dHarness", "window", "document", "devicePixelRatio", "matchMedia", "getComputedStyle", "ResizeObserver"]) delete global[key];

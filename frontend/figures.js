@@ -166,6 +166,7 @@ class InteractiveFigure {
     this.resize();
   }
   destroy() {
+    this.cancelDrag();
     this.observer?.disconnect();
     this.unmountWindowControls?.();
   }
@@ -186,7 +187,7 @@ class InteractiveFigure {
       if (axis < 0) return;
       c.setPointerCapture(e.pointerId);
       let pan = e.shiftKey || e.button === 1;
-      this.drag = { axis, start: p, current: p, pan, view: { x: [...this.views[axis].x], y: [...this.views[axis].y] } };
+      this.drag = { pointerId: e.pointerId, axis, start: p, current: p, pan, view: { x: [...this.views[axis].x], y: [...this.views[axis].y] } };
       c.classList.toggle("panning", pan);
       this.tip.hidden = true;
     };
@@ -211,10 +212,16 @@ class InteractiveFigure {
         v.x = [this.pixelData(Math.min(p.x, d.start.x), d.axis, "x"), this.pixelData(Math.max(p.x, d.start.x), d.axis, "x")].sort((a, b) => a - b);
         v.y = [this.pixelData(Math.max(p.y, d.start.y), d.axis, "y"), this.pixelData(Math.min(p.y, d.start.y), d.axis, "y")].sort((a, b) => a - b);
       } else if (!d.pan) this.showHit(p, true);
-      this.drag = null;
-      c.classList.remove("panning");
+      this.cancelDrag();
       this.draw();
     };
+    const cancel = (e) => {
+      if (this.drag?.pointerId !== e.pointerId) return;
+      this.cancelDrag();
+      this.draw();
+    };
+    c.onpointercancel = cancel;
+    c.onlostpointercapture = cancel;
     c.ondblclick = (e) => {
       e.preventDefault();
       this.reset();
@@ -236,7 +243,15 @@ class InteractiveFigure {
     this.ctx.setTransform(d, 0, 0, d, 0, 0);
     this.draw();
   }
+  cancelDrag() {
+    const pointerId = this.drag?.pointerId;
+    this.drag = null;
+    this.canvas.classList.remove("panning");
+    if (pointerId !== undefined && this.canvas.hasPointerCapture?.(pointerId)) this.canvas.releasePointerCapture(pointerId);
+  }
   reset() {
+    this.cancelDrag();
+    this.pinnedHit = null;
     this.views = this.initial.map((v) => ({ x: [...v.x], y: [...v.y] }));
     this.pinned = false;
     this.tip.hidden = true;
@@ -252,15 +267,9 @@ class InteractiveFigure {
     return this.data.axes[i].series.some((s) => s.kind === "image") ? images.aspectBox(box, this.data.axes[i], this.views[i]) : box;
   }
   axesViewport(i) {
-    const axes = this.data.axes[i], base = axes.title_layout_position;
-    if (!base) return viewports.fitAxes(axes.position, this.figureViewport);
-    const sourceReserve = Math.max(0, 1 - axes.position[3] / base[3]);
-    const title = this.data.axes.flatMap((item) => item.series).find((series) => series.figure_title);
-    const textHeight = title ? title.font_size * 1.2 * Math.max(1, title.lines.length) + title.margin * 2 + 36 : 0;
-    const viewportReserve = this.figureViewport.height > 0 ? textHeight / this.figureViewport.height : 0;
-    return viewports.fitAxes(base, this.figureViewport, Math.max(sourceReserve, viewportReserve));
-
+    return viewports.fitFigureAxes(this.data.axes[i], this.figureViewport, this.data.figure_axes || this.data.axes);
   }
+
   axisAt(p) {
     for (let i = this.data.axes.length - 1; i >= 0; i--) {
       // An invisible axes (figure title, annotation overlay) is not a zoom target.
@@ -321,6 +330,7 @@ class InteractiveFigure {
       c.strokeRect(d.start.x, d.start.y, d.current.x - d.start.x, d.current.y - d.start.y);
       c.restore();
     }
+    if (this.pinned && this.pinnedHit) this.positionTip(this.pinnedHit);
     this.canvas.dataset.view = JSON.stringify(this.views);
   }
   runFont(run, size, bold, italic, mono) {
@@ -482,10 +492,12 @@ class InteractiveFigure {
         c.stroke();
         c.setLineDash([]);
       }
+      const tip = s.role === "textbox" ? null : shapes.faceTip(s, polygon);
+      // Every opaque polygon participates in occlusion, even when it has no
+      // rectangular/bar tip. General shapes retain their original vertex tips.
+      if (tip || face && points.length > 2) this.faces.push({ axis: i, seriesIndex: j, series: s, points, tip });
       if (s.role === "textbox") continue;
-      const tip = shapes.faceTip(s, polygon);
-      if (tip) this.faces.push({ axis: i, seriesIndex: j, series: s, points, tip });
-      else if (!s.bar) polygon.points.forEach(([x, y], n) => this.hits.push({ x: points[n][0], y: points[n][1], vx: x, vy: y, series: s, axis: i, seriesIndex: j }));
+      if (!tip && !s.bar) polygon.points.forEach(([x, y], n) => this.hits.push({ x: points[n][0], y: points[n][1], vx: x, vy: y, series: s, axis: i, seriesIndex: j }));
     }
   }
   drawText(s, i, j) {
@@ -689,46 +701,78 @@ class InteractiveFigure {
     });
     c.restore();
   }
-  showHit(p, pin) {
-    let nearest = null, distance = 14;
-    for (let h of this.hits) {
-      let d = Math.hypot(h.x - p.x, h.y - p.y);
-      if (d < distance) {
-        nearest = h;
-        distance = d;
+  positionTip(hit) {
+    const x = hit.anchor ? this.dataPixel(hit.anchor.x, hit.axis, "x") : hit.x;
+    const y = hit.anchor ? this.dataPixel(hit.anchor.y, hit.axis, "y") : hit.y;
+    if (x === null || y === null) { this.tip.hidden = true; return; }
+    this.tip.style.left = Math.max(2, Math.min(this.width - 190, x + 9)) + "px";
+    this.tip.style.top = Math.max(2, Math.min(this.height - this.tip.offsetHeight - 2, y - 30)) + "px";
+  }
+  hitAt(p) {
+    // Walk the same axes/series stacking order as the painter. An opaque image
+    // or filled face masks samples below it, while later overlays stay pickable.
+    const group = (items) => {
+      const groups = new Map();
+      for (const item of items) {
+        const key = item.axis + ":" + item.seriesIndex;
+        if (!groups.has(key)) groups.set(key, []);
+        groups.get(key).push(item);
       }
-    }
-    if (!nearest) {
-      // No sample nearby: the topmost filled face under the pointer.
-      for (let n = this.faces.length - 1; n >= 0 && !nearest; n--) {
-        const face = this.faces[n], b = this.box(face.axis);
-        if (p.x < b.x || p.x > b.x + b.w || p.y < b.y || p.y > b.y + b.h) continue;
-        if (shapes.pointInPolygon(face.points, p.x, p.y)) nearest = { ...face, x: p.x, y: p.y, vx: face.tip.x, vy: face.tip.y };
-      }
-    }
-    if (!nearest) {
-      const axis = this.axisAt(p);
-      if (axis >= 0) {
-        const axes = this.data.axes[axis], x = this.pixelData(p.x, axis, "x"), y = this.pixelData(p.y, axis, "y");
-        for (let j = axes.series.length - 1; j >= 0 && !nearest; j--) {
-          const s = axes.series[j];
-          if (s.kind !== "image") continue;
-          const pixel = images.pick(s, x, y);
-          if (pixel) nearest = { x: p.x, y: p.y, vx: x, vy: y, axis, series: s, seriesIndex: j, pixel };
+      return groups;
+    };
+    const hitGroups = group(this.hits), faceGroups = group(this.faces);
+    for (let axis = this.data.axes.length - 1; axis >= 0; axis--) {
+      const axes = this.data.axes[axis], b = this.box(axis);
+      if (axes.visible === false || p.x < b.x || p.x > b.x + b.w || p.y < b.y || p.y > b.y + b.h) continue;
+      const covering = (j, point) => {
+        const series = axes.series[j];
+        if (series.kind === "image") return images.pick(series, this.pixelData(point.x, axis, "x"), this.pixelData(point.y, axis, "y"));
+        if (series.kind === "patch2d" && series.face_color !== "none") return (faceGroups.get(axis + ":" + j) || []).some((face) => shapes.pointInPolygon(face.points, point.x, point.y));
+        return false;
+      };
+      for (let j = axes.series.length - 1; j >= 0; j--) {
+        let nearest = null, distance = 14;
+        for (const hit of hitGroups.get(axis + ":" + j) || []) {
+          if (hit.x < b.x || hit.x > b.x + b.w || hit.y < b.y || hit.y > b.y + b.h) continue;
+          const d = Math.hypot(hit.x - p.x, hit.y - p.y);
+          if (d >= distance) continue;
+          let hidden = false;
+          for (let above = j + 1; above < axes.series.length && !hidden; above++) hidden = !!covering(above, hit);
+          if (!hidden) { nearest = hit; distance = d; }
+        }
+        if (nearest) return nearest;
+        const series = axes.series[j];
+        if (series.kind === "image") {
+          const x = this.pixelData(p.x, axis, "x"), y = this.pixelData(p.y, axis, "y"), pixel = images.pick(series, x, y);
+          if (pixel) return { x: p.x, y: p.y, vx: x, vy: y, axis, series, seriesIndex: j, pixel };
+        }
+        const faces = faceGroups.get(axis + ":" + j) || [];
+        for (let n = faces.length - 1; n >= 0; n--) {
+          const face = faces[n];
+          if (series.face_color !== "none" && shapes.pointInPolygon(face.points, p.x, p.y)) {
+            if (!face.tip) return null;
+            return { ...face, x: p.x, y: p.y, vx: face.tip.x, vy: face.tip.y };
+          }
         }
       }
+      // This axes' painted background obscures earlier overlapping axes.
+      return null;
     }
+    return null;
+  }
+  showHit(p, pin) {
+    const nearest = this.hitAt(p);
     if (!nearest) {
       if (!this.pinned) this.tip.hidden = true;
       return;
     }
     this.pinned = pin;
+    this.pinnedHit = pin ? { ...nearest, anchor: { x: this.pixelData(nearest.x, nearest.axis, "x"), y: this.pixelData(nearest.y, nearest.axis, "y") } } : null;
     const value = (v) => Array.isArray(v) ? `[${plotFormat(Number(v[0]))}, ${plotFormat(Number(v[1]))}]` : plotFormat(Number(v));
     let label = shapes.plainText(nearest.series.display_name || this.data.axes[nearest.axis].legend?.labels?.[nearest.seriesIndex] || ""), name = label ? label + ": " : "";
     this.tip.textContent = nearest.pixel ? `${t("Row")} = ${nearest.pixel.row + 1}, ${t("Column")} = ${nearest.pixel.column + 1}, ${t("Value")} = ${Array.isArray(nearest.pixel.value) ? "[" + nearest.pixel.value.map(plotFormat).join(", ") + "]" : plotFormat(nearest.pixel.value)}` : `${name}x = ${value(nearest.vx)}, y = ${value(nearest.vy)}`;
     this.tip.hidden = false;
-    this.tip.style.left = Math.max(2, Math.min(this.width - 190, nearest.x + 9)) + "px";
-    this.tip.style.top = Math.max(2, nearest.y - 30) + "px";
+    this.positionTip(this.pinnedHit || nearest);
   }
 }
 function figureDetail(data, supported) {
@@ -748,7 +792,7 @@ function figureDetail(data, supported) {
 function supportedData(data) {
   return !!data?.supported && [2, 3].includes(data.version);
 }
-function paint2D(ctx, axes, width, height, figureSize) {
+function paint2D(ctx, axes, width, height, figureSize, figureAxes) {
   const plot = Object.create(InteractiveFigure.prototype);
   plot.ctx = ctx;
   plot.width = width;
@@ -757,7 +801,7 @@ function paint2D(ctx, axes, width, height, figureSize) {
   plot.hits = [];
   plot.faces = [];
   plot.texts = [];
-  plot.data = { version: 3, axes: [axes], source: { figure_size: figureSize } };
+  plot.data = { version: 3, axes: [axes], figure_axes: figureAxes, source: { figure_size: figureSize } };
   plot.figureViewport = viewports.fitFigureViewport(figureSize, width, height);
   plot.views = [{ x: [...axes.xlim], y: [...axes.ylim] }];
   plot.initial = [{ x: [...axes.xlim], y: [...axes.ylim] }];

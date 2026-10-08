@@ -10,6 +10,7 @@ from backend.assistants import Assistants
 from backend.assistant_bridge_service import BridgeService
 from backend.kernel import Kernel
 from backend.source_jobs import validate_source_context
+from backend.source_files import read_file_source
 from backend.files import Workspace
 from backend.file_operations import FileOperations
 from backend.workspace_actions import WorkspaceActions, MatTarget, variable_read_request, variable_write_request
@@ -369,7 +370,7 @@ class Handler(BaseHTTPRequestHandler):
                 with self.app.file_lock:
                     if state['status']=='idle':self.app.workspace.follow(state.get('cwd',''))
                     state.update(self.app.workspace.info())
-                state.update(epoch=self.app.kernel.generation)
+                state.update(epoch=self.app.kernel.generation,source_file_adapter_version=1)
                 return self.send(200,state)
             if path=='/api/files':
                 with self.app.file_lock:data=self.app.workspace.tree()
@@ -488,6 +489,20 @@ class Handler(BaseHTTPRequestHandler):
                 f=w.path(arg)
                 if not f.is_file() or f.suffix!='.m':raise ValueError(tr('Select a .m file.'))
                 arg=str(f)
+            source_file=None
+            if 'adapt_file_literals' in d and type(d['adapt_file_literals']) is not bool:
+                raise ValueError(tr('Invalid saved file adaptation request.'))
+            if any(key in d for key in ('generated_path','generated_text','generated_code','generated_file','generated_paths','physical_path','source_map','source_maps','source_file','file_source')):
+                raise ValueError(tr('Invalid saved file adaptation request.'))
+            if d.get('adapt_file_literals') is True:
+                if set(d) - {'code','mode','argument','timeout','history','adapt_file_literals','file_hash'}:
+                    raise ValueError(tr('Invalid saved file adaptation request.'))
+                if mode != 'file' or code or 'source_context' in d or d.get('adapt_editor_literals') is True:
+                    raise ValueError(tr('Invalid saved file adaptation request.'))
+                with self.app.file_lock:
+                    source_file=read_file_source(w,arg,d.get('file_hash'))
+            elif 'file_hash' in d:
+                raise ValueError(tr('Invalid saved file adaptation request.'))
             source_context=None
             if 'adapt_editor_literals' in d and type(d['adapt_editor_literals']) is not bool:
                 raise ValueError(tr('Invalid editor source context.'))
@@ -496,11 +511,11 @@ class Handler(BaseHTTPRequestHandler):
                     source_context=validate_source_context(d.get('source_context'),code,mode,w)
             elif 'source_context' in d:
                 raise ValueError(tr('Invalid editor source context.'))
-            if source_context is not None:
+            if source_context is not None or source_file is not None:
                 with k.lock:
-                    job=k.submit(code,mode,arg,min(3600,max(0,float(d.get('timeout',0)))),source_context=source_context)
+                    job=k.submit(code,mode,arg,min(3600,max(0,float(d.get('timeout',0)))),source_context=source_context,source_file=source_file)
                     adapter=k.snapshot().get('source_adapter')
-                return self.send(202,{'job':job,'source_adapter':adapter})
+                return self.send(202,{'job':job,'source_adapter':adapter,**({'source_context':source_file.context()} if source_file is not None else {})})
             job=k.submit(code,mode,arg,min(3600,max(0,float(d.get('timeout',0)))))
             if mode=='code' and code.strip() and d.get('history') is True:
                 return self.send(202,{'job':job,'history_recorded':self.app.record(code)})

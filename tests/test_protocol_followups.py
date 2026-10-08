@@ -129,12 +129,12 @@ class CommandLineFunctionGuardTests(Base):
 
 class StagingFailureTests(Base):
     def test_write_failure_leaves_kernel_idle(self):
-        original = Path.write_text
+        original = Path.write_bytes
         def failing(path, *args, **kwargs):
             if path.name == 'preapply.txt':
                 raise OSError(28, 'No space left on device')
             return original(path, *args, **kwargs)
-        with patch.object(Path, 'write_text', failing):
+        with patch.object(Path, 'write_bytes', failing):
             with self.assertRaises(ValueError) as caught:
                 self.kernel.submit('never_runs=1;')
         self.assertIn('hazırlanamadı', str(caught.exception))
@@ -144,13 +144,13 @@ class StagingFailureTests(Base):
         self.assertNotIn('never_runs', [v['name'] for v in state['variables']])
 
     def test_read_failure_ends_job_with_turkish_error(self):
-        original = Path.write_text
+        original = Path.write_bytes
         def unreadable(path, *args, **kwargs):
             result = original(path, *args, **kwargs)
             if path.name == 'preapply.txt':
                 os.chmod(path, 0)
             return result
-        with patch.object(Path, 'write_text', unreadable):
+        with patch.object(Path, 'write_bytes', unreadable):
             self.kernel.submit('never_runs=1;')
             state = self.idle(error=True)
         self.assertIn('Kesme noktaları uygulanamadı', state['error'])

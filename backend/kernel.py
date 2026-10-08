@@ -3,6 +3,7 @@ from __future__ import annotations
 from backend.i18n import tr, get_language
 from backend.source_adapter import AdapterProfile, PackageSupport, adapt_source, verify_package
 from backend.source_jobs import map_error
+from backend.source_files import SourceFile, adapt_file_source, map_file_errors, MAX_RETAINED_FILES, MAX_RETAINED_BYTES
 import codecs, json, os, queue, re, shutil, signal, subprocess, threading, time, uuid
 from pathlib import Path
 import sys
@@ -107,6 +108,9 @@ class Kernel:
 
     def start(self):
         self.generation += 1
+        self._retained_file_jobs = set()
+        self._file_request_count = 0
+        self._file_staged_bytes = 0
         self.events = queue.Queue(maxsize=128)
         argv=[self.executable, '--no-gui', '--quiet', '--no-init-file', '--no-site-file', '--no-history', '--no-line-editing', '--interactive']
         self._octave_language=get_language()
@@ -146,20 +150,20 @@ class Kernel:
             if self.run_to_cursor_state:state['run_to_cursor']={'file':self.run_to_cursor_state['file'],'line':self.run_to_cursor_state.get('actual_line') or self.run_to_cursor_state['line'],'continued':self.run_to_cursor_state.get('continued',False)}
             return state
 
-    def submit(self, code='', mode='code', argument='', timeout=0, *, source_context=None):
+    def submit(self, code='', mode='code', argument='', timeout=0, *, source_context=None, source_file=None):
         with self.lock:
             if self.state['status'] in ('running','starting','stopping','paused'): raise ValueError(tr('Stop the running operation first.'))
             if not self.proc or self.proc.poll() is not None: raise ValueError(tr('Octave closed. Reset the session.'))
-            return self._submit(code,mode,argument,timeout,source_context=source_context)
+            return self._submit(code,mode,argument,timeout,source_context=source_context,source_file=source_file)
 
-    def _source_package(self):
+    def _source_package(self, cwd=None):
         # The previous completed job records the live path, resolution and cwd.
         # Reverify every opt-in job; package/path changes never reuse a capability.
         try:
             environment=json.loads((self.runtime/self.job/'source-environment.json').read_text())
             setup=self.call('path',environment['path'])
             return verify_package(environment['constructor'],executable=cli_executable(self.executable),
-                                  setup=setup,cwd=environment['cwd'])
+                                  setup=setup,cwd=cwd or environment['cwd'])
         except (OSError,ValueError,KeyError,TypeError):
             return PackageSupport(reason='Live constructor/package verification is unavailable.')
 
@@ -176,10 +180,25 @@ class Kernel:
             if self.state['status']=='paused':raise ValueError(tr('Workspace is read-only while debugging is paused.'))
             return self.submit(mode=mode,argument=json.dumps(request,ensure_ascii=False,separators=(',',':')))
 
-    def _submit(self,code,mode,argument,timeout,initializing=False,apply_breakpoints=True,source_context=None):
+    def _submit(self,code,mode,argument,timeout,initializing=False,apply_breakpoints=True,source_context=None,source_file=None):
         adaptation=None
         original=code
-        if source_context is not None:
+        physical_path=None
+        staged_bytes=0
+        if source_file is not None:
+            if not isinstance(source_file, SourceFile) or mode != 'file' or code or source_context is not None or argument != source_file.path or initializing:
+                raise ValueError(tr('Invalid saved file adaptation request.'))
+            # Re-adding an unchanged path clears console-created breakpoints in
+            # Octave. Without IDE breakpoints, enter the already locked helper
+            # directly so its native debug/profile guard sees the live state.
+            if not any(p.get('enabled') for points in self.breakpoints.values() for p in points.values()):
+                apply_breakpoints=False
+            source_context=source_file.context()
+            original=source_file.document
+            adaptation=adapt_file_source(source_file, AdapterProfile(True, package=self._source_package(cwd=str(Path(argument).parent))),
+                                         debugging=any(p.get('enabled') for points in self.breakpoints.values() for p in points.values()) or bool(self.state.get('debug')))
+            code=adaptation.generated_text
+        if source_context is not None and source_file is None:
             source_context=json.loads(json.dumps(source_context))
             if mode!='code' or initializing:raise ValueError(tr('Source adaptation is limited to editor selections and sections.'))
             if adapt_source(source_context['document'],source_context['span']).generated_text!=code:
@@ -189,30 +208,50 @@ class Kernel:
             code=adaptation.generated_text
         job=uuid.uuid4().hex
         folder=self.runtime/job
-        # Stage every file before any state changes: a failure here leaves the
-        # kernel exactly as it was (idle), with a clear error and no stray folder.
+        # Build exact bytes before quota checks or filesystem/state mutations.
+        staged={'code.m':code.encode('utf-8')}
+        if adaptation is not None:
+            metadata={**adaptation.metadata(),'original_text':original,'adapted_text':code,
+                      'source_context':source_context,'job':job,'epoch':self.generation,'profile':'matlab'}
+        if source_file is not None:
+            physical_path=folder/'entry'/Path(source_file.path).name
+            metadata.update(scope='entry-file',physical_path=str(physical_path))
+            staged['entry/'+physical_path.name]=code.encode('utf-8')
+            staged['saved-source.bin']=source_file.saved_bytes
+            staged['file-source.json']=json.dumps({'path':source_file.path,'sha256':source_file.sha256,
+                'physical_path':str(physical_path),'adapted':adaptation.status == 'adapted'}).encode('utf-8')
+        if adaptation is not None:
+            staged['source.json']=json.dumps(metadata,ensure_ascii=False).encode('utf-8')
+        if apply_breakpoints:staged['preapply.txt']=self._breakpoint_commands().encode('utf-8')
+        if source_file is not None:
+            # Every opt-in request consumes lifetime budget, even unchanged/fallback.
+            staged_bytes=sum(len(data) for data in staged.values())
+            if self._file_request_count >= MAX_RETAINED_FILES or self._file_staged_bytes + staged_bytes > MAX_RETAINED_BYTES:
+                raise ValueError(tr('Saved file adaptation session limit reached. Reset explicitly to release retained sources.'))
         try:
             folder.mkdir()
-            (folder/'code.m').write_text(code)
-            if adaptation is not None:
-                metadata={**adaptation.metadata(),'original_text':original,'adapted_text':code,
-                          'source_context':source_context,'job':job,'epoch':self.generation,'profile':'matlab'}
-                (folder/'source.json').write_text(json.dumps(metadata,ensure_ascii=False),encoding='utf-8')
-            # The entry function rehashes and applies preapply.txt in its own workspace.
-            if apply_breakpoints:(folder/'preapply.txt').write_text(self._breakpoint_commands())
+            if source_file is not None:(folder/'entry').mkdir()
+            for name,data in staged.items():(folder/name).write_bytes(data)
+            if source_file is not None:
+                physical_path.chmod(0o400)
+                physical_path.parent.chmod(0o500)
         except OSError as exc:
-            shutil.rmtree(folder,ignore_errors=True)
+            self._remove_job(folder)
             raise ValueError(tr('Could not prepare the job (disk or permission error): {error}', error=exc)) from exc
+        if source_file is not None:
+            self._file_request_count += 1
+            self._file_staged_bytes += staged_bytes
+            self._retained_file_jobs.add(job)
         self.job=job
         self.state.update(waiting_input=False,status='starting' if initializing else 'running',job=job,output='',error=None,started=time.time(),elapsed=0,kind=mode,detail=None,workspace_action=None,variable_action=None,breakpoint_relocation=None,console_clear=0,debug=None)
-        self._source_job=(job,adaptation,source_context) if adaptation is not None else None
-        for name in ('source_adapter','source_error_locations','raw_error','error_frames'):
+        self._source_job=(job,adaptation,source_context,physical_path) if adaptation is not None else None
+        for name in ('source_adapter','source_error_locations','raw_error','error_frames','file_source_fallback'):
             self.state.pop(name,None)
         if adaptation is not None:
             # Maps and whole documents stay in private job staging. The UI owns
             # its submitted snapshot and receives bounded transparency metadata.
             self.state['source_adapter']={key:value for key,value in metadata.items()
-                if key in ('status','adapter_version','diagnostics','replacements','package_fingerprint','span','job','epoch','profile')}
+                if key in ('status','adapter_version','diagnostics','replacements','package_fingerprint','span','job','epoch','profile','scope')}
         proc,events,gen=self.proc,self.events,self.generation
         execute=self.call('__mf_execute__',str(folder),mode,argument)+"\n"
         if apply_breakpoints:
@@ -378,13 +417,21 @@ class Kernel:
                 self.state.update(meta)
                 source_job=getattr(self,'_source_job',None)
                 if source_job and source_job[0]==job:
-                    _,adaptation,context=source_job
+                    _,adaptation,context,physical_path=source_job
+                    if physical_path is not None:
+                        fallback=meta.get('file_source_fallback')
+                        native=adaptation.status != 'adapted' or bool(fallback)
+                        if fallback:
+                            self.state['source_adapter'].update(status='fallback',replacements=[],diagnostics=[
+                                {'code':fallback,'message':'Engine state requires native file execution.','start':0,'end':0}])
+                        locations=map_file_errors(adaptation,context,physical_path,frames,native=native)
+                        self.state['source_error_locations']=[{**item,'job':job,'epoch':gen} for item in locations]
                     self.state['raw_error']=self.state.get('error')
                     self.state['error_frames']=frames or []
                     # External file frames are native and retain their raw
                     # locations. Only evalin's submitted-source messages map.
                     external=any(frame.get('file') and '__mf_' not in frame.get('name','') for frame in frames or [])
-                    if self.state.get('error') and not external:
+                    if physical_path is None and self.state.get('error') and not external:
                         self.state['error'],locations=map_error(adaptation,context,self.state['error'])
                         self.state['source_error_locations']=[{**item,'job':job,'epoch':gen} for item in locations]
             except (OSError,ValueError):
@@ -693,16 +740,28 @@ class Kernel:
             self.run_to_cursor_state=None
             self.debug_frame_target=None
             self.state.update(status='starting',variables=[],figures=[],error=None,output='',waiting_input=False,console_clear=0,debug=None)
-            try:self.start()
+            try:
+                for job in getattr(self,'_retained_file_jobs',set()):
+                    folder=self.runtime/job
+                    self._remove_job(folder)
+                    if folder.exists():raise OSError(tr('Retained source files could not be removed.'))
+                self.start()
             except Exception as exc:
                 self.state.update(status='dead',error=tr('Could not start Octave: {error}', error=exc))
                 raise
 
+    @staticmethod
+    def _remove_job(folder):
+        # Entry directories are immutable during their retained session lifetime.
+        try:(folder/'entry').chmod(0o700)
+        except OSError:pass
+        shutil.rmtree(folder,ignore_errors=True)
+
     def _prune(self):
-        protected={self.state.get('job')}|{f.get('job') for f in self.state.get('figures',[])}
+        protected=set(getattr(self,'_retained_file_jobs',set()))|{self.state.get('job')}|{f.get('job') for f in self.state.get('figures',[])}
         folders=sorted((p for p in self.runtime.iterdir() if p.is_dir()),key=lambda p:p.stat().st_mtime,reverse=True)
         for folder in folders[20:]:
-            if folder.name not in protected:shutil.rmtree(folder,ignore_errors=True)
+            if folder.name not in protected:self._remove_job(folder)
 
     def _kill(self,proc):
         if not proc:return

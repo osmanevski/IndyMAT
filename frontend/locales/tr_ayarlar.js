@@ -1,5 +1,14 @@
 // Turkish translations owned by one feature lane; merged in i18n.js.
 export default {
+  "Adapted: {count} literals · entry script only; dependencies run natively.": "Uyarlandı: {count} sabit · yalnızca giriş betiği; bağımlılıklar yerel çalışır.",
+  "Adapt double-quoted saved entry scripts": "Kayıtlı giriş betiklerindeki çift tırnaklı metinleri uyarla",
+  "Experimental: saved entry scripts only; dependencies, Profile and Publish run natively. Functions, classes, private folders, debugging and uncertain source run unchanged. Adapted copies expose generated mfilename and stack paths and remain until an explicit session reset.": "Deneysel: yalnızca kayıtlı giriş betikleri; bağımlılıklar, Profil ve Yayınla yerel çalışır. İşlevler, sınıflar, private klasörleri, hata ayıklama ve belirsiz kaynak değiştirilmeden çalışır. Uyarlanmış kopyaların mfilename ve yığın yolları üretilen dosyayı gösterir; kopyalar açıkça oturum sıfırlanana kadar korunur.",
+  "Entry script executed unchanged; dependencies run natively.": "Giriş betiği değiştirilmeden çalıştı; bağımlılıklar yerel çalışır.",
+  "Original source: line {line}": "Özgün kaynak: satır {line}",
+  "Entry scripts run unchanged while debugging or breakpoints are active.": "Hata ayıklama veya kesme noktaları etkinse giriş betikleri değiştirilmeden çalışır.",
+  "Entry scripts run unchanged while profiling is active.": "Profil çıkarma etkinse giriş betikleri değiştirilmeden çalışır.",
+  "Private folders and package or class hierarchies run unchanged.": "Private klasörleri ve paket ya da sınıf hiyerarşileri değiştirilmeden çalışır.",
+  "Function, class and local-function files run unchanged.": "İşlev, sınıf ve yerel işlev dosyaları değiştirilmeden çalışır.",
   "Adapt double-quoted editor literals": "Editördeki çift tırnaklı metin sabitlerini uyarla",
   "Experimental: adapts MATLAB double-quoted text before Run Selection and Run Section, including Run and Advance and Run to End. Saved-file Run, Command Window, Publish, assistant code, and files loaded by Octave are not covered.": "Deneysel: Seçimi çalıştır ve Bölümü çalıştır öncesinde MATLAB çift tırnaklı metinlerini uyarlar; Çalıştır ve ilerle ile Bölümden sona çalıştır da kapsamdadır. Kayıtlı dosyayı çalıştırma, Konsol, Yayınla, asistan kodu ve Octave’ın yüklediği dosyalar kapsam dışındadır.",
   "Settings cannot be saved in the browser; they will stay in memory for this session.": "Ayarlar tarayıcıya yazılamıyor; bu oturumda bellekte korunacak.",

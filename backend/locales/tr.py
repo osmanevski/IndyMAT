@@ -1,6 +1,13 @@
 """Turkish server messages; values preserve the original UI text."""
 
 TRANSLATIONS = {
+    'Retained source files could not be removed.': 'Saklanan kaynak dosyaları silinemedi.',
+    'A saved file hash is required for file adaptation.': 'Dosya uyarlaması için kayıtlı dosyanın özeti gereklidir.',
+    'Select a saved .m file.': 'Kayıtlı bir .m dosyası seçin.',
+    'The saved source changed. Reload or save it before running.': 'Kayıtlı kaynak değişti. Çalıştırmadan önce yeniden yükleyin veya kaydedin.',
+    'Invalid saved file adaptation request.': 'Geçersiz kayıtlı dosya uyarlama isteği.',
+    'Saved file adaptation session limit reached. Reset explicitly to release retained sources.': 'Kayıtlı dosya uyarlaması oturum sınırına ulaştı. Korunan kaynakları bırakmak için oturumu açıkça sıfırlayın.',
+
     'Invalid assistant model or effort.': 'Geçersiz asistan modeli veya akıl yürütme düzeyi.',
     'Change effort after the current turn ends.': 'Akıl yürütme düzeyini geçerli tur bittikten sonra değiştirin.',
     'Could not load models from the local program. Default uses its own setting; try again after ten minutes.': 'Yerel programdan modeller yüklenemedi. Varsayılan, programın kendi ayarını kullanır; on dakika sonra yeniden deneyin.',

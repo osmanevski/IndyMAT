@@ -9,6 +9,10 @@ export function editorSourceContext(origin, document, from, to, cursor) {
 }
 
 function diagnosticText(diagnostic) {
+  if (diagnostic.code === "file-debug") return t("Entry scripts run unchanged while debugging or breakpoints are active.");
+  if (diagnostic.code === "file-profile") return t("Entry scripts run unchanged while profiling is active.");
+  if (diagnostic.code === "file-hierarchy") return t("Private folders and package or class hierarchies run unchanged.");
+  if (diagnostic.code === "file-declaration") return t("Function, class and local-function files run unchanged.");
   if (diagnostic.code === "quoted-command") return t("Quoted command-form arguments execute unchanged.");
   if (diagnostic.code === "package-unverified") return t("The patched datatypes string constructor is unavailable or could not be verified.");
   if (diagnostic.code === "semantic-limit") return t("Only measured literal positions are adapted; other overloads, dynamic source, or reflection can differ.");
@@ -20,7 +24,7 @@ export function showAdaptation(entry, metadata) {
   if (!entry || !metadata) return;
   entry.adapterMetadata = metadata;
   let note = entry.wrap.querySelector(".source-adapter-note");
-  if (metadata.status === "unchanged") return;
+  if (metadata.status === "unchanged" && metadata.scope !== "entry-file") return;
   if (!note) {
     note = registry.el("div", "source-adapter-note");
     entry.wrap.querySelector(".console-command")?.after(note);
@@ -29,9 +33,11 @@ export function showAdaptation(entry, metadata) {
     const replacements = metadata.replacements.filter((item) => item.original_text.startsWith('"'));
     const document = entry.sourceContext?.document || "";
     const lines = [...new Set(replacements.map((item) => document.slice(0, item.original.start_utf16).split(/\r\n|\r|\n/).length))];
-    note.textContent = t("Adapted: {count} literals", { count: replacements.length });
+    note.textContent = metadata.scope === "entry-file" ? t("Adapted: {count} literals · entry script only; dependencies run natively.", { count: replacements.length }) : t("Adapted: {count} literals", { count: replacements.length });
     note.title = t("Original lines: {lines}", { lines: lines.join(", ") });
     if (metadata.diagnostics.length) note.title += "\n" + metadata.diagnostics.map(diagnosticText).join("\n");
+  } else if (metadata.status === "unchanged") {
+    note.textContent = t("Entry script executed unchanged; dependencies run natively.");
   } else {
     const diagnostic = metadata.diagnostics[0];
     note.textContent = t("Executed unchanged: {reason}", { reason: diagnosticText(diagnostic) });
@@ -70,7 +76,9 @@ export function showSourceErrors(entry, state) {
   for (const location of state.source_error_locations) {
     if (location.job !== entry.job || location.epoch !== entry.epoch) continue;
     const button = registry.el("button", "source-error-location", t("Original source: line {line}, column {column}", location));
+    if (location.line_only) button.textContent = t("Original source: line {line}", location);
     button.type = "button";
+    button.dataset.lineOnly = String(Boolean(location.line_only));
     button.dataset.line = String(location.line);
     button.dataset.column = String(location.column);
     button.onclick = () => openSourceLocation(entry, location);
@@ -85,6 +93,6 @@ onLanguageChange(() => {
     if (entry?.adapterMetadata) showAdaptation(entry, entry.adapterMetadata);
   }
   for (const button of document.querySelectorAll(".source-error-location")) {
-    button.textContent = t("Original source: line {line}, column {column}", button.dataset);
+    button.textContent = button.dataset.lineOnly === "true" ? t("Original source: line {line}", button.dataset) : t("Original source: line {line}, column {column}", button.dataset);
   }
 });

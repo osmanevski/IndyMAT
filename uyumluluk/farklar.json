@@ -1,5 +1,20 @@
 {
+ "schema": 2,
+ "serializer_schema": 2,
+ "reference_fixture_fingerprint": "9d327cf0b2afc4d93a111cebc220b137c074e9257f6a09f9feb582f1c10e66a6",
+ "measurement_schema": 2,
  "yoklama": 1641,
+ "counts": {
+  "aynı": 1286,
+  "ikisi de hata": 33,
+  "Octave hata verir": 31,
+  "yalnız MATLAB hata verir": 29,
+  "sınıf farklı": 122,
+  "boyut farklı": 61,
+  "değer farklı": 47,
+  "kısmi ölçüm": 32,
+  "ölçülemedi": 0
+ },
  "farklar": [
   {
    "id": "tohum-sprintf-d",
@@ -7,7 +22,19 @@
    "group": "Tohum yoklamalar",
    "kind": "boyut farklı",
    "matlab": "char|1x12|u51,46,57,48,48,48,48,48,101,43,48,48,",
-   "octave": "char|1x3|u51,46,57,"
+   "octave": "char|1x3|u51,46,57,",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "tohum-cift-tirnak",
@@ -15,7 +42,19 @@
    "group": "Tohum yoklamalar",
    "kind": "sınıf farklı",
    "matlab": "string|1x1|{char|1x2|u97,98,;}",
-   "octave": "char|1x2|u97,98,"
+   "octave": "char|1x2|u97,98,",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "tohum-cift-tirnak-toplam",
@@ -23,7 +62,19 @@
    "group": "Tohum yoklamalar",
    "kind": "sınıf farklı",
    "matlab": "string|1x1|{char|1x4|u97,98,99,100,;}",
-   "octave": "double|1x2|196,198,"
+   "octave": "double|1x2|196,198,",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "tohum-uzunluk-utf",
@@ -31,7 +82,43 @@
    "group": "Tohum yoklamalar",
    "kind": "değer farklı",
    "matlab": "double|1x1|1,",
-   "octave": "double|1x1|2,"
+   "octave": "double|1x1|2,",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
+  },
+  {
+   "id": "tohum-func2str",
+   "code": "r = @(x, y) x + 2 * y;",
+   "group": "Tohum yoklamalar",
+   "kind": "kısmi ölçüm",
+   "matlab": "function_handle|1x1|<partial:unsupported-object>",
+   "octave": "function_handle|1x1|<partial:unsupported-object>",
+   "coverage": {
+    "matlab": {
+     "status": "partial",
+     "complete": false,
+     "reasons": [
+      "unsupported-object"
+     ]
+    },
+    "octave": {
+     "status": "partial",
+     "complete": false,
+     "reasons": [
+      "unsupported-object"
+     ]
+    }
+   }
   },
   {
    "id": "yd-operator-complex-relational",
@@ -39,7 +126,19 @@
    "group": "Islemler ve oncelik",
    "kind": "değer farklı",
    "matlab": "logical|1x2|10",
-   "octave": "logical|1x2|00"
+   "octave": "logical|1x2|00",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "yd-operator-short-and-empty",
@@ -47,7 +146,19 @@
    "group": "Islemler ve oncelik",
    "kind": "yalnız MATLAB hata verir",
    "matlab": "HATA|MATLAB:nonLogicalConditional|Operands to the logical AND (&&) and OR (||) operators must be convertible to logical scalar values. Use the ANY or ALL functions to reduce operands to logical scalar values.",
-   "octave": "logical|1x1|0"
+   "octave": "logical|1x1|0",
+   "coverage": {
+    "matlab": {
+     "status": "error",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "yd-operator-short-or-empty",
@@ -55,7 +166,19 @@
    "group": "Islemler ve oncelik",
    "kind": "yalnız MATLAB hata verir",
    "matlab": "HATA|MATLAB:nonLogicalConditional|Operands to the logical AND (&&) and OR (||) operators must be convertible to logical scalar values. Use the ANY or ALL functions to reduce operands to logical scalar values.",
-   "octave": "logical|1x1|1"
+   "octave": "logical|1x1|1",
+   "coverage": {
+    "matlab": {
+     "status": "error",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "yd-index-dynamic-field",
@@ -63,7 +186,19 @@
    "group": "Genisleme ve indeksleme",
    "kind": "yalnız MATLAB hata verir",
    "matlab": "HATA|MATLAB:AddField:InvalidFieldName|Invalid field name: 'wave-1'.",
-   "octave": "double|1x1|7,"
+   "octave": "double|1x1|7,",
+   "coverage": {
+    "matlab": {
+     "status": "error",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "yd-int-plus-single",
@@ -71,7 +206,19 @@
    "group": "Integer, single ve bit islemleri",
    "kind": "yalnız MATLAB hata verir",
    "matlab": "HATA|MATLAB:mixedClasses|Integers can only be combined with integers of the same class, or scalar doubles.",
-   "octave": "int16|1x1|5,"
+   "octave": "int16|1x1|5,",
+   "coverage": {
+    "matlab": {
+     "status": "error",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "yd-cast-char-numeric",
@@ -79,7 +226,19 @@
    "group": "Tur donusumleri",
    "kind": "değer farklı",
    "matlab": "char|1x3|u65,66,937,",
-   "octave": "char|1x3|u65,66,0,"
+   "octave": "char|1x3|u65,66,0,",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "yd-cast-func2str",
@@ -87,7 +246,19 @@
    "group": "Tur donusumleri",
    "kind": "boyut farklı",
    "matlab": "char|1x10|u64,40,120,41,120,46,94,50,43,49,",
-   "octave": "char|1x15|u64,40,120,41,32,120,32,46,94,32,50,32,43,32,49,"
+   "octave": "char|1x15|u64,40,120,41,32,120,32,46,94,32,50,32,43,32,49,",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "yd-string-char-vector",
@@ -95,7 +266,19 @@
    "group": "String dizileri",
    "kind": "yalnız MATLAB hata verir",
    "matlab": "HATA|MATLAB:catenate:dimensionMismatch|Dimensions of arrays being concatenated are not consistent.",
-   "octave": "string|2x1|{char|1x2|u97,32,;char|1x2|u98,98,;}"
+   "octave": "string|2x1|{char|1x2|u97,32,;char|1x2|u98,98,;}",
+   "coverage": {
+    "matlab": {
+     "status": "error",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "yd-string-plus",
@@ -103,7 +286,19 @@
    "group": "String dizileri",
    "kind": "sınıf farklı",
    "matlab": "string|1x1|{char|1x2|u97,98,;}",
-   "octave": "double|1x1|195,"
+   "octave": "double|1x1|195,",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "yd-string-plus-char",
@@ -111,7 +306,19 @@
    "group": "String dizileri",
    "kind": "sınıf farklı",
    "matlab": "string|1x1|{char|1x2|u97,98,;}",
-   "octave": "double|1x1|195,"
+   "octave": "double|1x1|195,",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "yd-string-char-plus",
@@ -119,7 +326,19 @@
    "group": "String dizileri",
    "kind": "sınıf farklı",
    "matlab": "string|1x1|{char|1x2|u97,98,;}",
-   "octave": "double|1x1|195,"
+   "octave": "double|1x1|195,",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "yd-string-char-convert",
@@ -127,7 +346,19 @@
    "group": "String dizileri",
    "kind": "boyut farklı",
    "matlab": "char|1x2x2|u97,32,98,98,",
-   "octave": "char|1x3|u97,98,98,"
+   "octave": "char|1x3|u97,98,98,",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "yd-string-cellstr-convert",
@@ -135,7 +366,19 @@
    "group": "String dizileri",
    "kind": "boyut farklı",
    "matlab": "cell|1x2|{char|1x1|u97,;char|1x2|u98,98,;}",
-   "octave": "cell|1x1|{char|1x3|u97,98,98,;}"
+   "octave": "cell|1x1|{char|1x3|u97,98,98,;}",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "yd-string-double-convert",
@@ -143,7 +386,19 @@
    "group": "String dizileri",
    "kind": "boyut farklı",
    "matlab": "double|1x1|123,",
-   "octave": "double|1x3|49,50,51,"
+   "octave": "double|1x3|49,50,51,",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "yd-string-strlength",
@@ -151,7 +406,19 @@
    "group": "String dizileri",
    "kind": "boyut farklı",
    "matlab": "double|1x2|1,2,",
-   "octave": "double|1x1|3,"
+   "octave": "double|1x1|3,",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "yd-string-join",
@@ -159,7 +426,19 @@
    "group": "String dizileri",
    "kind": "sınıf farklı",
    "matlab": "string|1x1|{char|1x3|u97,45,98,;}",
-   "octave": "cell|1x1|{char|1x2|u97,98,;}"
+   "octave": "cell|1x1|{char|1x2|u97,98,;}",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "yd-string-split",
@@ -167,7 +446,19 @@
    "group": "String dizileri",
    "kind": "sınıf farklı",
    "matlab": "string|3x1|{char|1x1|u97,;char|1x1|u98,;char|1x1|u99,;}",
-   "octave": "cell|3x1|{char|1x1|u97,;char|1x1|u98,;char|1x1|u99,;}"
+   "octave": "cell|3x1|{char|1x1|u97,;char|1x1|u98,;char|1x1|u99,;}",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "yd-string-reshape",
@@ -175,7 +466,19 @@
    "group": "String dizileri",
    "kind": "sınıf farklı",
    "matlab": "string|2x2|{char|1x1|u97,;char|1x1|u98,;char|1x1|u99,;char|1x1|u100,;}",
-   "octave": "char|2x2|u97,98,99,100,"
+   "octave": "char|2x2|u97,98,99,100,",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "yd-string-plus-numeric",
@@ -183,7 +486,43 @@
    "group": "String dizileri",
    "kind": "sınıf farklı",
    "matlab": "string|1x1|{char|1x2|u120,53,;}",
-   "octave": "double|1x1|125,"
+   "octave": "double|1x1|125,",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
+  },
+  {
+   "id": "yd-struct-cell-expand",
+   "code": "r=struct('a',{1,2},'b',{3,4});",
+   "group": "Cell, struct ve Map",
+   "kind": "kısmi ölçüm",
+   "matlab": "struct|1x2|<partial:structure-array>",
+   "octave": "struct|1x2|<partial:structure-array>",
+   "coverage": {
+    "matlab": {
+     "status": "partial",
+     "complete": false,
+     "reasons": [
+      "structure-array"
+     ]
+    },
+    "octave": {
+     "status": "partial",
+     "complete": false,
+     "reasons": [
+      "structure-array"
+     ]
+    }
+   }
   },
   {
    "id": "yd-handle-func2str",
@@ -191,7 +530,19 @@
    "group": "Handles, akis ve yardimci sorgular",
    "kind": "boyut farklı",
    "matlab": "char|1x9|u64,40,120,44,121,41,120,43,121,",
-   "octave": "char|1x13|u64,40,120,44,32,121,41,32,120,32,43,32,121,"
+   "octave": "char|1x13|u64,40,120,44,32,121,41,32,120,32,43,32,121,",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "yd-error-catch-fields",
@@ -199,7 +550,19 @@
    "group": "Handles, akis ve yardimci sorgular",
    "kind": "değer farklı",
    "matlab": "cell|1x2|{char|1x30|u77,65,84,76,65,66,58,115,105,122,101,68,105,109,101,110,115,105,111,110,115,77,117,115,116,77,97,116,99,104,;char|1x50|u65,114,114,97,121,115,32,104,97,118,101,32,105,110,99,111,109,112,97,116,105,98,108,101,32,115,105,122,101,115,32,102,111,114,32,116,104,105,115,32,111,112,101,114,97,116,105,111,110,46,;}",
-   "octave": "cell|1x2|{char|1x25|u79,99,116,97,118,101,58,110,111,110,99,111,110,102,111,114,109,97,110,116,45,97,114,103,115,;char|1x60|u111,112,101,114,97,116,111,114,32,43,58,32,110,111,110,99,111,110,102,111,114,109,97,110,116,32,97,114,103,117,109,101,110,116,115,32,40,111,112,49,32,105,115,32,49,120,50,44,32,111,112,50,32,105,115,32,49,120,51,41,;}"
+   "octave": "cell|1x2|{char|1x25|u79,99,116,97,118,101,58,110,111,110,99,111,110,102,111,114,109,97,110,116,45,97,114,103,115,;char|1x60|u111,112,101,114,97,116,111,114,32,43,58,32,110,111,110,99,111,110,102,111,114,109,97,110,116,32,97,114,103,117,109,101,110,116,115,32,40,111,112,49,32,105,115,32,49,120,50,44,32,111,112,50,32,105,115,32,49,120,51,41,;}",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "yd-error-catch-undefined",
@@ -207,7 +570,19 @@
    "group": "Handles, akis ve yardimci sorgular",
    "kind": "değer farklı",
    "matlab": "cell|1x2|{char|1x24|u77,65,84,76,65,66,58,85,110,100,101,102,105,110,101,100,70,117,110,99,116,105,111,110,;char|1x82|u85,110,100,101,102,105,110,101,100,32,102,117,110,99,116,105,111,110,32,39,113,113,113,95,121,100,95,109,105,115,115,105,110,103,95,102,117,110,99,116,105,111,110,39,32,102,111,114,32,105,110,112,117,116,32,97,114,103,117,109,101,110,116,115,32,111,102,32,116,121,112,101,32,39,100,111,117,98,108,101,39,46,;}",
-   "octave": "cell|1x2|{char|1x25|u79,99,116,97,118,101,58,117,110,100,101,102,105,110,101,100,45,102,117,110,99,116,105,111,110,;char|1x57|u39,113,113,113,95,121,100,95,109,105,115,115,105,110,103,95,102,117,110,99,116,105,111,110,39,32,117,110,100,101,102,105,110,101,100,32,110,101,97,114,32,108,105,110,101,32,51,44,32,99,111,108,117,109,110,32,56,;}"
+   "octave": "cell|1x2|{char|1x25|u79,99,116,97,118,101,58,117,110,100,101,102,105,110,101,100,45,102,117,110,99,116,105,111,110,;char|1x57|u39,113,113,113,95,121,100,95,109,105,115,115,105,110,103,95,102,117,110,99,116,105,111,110,39,32,117,110,100,101,102,105,110,101,100,32,110,101,97,114,32,108,105,110,101,32,51,44,32,99,111,108,117,109,110,32,56,;}",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "yd-error-catch-index",
@@ -215,7 +590,19 @@
    "group": "Handles, akis ve yardimci sorgular",
    "kind": "değer farklı",
    "matlab": "cell|1x2|{char|1x19|u77,65,84,76,65,66,58,98,97,100,115,117,98,115,99,114,105,112,116,;char|1x68|u73,110,100,101,120,32,101,120,99,101,101,100,115,32,116,104,101,32,110,117,109,98,101,114,32,111,102,32,97,114,114,97,121,32,101,108,101,109,101,110,116,115,46,32,73,110,100,101,120,32,109,117,115,116,32,110,111,116,32,101,120,99,101,101,100,32,50,46,;}",
-   "octave": "cell|1x2|{char|1x26|u79,99,116,97,118,101,58,105,110,100,101,120,45,111,117,116,45,111,102,45,98,111,117,110,100,115,;char|1x41|u97,40,52,41,58,32,111,117,116,32,111,102,32,98,111,117,110,100,32,50,32,40,100,105,109,101,110,115,105,111,110,115,32,97,114,101,32,49,120,50,41,;}"
+   "octave": "cell|1x2|{char|1x26|u79,99,116,97,118,101,58,105,110,100,101,120,45,111,117,116,45,111,102,45,98,111,117,110,100,115,;char|1x41|u97,40,52,41,58,32,111,117,116,32,111,102,32,98,111,117,110,100,32,50,32,40,100,105,109,101,110,115,105,111,110,115,32,97,114,101,32,49,120,50,41,;}",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "yd-error-catch-assign",
@@ -223,7 +610,19 @@
    "group": "Handles, akis ve yardimci sorgular",
    "kind": "değer farklı",
    "matlab": "cell|1x2|{char|1x42|u77,65,84,76,65,66,58,109,97,116,114,105,120,58,115,105,110,103,108,101,83,117,98,115,99,114,105,112,116,78,117,109,101,108,77,105,115,109,97,116,99,104,;char|1x98|u85,110,97,98,108,101,32,116,111,32,112,101,114,102,111,114,109,32,97,115,115,105,103,110,109,101,110,116,32,98,101,99,97,117,115,101,32,116,104,101,32,108,101,102,116,32,97,110,100,32,114,105,103,104,116,32,115,105,100,101,115,32,104,97,118,101,32,97,32,100,105,102,102,101,114,101,110,116,32,110,117,109,98,101,114,32,111,102,32,101,108,101,109,101,110,116,115,46,;}",
-   "octave": "cell|1x2|{char|1x25|u79,99,116,97,118,101,58,110,111,110,99,111,110,102,111,114,109,97,110,116,45,97,114,103,115,;char|1x51|u61,58,32,110,111,110,99,111,110,102,111,114,109,97,110,116,32,97,114,103,117,109,101,110,116,115,32,40,111,112,49,32,105,115,32,50,120,49,44,32,111,112,50,32,105,115,32,49,120,51,41,;}"
+   "octave": "cell|1x2|{char|1x25|u79,99,116,97,118,101,58,110,111,110,99,111,110,102,111,114,109,97,110,116,45,97,114,103,115,;char|1x51|u61,58,32,110,111,110,99,111,110,102,111,114,109,97,110,116,32,97,114,103,117,109,101,110,116,115,32,40,111,112,49,32,105,115,32,50,120,49,44,32,111,112,50,32,105,115,32,49,120,51,41,;}",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "yd-error-catch-field",
@@ -231,7 +630,19 @@
    "group": "Handles, akis ve yardimci sorgular",
    "kind": "değer farklı",
    "matlab": "cell|1x2|{char|1x23|u77,65,84,76,65,66,58,110,111,110,69,120,105,115,116,101,110,116,70,105,101,108,100,;char|1x31|u85,110,114,101,99,111,103,110,105,122,101,100,32,102,105,101,108,100,32,110,97,109,101,32,34,110,111,112,101,34,46,;}",
-   "octave": "cell|1x2|{char|1x23|u79,99,116,97,118,101,58,105,110,118,97,108,105,100,45,105,110,100,101,120,105,110,103,;char|1x30|u115,116,114,117,99,116,117,114,101,32,104,97,115,32,110,111,32,109,101,109,98,101,114,32,39,110,111,112,101,39,;}"
+   "octave": "cell|1x2|{char|1x23|u79,99,116,97,118,101,58,105,110,118,97,108,105,100,45,105,110,100,101,120,105,110,103,;char|1x30|u115,116,114,117,99,116,117,114,101,32,104,97,115,32,110,111,32,109,101,109,98,101,114,32,39,110,111,112,101,39,;}",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "yd-operator-leftdivide-singular",
@@ -239,7 +650,19 @@
    "group": "Ek islemler ve integer sinirlari",
    "kind": "değer farklı",
    "matlab": "double|2x1|NaN,NaN,",
-   "octave": "double|2x1|0.6,1.2,"
+   "octave": "double|2x1|0.59999999999999987,1.1999999999999997,",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "yd-int-add-single-uint",
@@ -247,7 +670,19 @@
    "group": "Ek islemler ve integer sinirlari",
    "kind": "yalnız MATLAB hata verir",
    "matlab": "HATA|MATLAB:mixedClasses|Integers can only be combined with integers of the same class, or scalar doubles.",
-   "octave": "uint8|1x1|5,"
+   "octave": "uint8|1x1|5,",
+   "coverage": {
+    "matlab": {
+     "status": "error",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "yd-int-bitcmp-width",
@@ -255,7 +690,19 @@
    "group": "Ek islemler ve integer sinirlari",
    "kind": "yalnız MATLAB hata verir",
    "matlab": "HATA|MATLAB:bitcmp:unknownTypeString|ASSUMEDTYPE must be an integer type name.",
-   "octave": "uint16|1x1|254,"
+   "octave": "uint16|1x1|254,",
+   "coverage": {
+    "matlab": {
+     "status": "error",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "yd-query-columns-row",
@@ -263,7 +710,19 @@
    "group": "Ek predicate ve boyut sorgulari",
    "kind": "yalnız MATLAB hata verir",
    "matlab": "HATA|MATLAB:UndefinedFunction|Undefined function 'columns' for input arguments of type 'double'.",
-   "octave": "double|1x1|5,"
+   "octave": "double|1x1|5,",
+   "coverage": {
+    "matlab": {
+     "status": "error",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "yd-query-rows-matrix",
@@ -271,7 +730,19 @@
    "group": "Ek predicate ve boyut sorgulari",
    "kind": "yalnız MATLAB hata verir",
    "matlab": "HATA|MATLAB:UndefinedFunction|Undefined function 'rows' for input arguments of type 'double'.",
-   "octave": "double|1x1|2,"
+   "octave": "double|1x1|2,",
+   "coverage": {
+    "matlab": {
+     "status": "error",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "yd-array-permute-sparse",
@@ -279,7 +750,19 @@
    "group": "Ek dizi kurma ve bicim donusumleri",
    "kind": "yalnız MATLAB hata verir",
    "matlab": "HATA|MATLAB:printf:invalidInputAttribute|Function is not defined for sparse inputs.",
-   "octave": "double|2x2|1,0,0,2,"
+   "octave": "double|2x2|1,0,0,2,",
+   "coverage": {
+    "matlab": {
+     "status": "error",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "yd-string-isempty",
@@ -287,7 +770,19 @@
    "group": "Ek string, cell, struct ve Map",
    "kind": "boyut farklı",
    "matlab": "logical|1x2|00",
-   "octave": "logical|1x1|1"
+   "octave": "logical|1x1|1",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "yd-struct-structfun-empty",
@@ -295,7 +790,19 @@
    "group": "Ek string, cell, struct ve Map",
    "kind": "yalnız MATLAB hata verir",
    "matlab": "HATA|MATLAB:structfun:NonScalar|Inputs to STRUCTFUN must be scalar structures.",
-   "octave": "double|1x0x0|,"
+   "octave": "double|1x0x0|",
+   "coverage": {
+    "matlab": {
+     "status": "error",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "yd-error-catch-assignment-growth",
@@ -303,7 +810,19 @@
    "group": "Ek handle, akis ve hata davranislari",
    "kind": "değer farklı",
    "matlab": "cell|1x2|{char|1x42|u77,65,84,76,65,66,58,109,97,116,114,105,120,58,115,105,110,103,108,101,83,117,98,115,99,114,105,112,116,78,117,109,101,108,77,105,115,109,97,116,99,104,;char|1x98|u85,110,97,98,108,101,32,116,111,32,112,101,114,102,111,114,109,32,97,115,115,105,103,110,109,101,110,116,32,98,101,99,97,117,115,101,32,116,104,101,32,108,101,102,116,32,97,110,100,32,114,105,103,104,116,32,115,105,100,101,115,32,104,97,118,101,32,97,32,100,105,102,102,101,114,101,110,116,32,110,117,109,98,101,114,32,111,102,32,101,108,101,109,101,110,116,115,46,;}",
-   "octave": "cell|1x2|{char|1x25|u79,99,116,97,118,101,58,110,111,110,99,111,110,102,111,114,109,97,110,116,45,97,114,103,115,;char|1x51|u61,58,32,110,111,110,99,111,110,102,111,114,109,97,110,116,32,97,114,103,117,109,101,110,116,115,32,40,111,112,49,32,105,115,32,50,120,49,44,32,111,112,50,32,105,115,32,49,120,51,41,;}"
+   "octave": "cell|1x2|{char|1x25|u79,99,116,97,118,101,58,110,111,110,99,111,110,102,111,114,109,97,110,116,45,97,114,103,115,;char|1x51|u61,58,32,110,111,110,99,111,110,102,111,114,109,97,110,116,32,97,114,103,117,109,101,110,116,115,32,40,111,112,49,32,105,115,32,50,120,49,44,32,111,112,50,32,105,115,32,49,120,51,41,;}",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "yd-error-catch-dimension",
@@ -311,7 +830,19 @@
    "group": "Ek handle, akis ve hata davranislari",
    "kind": "değer farklı",
    "matlab": "cell|1x2|{char|1x30|u77,65,84,76,65,66,58,115,105,122,101,68,105,109,101,110,115,105,111,110,115,77,117,115,116,77,97,116,99,104,;char|1x50|u65,114,114,97,121,115,32,104,97,118,101,32,105,110,99,111,109,112,97,116,105,98,108,101,32,115,105,122,101,115,32,102,111,114,32,116,104,105,115,32,111,112,101,114,97,116,105,111,110,46,;}",
-   "octave": "cell|1x2|{char|1x25|u79,99,116,97,118,101,58,110,111,110,99,111,110,102,111,114,109,97,110,116,45,97,114,103,115,;char|1x60|u111,112,101,114,97,116,111,114,32,43,58,32,110,111,110,99,111,110,102,111,114,109,97,110,116,32,97,114,103,117,109,101,110,116,115,32,40,111,112,49,32,105,115,32,50,120,51,44,32,111,112,50,32,105,115,32,51,120,50,41,;}"
+   "octave": "cell|1x2|{char|1x25|u79,99,116,97,118,101,58,110,111,110,99,111,110,102,111,114,109,97,110,116,45,97,114,103,115,;char|1x60|u111,112,101,114,97,116,111,114,32,43,58,32,110,111,110,99,111,110,102,111,114,109,97,110,116,32,97,114,103,117,109,101,110,116,115,32,40,111,112,49,32,105,115,32,50,120,51,44,32,111,112,50,32,105,115,32,51,120,50,41,;}",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "yd-error-catch-unknown-field",
@@ -319,7 +850,19 @@
    "group": "Ek handle, akis ve hata davranislari",
    "kind": "değer farklı",
    "matlab": "cell|1x2|{char|1x23|u77,65,84,76,65,66,58,110,111,110,69,120,105,115,116,101,110,116,70,105,101,108,100,;char|1x34|u85,110,114,101,99,111,103,110,105,122,101,100,32,102,105,101,108,100,32,110,97,109,101,32,34,117,110,107,110,111,119,110,34,46,;}",
-   "octave": "cell|1x2|{char|1x23|u79,99,116,97,118,101,58,105,110,118,97,108,105,100,45,105,110,100,101,120,105,110,103,;char|1x33|u115,116,114,117,99,116,117,114,101,32,104,97,115,32,110,111,32,109,101,109,98,101,114,32,39,117,110,107,110,111,119,110,39,;}"
+   "octave": "cell|1x2|{char|1x23|u79,99,116,97,118,101,58,105,110,118,97,108,105,100,45,105,110,100,101,120,105,110,103,;char|1x33|u115,116,114,117,99,116,117,114,101,32,104,97,115,32,110,111,32,109,101,109,98,101,114,32,39,117,110,107,110,111,119,110,39,;}",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "ym-hypot-inf-nan",
@@ -327,7 +870,19 @@
    "group": "Temel fonksiyonlar ve sayısal sınırlar",
    "kind": "değer farklı",
    "matlab": "double|1x2|NaN,NaN,",
-   "octave": "double|1x2|Inf,Inf,"
+   "octave": "double|1x2|Inf,Inf,",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "ym-gcd-array-expansion",
@@ -335,7 +890,19 @@
    "group": "Temel fonksiyonlar ve sayısal sınırlar",
    "kind": "yalnız MATLAB hata verir",
    "matlab": "HATA|MATLAB:gcd:InputSizeMismatch|Inputs must be the same size.",
-   "octave": "double|2x2|4,2,12,6,"
+   "octave": "double|2x2|4,2,12,6,",
+   "coverage": {
+    "matlab": {
+     "status": "error",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "ym-rats-class-size",
@@ -343,7 +910,19 @@
    "group": "Temel fonksiyonlar ve sayısal sınırlar",
    "kind": "değer farklı",
    "matlab": "cell|1x2|{char|1x4|u99,104,97,114,;double|1x2|2,28,;}",
-   "octave": "cell|1x2|{char|1x4|u99,104,97,114,;double|1x2|2,30,;}"
+   "octave": "cell|1x2|{char|1x4|u99,104,97,114,;double|1x2|2,30,;}",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "ym-cumsum-all",
@@ -351,7 +930,19 @@
    "group": "İndirgemeler ve boyut seçenekleri",
    "kind": "yalnız MATLAB hata verir",
    "matlab": "HATA|MATLAB:cumsum:wrongFlag|Invalid option. Option must be 'forward', 'reverse', 'omitnan', 'includenan', 'omitmissing' or 'includemissing'.",
-   "octave": "double|4x1|1,4,6,10,"
+   "octave": "double|4x1|1,4,6,10,",
+   "coverage": {
+    "matlab": {
+     "status": "error",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "ym-sortrows-char",
@@ -359,7 +950,43 @@
    "group": "Sıralama, kümeler ve birikim",
    "kind": "yalnız MATLAB hata verir",
    "matlab": "HATA|MATLAB:maxrhs|Too many input arguments.",
-   "octave": "char|3x2|u97,97,98,97,98,98,"
+   "octave": "char|3x2|u97,97,98,97,98,98,",
+   "coverage": {
+    "matlab": {
+     "status": "error",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
+  },
+  {
+   "id": "ym-discretize-categories",
+   "code": "r = discretize([1 2 3],[0 2 4],'categorical',{'low','high'});",
+   "group": "Sıralama, kümeler ve birikim",
+   "kind": "kısmi ölçüm",
+   "matlab": "categorical|1x3|<partial:unsupported-object>",
+   "octave": "categorical|1x3|<partial:unsupported-object>",
+   "coverage": {
+    "matlab": {
+     "status": "partial",
+     "complete": false,
+     "reasons": [
+      "unsupported-object"
+     ]
+    },
+    "octave": {
+     "status": "partial",
+     "complete": false,
+     "reasons": [
+      "unsupported-object"
+     ]
+    }
+   }
   },
   {
    "id": "ym-cummax-outs",
@@ -367,7 +994,19 @@
    "group": "Sıralama, kümeler ve birikim",
    "kind": "yalnız MATLAB hata verir",
    "matlab": "HATA|MATLAB:maxlhs|Too many output arguments.",
-   "octave": "cell|1x2|{double|1x4|2,2,3,3,;double|1x4|1,1,3,3,;}"
+   "octave": "cell|1x2|{double|1x4|2,2,3,3,;double|1x4|1,1,3,3,;}",
+   "coverage": {
+    "matlab": {
+     "status": "error",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "ym-cummin-outs",
@@ -375,15 +1014,39 @@
    "group": "Sıralama, kümeler ve birikim",
    "kind": "yalnız MATLAB hata verir",
    "matlab": "HATA|MATLAB:maxlhs|Too many output arguments.",
-   "octave": "cell|1x2|{double|1x4|2,1,1,0,;double|1x4|1,2,2,4,;}"
+   "octave": "cell|1x2|{double|1x4|2,1,1,0,;double|1x4|1,2,2,4,;}",
+   "coverage": {
+    "matlab": {
+     "status": "error",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "ym-backslash-underdetermined",
    "code": "r = [1 0 1;0 1 1]\\[2;3];",
    "group": "Lineer cebir",
    "kind": "değer farklı",
-   "matlab": "double|3x1|-1,0,3,",
-   "octave": "double|3x1|0.333333333333,1.33333333333,1.66666666667,"
+   "matlab": "double|3x1|-1.0000000000000002,0,2.9999999999999991,",
+   "octave": "double|3x1|0.33333333333333298,1.3333333333333339,1.6666666666666672,",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "ym-backslash-singular",
@@ -391,15 +1054,39 @@
    "group": "Lineer cebir",
    "kind": "değer farklı",
    "matlab": "double|2x1|NaN,NaN,",
-   "octave": "double|2x1|0.6,1.2,"
+   "octave": "double|2x1|0.59999999999999987,1.1999999999999997,",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "ym-mrdivide-under",
    "code": "r = [1 2]/[1 0;0 1;1 1];",
    "group": "Lineer cebir",
    "kind": "değer farklı",
-   "matlab": "double|1x3|-1,0,2,",
-   "octave": "double|1x3|-2.07030422225e-16,1,1,"
+   "matlab": "double|1x3|-1,0,1.9999999999999998,",
+   "octave": "double|1x3|-2.0703042222521495e-16,1.0000000000000002,1.0000000000000002,",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "ym-trace-rectangular",
@@ -407,7 +1094,39 @@
    "group": "Lineer cebir",
    "kind": "yalnız MATLAB hata verir",
    "matlab": "HATA|MATLAB:trace:square|Matrix must be square.",
-   "octave": "double|1x1|6,"
+   "octave": "double|1x1|6,",
+   "coverage": {
+    "matlab": {
+     "status": "error",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
+  },
+  {
+   "id": "ym-norm-zero",
+   "code": "r = norm([3 0 -2],0);",
+   "group": "Lineer cebir",
+   "kind": "değer farklı",
+   "matlab": "double|1x1|Inf,",
+   "octave": "double|1x1|2,",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "ym-spline-endconds",
@@ -415,7 +1134,19 @@
    "group": "Polinomlar ve interpolasyon",
    "kind": "yalnız MATLAB hata verir",
    "matlab": "HATA|MATLAB:chckxy:NumSitesMismatchValues|The number of sample points X, 3, is incompatible with the number of values Y, 4.",
-   "octave": "double|1x3|1,0.25,1,"
+   "octave": "double|1x3|1,0.25,1,",
+   "coverage": {
+    "matlab": {
+     "status": "error",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "ym-ode45-output-shapes",
@@ -423,7 +1154,19 @@
    "group": "Polinomlar ve interpolasyon",
    "kind": "değer farklı",
    "matlab": "cell|1x4|{char|1x6|u100,111,117,98,108,101,;double|1x2|41,1,;char|1x6|u100,111,117,98,108,101,;double|1x2|41,2,;}",
-   "octave": "cell|1x4|{char|1x6|u100,111,117,98,108,101,;double|1x2|45,1,;char|1x6|u100,111,117,98,108,101,;double|1x2|45,2,;}"
+   "octave": "cell|1x4|{char|1x6|u100,111,117,98,108,101,;double|1x2|45,1,;char|1x6|u100,111,117,98,108,101,;double|1x2|45,2,;}",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "ym-ode45-options-output",
@@ -431,7 +1174,19 @@
    "group": "Polinomlar ve interpolasyon",
    "kind": "yalnız MATLAB hata verir",
    "matlab": "HATA|MATLAB:deal:narginNargoutMismatch|The number of outputs should match the number of inputs.",
-   "octave": "cell|1x5|{double|1x2|33,1,;double|1x2|33,2,;double|1x2|1,1,;double|1x2|1,2,;double|1x2|1,1,;}"
+   "octave": "cell|1x5|{double|1x2|33,1,;double|1x2|33,2,;double|1x2|1,1,;double|1x2|1,2,;double|1x2|1,1,;}",
+   "coverage": {
+    "matlab": {
+     "status": "error",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "ym-sprintf-float",
@@ -439,7 +1194,19 @@
    "group": "Sayıları metne dönüştürme",
    "kind": "sınıf farklı",
    "matlab": "string|1x1|{char|1x11|u49,46,50,53,48,45,51,46,53,48,48,;}",
-   "octave": "char|1x11|u49,46,50,53,48,45,51,46,53,48,48,"
+   "octave": "char|1x11|u49,46,50,53,48,45,51,46,53,48,48,",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "ym-sprintf-matrix",
@@ -447,7 +1214,19 @@
    "group": "Sayıları metne dönüştürme",
    "kind": "sınıf farklı",
    "matlab": "string|1x1|{char|1x8|u49,44,51,44,50,44,52,44,;}",
-   "octave": "char|1x8|u49,44,51,44,50,44,52,44,"
+   "octave": "char|1x8|u49,44,51,44,50,44,52,44,",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "ym-sprintf-width",
@@ -455,7 +1234,19 @@
    "group": "Sayıları metne dönüştürme",
    "kind": "sınıf farklı",
    "matlab": "string|1x1|{char|1x8|u32,32,32,32,51,46,49,52,;}",
-   "octave": "char|1x8|u32,32,32,32,51,46,49,52,"
+   "octave": "char|1x8|u32,32,32,32,51,46,49,52,",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "ym-bin2dec-char-matrix",
@@ -463,7 +1254,19 @@
    "group": "Sayıları metne dönüştürme",
    "kind": "yalnız MATLAB hata verir",
    "matlab": "HATA|MATLAB:maxrhs|Too many input arguments.",
-   "octave": "double|4x1|0,1,2,3,"
+   "octave": "double|4x1|0,1,2,3,",
+   "coverage": {
+    "matlab": {
+     "status": "error",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "ym-dec2base-negative",
@@ -471,7 +1274,19 @@
    "group": "Sayıları metne dönüştürme",
    "kind": "yalnız MATLAB hata verir",
    "matlab": "HATA|MATLAB:dec2base:FirstArg|First argument must be an array of integers, 0 <= D <= flintmax.",
-   "octave": "char|2x2|u70,70,70,54,"
+   "octave": "char|2x2|u70,70,70,54,",
+   "coverage": {
+    "matlab": {
+     "status": "error",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "ym-str2double-empty",
@@ -479,7 +1294,19 @@
    "group": "Sayıları metne dönüştürme",
    "kind": "boyut farklı",
    "matlab": "double|1x2|NaN,NaN,",
-   "octave": "double|1x1|NaN,"
+   "octave": "double|1x1|NaN,",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "ym-str2double-special",
@@ -487,15 +1314,39 @@
    "group": "Sayıları metne dönüştürme",
    "kind": "boyut farklı",
    "matlab": "double|1x3|NaN,Inf,-Inf,",
-   "octave": "double|1x1|NaN,"
+   "octave": "double|1x1|NaN,",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "ym-str2double-exponents",
    "code": "r = str2double([\"1e3\" \"-2.5e-2\" \"1,2\"]);",
    "group": "Sayıları metne dönüştürme",
    "kind": "boyut farklı",
-   "matlab": "double|1x3|1000,-0.025,12,",
-   "octave": "double|1x1|NaN,"
+   "matlab": "double|1x3|1000,-0.025000000000000001,12,",
+   "octave": "double|1x1|NaN,",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "ym-str2double-cell",
@@ -503,7 +1354,19 @@
    "group": "Sayıları metne dönüştürme",
    "kind": "değer farklı",
    "matlab": "double|1x3|NaN,NaN,NaN,",
-   "octave": "double|1x3|1.5,NaN,Inf,"
+   "octave": "double|1x3|1.5,NaN,Inf,",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "ym-sprintf-integer-precision",
@@ -511,7 +1374,163 @@
    "group": "Sayıları metne dönüştürme",
    "kind": "sınıf farklı",
    "matlab": "string|1x1|{char|1x8|u45,48,48,50,48,48,48,53,;}",
-   "octave": "char|1x8|u45,48,48,50,48,48,48,53,"
+   "octave": "char|1x8|u45,48,48,50,48,48,48,53,",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
+  },
+  {
+   "id": "ym-datetime-between",
+   "code": "a = datetime(2020,1,1); b = datetime(2021,2,3); r = between(a,b);",
+   "group": "Sabit girdili tarih ve süreler",
+   "kind": "kısmi ölçüm",
+   "matlab": "calendarDuration|1x1|<partial:unsupported-object>",
+   "octave": "calendarDuration|1x1|<partial:unsupported-object>",
+   "coverage": {
+    "matlab": {
+     "status": "partial",
+     "complete": false,
+     "reasons": [
+      "unsupported-object"
+     ]
+    },
+    "octave": {
+     "status": "partial",
+     "complete": false,
+     "reasons": [
+      "unsupported-object"
+     ]
+    }
+   }
+  },
+  {
+   "id": "ym-dateshift-monthstart",
+   "code": "d = datetime(2020,2,29); r = dateshift(d,\"start\",\"month\");",
+   "group": "Sabit girdili tarih ve süreler",
+   "kind": "kısmi ölçüm",
+   "matlab": "datetime|1x1|<partial:unsupported-object>",
+   "octave": "datetime|1x1|<partial:unsupported-object>",
+   "coverage": {
+    "matlab": {
+     "status": "partial",
+     "complete": false,
+     "reasons": [
+      "unsupported-object"
+     ]
+    },
+    "octave": {
+     "status": "partial",
+     "complete": false,
+     "reasons": [
+      "unsupported-object"
+     ]
+    }
+   }
+  },
+  {
+   "id": "ym-dateshift-nextday",
+   "code": "d = datetime(2020,2,29,12,0,0); r = dateshift(d,\"start\",\"day\");",
+   "group": "Sabit girdili tarih ve süreler",
+   "kind": "kısmi ölçüm",
+   "matlab": "datetime|1x1|<partial:unsupported-object>",
+   "octave": "datetime|1x1|<partial:unsupported-object>",
+   "coverage": {
+    "matlab": {
+     "status": "partial",
+     "complete": false,
+     "reasons": [
+      "unsupported-object"
+     ]
+    },
+    "octave": {
+     "status": "partial",
+     "complete": false,
+     "reasons": [
+      "unsupported-object"
+     ]
+    }
+   }
+  },
+  {
+   "id": "ym-between-calendar",
+   "code": "a = datetime(2020,1,31); b = datetime(2020,3,2); r = between(a,b,\"months\");",
+   "group": "Sabit girdili tarih ve süreler",
+   "kind": "kısmi ölçüm",
+   "matlab": "calendarDuration|1x1|<partial:unsupported-object>",
+   "octave": "calendarDuration|1x1|<partial:unsupported-object>",
+   "coverage": {
+    "matlab": {
+     "status": "partial",
+     "complete": false,
+     "reasons": [
+      "unsupported-object"
+     ]
+    },
+    "octave": {
+     "status": "partial",
+     "complete": false,
+     "reasons": [
+      "unsupported-object"
+     ]
+    }
+   }
+  },
+  {
+   "id": "ym-datetime-diff-calendar",
+   "code": "a = datetime(2020,1,31); b = datetime(2020,3,2); r = b-a;",
+   "group": "Sabit girdili tarih ve süreler",
+   "kind": "kısmi ölçüm",
+   "matlab": "duration|1x1|<partial:unsupported-object>",
+   "octave": "duration|1x1|<partial:unsupported-object>",
+   "coverage": {
+    "matlab": {
+     "status": "partial",
+     "complete": false,
+     "reasons": [
+      "unsupported-object"
+     ]
+    },
+    "octave": {
+     "status": "partial",
+     "complete": false,
+     "reasons": [
+      "unsupported-object"
+     ]
+    }
+   }
+  },
+  {
+   "id": "ym-dateshift-year",
+   "code": "d = datetime(2020,7,4); r = dateshift(d,\"start\",\"year\");",
+   "group": "Sabit girdili tarih ve süreler",
+   "kind": "kısmi ölçüm",
+   "matlab": "datetime|1x1|<partial:unsupported-object>",
+   "octave": "datetime|1x1|<partial:unsupported-object>",
+   "coverage": {
+    "matlab": {
+     "status": "partial",
+     "complete": false,
+     "reasons": [
+      "unsupported-object"
+     ]
+    },
+    "octave": {
+     "status": "partial",
+     "complete": false,
+     "reasons": [
+      "unsupported-object"
+     ]
+    }
+   }
   },
   {
    "id": "ys-upper-unicode",
@@ -519,7 +1538,19 @@
    "group": "Karakter dizileri ve hücre metinleri",
    "kind": "boyut farklı",
    "matlab": "char|1x7|u201,32,209,32,220,32,223,",
-   "octave": "char|1x11|u195,137,32,195,145,32,195,156,32,83,83,"
+   "octave": "char|1x11|u195,137,32,195,145,32,195,156,32,83,83,",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "ys-lower-unicode",
@@ -527,7 +1558,19 @@
    "group": "Karakter dizileri ve hücre metinleri",
    "kind": "boyut farklı",
    "matlab": "char|1x7|u233,32,241,32,252,32,105,",
-   "octave": "char|1x11|u195,137,32,195,145,32,195,156,32,196,176,"
+   "octave": "char|1x11|u195,137,32,195,145,32,195,156,32,196,176,",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "ys-strcmp-mixed-string",
@@ -535,7 +1578,19 @@
    "group": "Karakter dizileri ve hücre metinleri",
    "kind": "değer farklı",
    "matlab": "logical|1x2|11",
-   "octave": "logical|1x2|00"
+   "octave": "logical|1x2|00",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "ys-strncmpi-cells",
@@ -543,7 +1598,19 @@
    "group": "Karakter dizileri ve hücre metinleri",
    "kind": "yalnız MATLAB hata verir",
    "matlab": "HATA|MATLAB:strcmp:SizeMustBeInt|The number of characters to match must be an integer.",
-   "octave": "logical|1x2|11"
+   "octave": "logical|1x2|11",
+   "coverage": {
+    "matlab": {
+     "status": "error",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "ys-strfind-pattern-cell",
@@ -551,7 +1618,19 @@
    "group": "Karakter dizileri ve hücre metinleri",
    "kind": "yalnız MATLAB hata verir",
    "matlab": "HATA|MATLAB:string:MustBeTextOrPatternScalar|Search term must be a text or pattern scalar.",
-   "octave": "cell|1x3|{double|1x1|1,;double|1x1|2,;double|0x0|,;}"
+   "octave": "cell|1x3|{double|1x1|1,;double|1x1|2,;double|0x0|;}",
+   "coverage": {
+    "matlab": {
+     "status": "error",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "ys-contains-string",
@@ -559,7 +1638,19 @@
    "group": "Regexp çıktıları ve metin API",
    "kind": "boyut farklı",
    "matlab": "logical|1x2|10",
-   "octave": "logical|1x1|1"
+   "octave": "logical|1x1|1",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "ys-endswith-string-cell",
@@ -567,7 +1658,19 @@
    "group": "Regexp çıktıları ve metin API",
    "kind": "boyut farklı",
    "matlab": "logical|1x2|10",
-   "octave": "logical|1x1|0"
+   "octave": "logical|1x1|0",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "ys-split-string",
@@ -575,7 +1678,19 @@
    "group": "Regexp çıktıları ve metin API",
    "kind": "sınıf farklı",
    "matlab": "string|4x1|{char|1x1|u97,;char|1x1|u98,;char|0x0|u,;char|1x1|u99,;}",
-   "octave": "cell|4x1|{char|1x1|u97,;char|1x1|u98,;char|0x0|u,;char|1x1|u99,;}"
+   "octave": "cell|4x1|{char|1x1|u97,;char|1x1|u98,;char|0x0|u,;char|1x1|u99,;}",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "ys-join-string",
@@ -583,7 +1698,19 @@
    "group": "Regexp çıktıları ve metin API",
    "kind": "sınıf farklı",
    "matlab": "string|1x1|{char|1x5|u97,124,98,124,99,;}",
-   "octave": "cell|1x1|{char|1x3|u97,98,99,;}"
+   "octave": "cell|1x1|{char|1x3|u97,98,99,;}",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "ys-strlength-string",
@@ -591,7 +1718,19 @@
    "group": "Regexp çıktıları ve metin API",
    "kind": "boyut farklı",
    "matlab": "double|1x2|3,1,",
-   "octave": "double|1x1|4,"
+   "octave": "double|1x1|4,",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "ys-lower-string-cell",
@@ -599,7 +1738,19 @@
    "group": "Regexp çıktıları ve metin API",
    "kind": "sınıf farklı",
    "matlab": "string|1x2|{char|1x3|u97,98,99,;char|1x3|u100,101,102,;}",
-   "octave": "char|1x6|u97,98,99,100,101,102,"
+   "octave": "char|1x6|u97,98,99,100,101,102,",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "ys-numel-string",
@@ -607,7 +1758,19 @@
    "group": "Regexp çıktıları ve metin API",
    "kind": "değer farklı",
    "matlab": "double|1x1|2,",
-   "octave": "double|1x1|3,"
+   "octave": "double|1x1|3,",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "ys-string-missing",
@@ -615,7 +1778,19 @@
    "group": "Regexp çıktıları ve metin API",
    "kind": "Octave hata verir",
    "matlab": "logical|1x3|010",
-   "octave": "HATA||cat: missing/horzcat method failed"
+   "octave": "HATA||cat: missing/horzcat method failed",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "error",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "ys-string-join-mixed",
@@ -623,7 +1798,19 @@
    "group": "Regexp çıktıları ve metin API",
    "kind": "sınıf farklı",
    "matlab": "string|1x1|{char|1x3|u97,45,98,;}",
-   "octave": "cell|1x1|{char|1x2|u97,98,;}"
+   "octave": "cell|1x1|{char|1x2|u97,98,;}",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "ys-char-unicode-width",
@@ -631,7 +1818,19 @@
    "group": "Regexp çıktıları ve metin API",
    "kind": "boyut farklı",
    "matlab": "double|2x1|233,120,",
-   "octave": "double|2x2|195,120,169,32,"
+   "octave": "double|2x2|195,120,169,32,",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "ys-native-unicode",
@@ -639,7 +1838,19 @@
    "group": "Regexp çıktıları ve metin API",
    "kind": "boyut farklı",
    "matlab": "char|1x1|u233,",
-   "octave": "char|1x2|u195,169,"
+   "octave": "char|1x2|u195,169,",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "ys-unicode-length-char",
@@ -647,7 +1858,19 @@
    "group": "Regexp çıktıları ve metin API",
    "kind": "değer farklı",
    "matlab": "double|1x3|1,1,1,",
-   "octave": "double|1x3|2,2,1,"
+   "octave": "double|1x3|2,2,1,",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "ys-digitspattern-basic",
@@ -655,7 +1878,19 @@
    "group": "Regexp çıktıları ve metin API",
    "kind": "sınıf farklı",
    "matlab": "string|3x1|{char|1x2|u49,50,;char|1x3|u49,50,51,;char|1x1|u52,;}",
-   "octave": "cell|3x1|{char|1x2|u49,50,;char|1x3|u49,50,51,;char|1x1|u52,;}"
+   "octave": "cell|3x1|{char|1x2|u49,50,;char|1x3|u49,50,51,;char|1x1|u52,;}",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "ys-letterspattern-basic",
@@ -663,7 +1898,19 @@
    "group": "Regexp çıktıları ve metin API",
    "kind": "sınıf farklı",
    "matlab": "string|2x1|{char|1x2|u97,98,;char|1x2|u99,100,;}",
-   "octave": "cell|2x1|{char|1x2|u97,98,;char|1x2|u99,100,;}"
+   "octave": "cell|2x1|{char|1x2|u97,98,;char|1x2|u99,100,;}",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "ys-whitespacepattern",
@@ -671,7 +1918,19 @@
    "group": "Regexp çıktıları ve metin API",
    "kind": "sınıf farklı",
    "matlab": "string|1x1|{char|1x2|u32,32,;}",
-   "octave": "cell|1x1|{char|1x2|u32,32,;}"
+   "octave": "cell|1x1|{char|1x2|u32,32,;}",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "ys-optionalpattern",
@@ -679,7 +1938,19 @@
    "group": "Regexp çıktıları ve metin API",
    "kind": "sınıf farklı",
    "matlab": "string|1x2|{char|1x4|u49,50,107,103,;char|1x1|u55,;}",
-   "octave": "cell|2x1|{char|1x4|u49,50,107,103,;char|1x1|u55,;}"
+   "octave": "cell|2x1|{char|1x4|u49,50,107,103,;char|1x1|u55,;}",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "ys-pattern-replace",
@@ -687,7 +1958,19 @@
    "group": "Regexp çıktıları ve metin API",
    "kind": "sınıf farklı",
    "matlab": "string|1x1|{char|1x4|u97,35,98,35,;}",
-   "octave": "char|1x4|u97,35,98,35,"
+   "octave": "char|1x4|u97,35,98,35,",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "ys-pattern-contains",
@@ -695,7 +1978,427 @@
    "group": "Regexp çıktıları ve metin API",
    "kind": "boyut farklı",
    "matlab": "logical|1x2|10",
-   "octave": "logical|1x1|1"
+   "octave": "logical|1x1|1",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
+  },
+  {
+   "id": "ys-jsondecode-array",
+   "code": "r = jsondecode('[{\"x\":1},{\"x\":2}]')",
+   "group": "JSON ve tablo temelleri",
+   "kind": "kısmi ölçüm",
+   "matlab": "struct|2x1|<partial:structure-array>",
+   "octave": "struct|2x1|<partial:structure-array>",
+   "coverage": {
+    "matlab": {
+     "status": "partial",
+     "complete": false,
+     "reasons": [
+      "structure-array"
+     ]
+    },
+    "octave": {
+     "status": "partial",
+     "complete": false,
+     "reasons": [
+      "structure-array"
+     ]
+    }
+   }
+  },
+  {
+   "id": "ys-table-paren-row",
+   "code": "T = table([1;2], [3;4], 'VariableNames', {'A','B'}); r = T(1,:)",
+   "group": "JSON ve tablo temelleri",
+   "kind": "kısmi ölçüm",
+   "matlab": "table|1x2|<partial:unsupported-object>",
+   "octave": "table|1x2|<partial:unsupported-object>",
+   "coverage": {
+    "matlab": {
+     "status": "partial",
+     "complete": false,
+     "reasons": [
+      "unsupported-object"
+     ]
+    },
+    "octave": {
+     "status": "partial",
+     "complete": false,
+     "reasons": [
+      "unsupported-object"
+     ]
+    }
+   }
+  },
+  {
+   "id": "ys-table-addvars",
+   "code": "T = table([1;2], 'VariableNames', {'A'}); T = addvars(T, [3;4], 'NewVariableNames','B'); r = T",
+   "group": "JSON ve tablo temelleri",
+   "kind": "kısmi ölçüm",
+   "matlab": "table|2x2|<partial:unsupported-object>",
+   "octave": "table|2x2|<partial:unsupported-object>",
+   "coverage": {
+    "matlab": {
+     "status": "partial",
+     "complete": false,
+     "reasons": [
+      "unsupported-object"
+     ]
+    },
+    "octave": {
+     "status": "partial",
+     "complete": false,
+     "reasons": [
+      "unsupported-object"
+     ]
+    }
+   }
+  },
+  {
+   "id": "ys-table-removevars",
+   "code": "T = table([1;2], [3;4], 'VariableNames', {'A','B'}); r = removevars(T,'A')",
+   "group": "JSON ve tablo temelleri",
+   "kind": "kısmi ölçüm",
+   "matlab": "table|2x1|<partial:unsupported-object>",
+   "octave": "table|2x1|<partial:unsupported-object>",
+   "coverage": {
+    "matlab": {
+     "status": "partial",
+     "complete": false,
+     "reasons": [
+      "unsupported-object"
+     ]
+    },
+    "octave": {
+     "status": "partial",
+     "complete": false,
+     "reasons": [
+      "unsupported-object"
+     ]
+    }
+   }
+  },
+  {
+   "id": "ys-table-renamevars",
+   "code": "T = table([1;2], 'VariableNames', {'A'}); r = renamevars(T,'A','X')",
+   "group": "JSON ve tablo temelleri",
+   "kind": "kısmi ölçüm",
+   "matlab": "table|2x1|<partial:unsupported-object>",
+   "octave": "table|2x1|<partial:unsupported-object>",
+   "coverage": {
+    "matlab": {
+     "status": "partial",
+     "complete": false,
+     "reasons": [
+      "unsupported-object"
+     ]
+    },
+    "octave": {
+     "status": "partial",
+     "complete": false,
+     "reasons": [
+      "unsupported-object"
+     ]
+    }
+   }
+  },
+  {
+   "id": "ys-table-sortrows",
+   "code": "T = table([3;1;2], [8;9;7], 'VariableNames', {'A','B'}); r = sortrows(T,'A')",
+   "group": "JSON ve tablo temelleri",
+   "kind": "kısmi ölçüm",
+   "matlab": "table|3x2|<partial:unsupported-object>",
+   "octave": "table|3x2|<partial:unsupported-object>",
+   "coverage": {
+    "matlab": {
+     "status": "partial",
+     "complete": false,
+     "reasons": [
+      "unsupported-object"
+     ]
+    },
+    "octave": {
+     "status": "partial",
+     "complete": false,
+     "reasons": [
+      "unsupported-object"
+     ]
+    }
+   }
+  },
+  {
+   "id": "ys-array2table",
+   "code": "r = array2table([1 2;3 4], 'VariableNames', {'A','B'})",
+   "group": "JSON ve tablo temelleri",
+   "kind": "kısmi ölçüm",
+   "matlab": "table|2x2|<partial:unsupported-object>",
+   "octave": "table|2x2|<partial:unsupported-object>",
+   "coverage": {
+    "matlab": {
+     "status": "partial",
+     "complete": false,
+     "reasons": [
+      "unsupported-object"
+     ]
+    },
+    "octave": {
+     "status": "partial",
+     "complete": false,
+     "reasons": [
+      "unsupported-object"
+     ]
+    }
+   }
+  },
+  {
+   "id": "ys-struct2table",
+   "code": "r = struct2table(struct('a', {1;2}, 'b', {3;4}))",
+   "group": "JSON ve tablo temelleri",
+   "kind": "kısmi ölçüm",
+   "matlab": "table|2x2|<partial:unsupported-object>",
+   "octave": "table|2x2|<partial:unsupported-object>",
+   "coverage": {
+    "matlab": {
+     "status": "partial",
+     "complete": false,
+     "reasons": [
+      "unsupported-object"
+     ]
+    },
+    "octave": {
+     "status": "partial",
+     "complete": false,
+     "reasons": [
+      "unsupported-object"
+     ]
+    }
+   }
+  },
+  {
+   "id": "ys-table2struct",
+   "code": "T = table([1;2], [3;4], 'VariableNames', {'A','B'}); r = table2struct(T)",
+   "group": "JSON ve tablo temelleri",
+   "kind": "kısmi ölçüm",
+   "matlab": "struct|2x1|<partial:structure-array>",
+   "octave": "struct|2x1|<partial:structure-array>",
+   "coverage": {
+    "matlab": {
+     "status": "partial",
+     "complete": false,
+     "reasons": [
+      "structure-array"
+     ]
+    },
+    "octave": {
+     "status": "partial",
+     "complete": false,
+     "reasons": [
+      "structure-array"
+     ]
+    }
+   }
+  },
+  {
+   "id": "ys-table-innerjoin",
+   "code": "A = table([1;2], [10;20], 'VariableNames', {'Key','X'}); B = table([1;3], [30;40], 'VariableNames', {'Key','Y'}); r = innerjoin(A,B)",
+   "group": "JSON ve tablo temelleri",
+   "kind": "kısmi ölçüm",
+   "matlab": "table|1x3|<partial:unsupported-object>",
+   "octave": "table|1x3|<partial:unsupported-object>",
+   "coverage": {
+    "matlab": {
+     "status": "partial",
+     "complete": false,
+     "reasons": [
+      "unsupported-object"
+     ]
+    },
+    "octave": {
+     "status": "partial",
+     "complete": false,
+     "reasons": [
+      "unsupported-object"
+     ]
+    }
+   }
+  },
+  {
+   "id": "ys-table-groupsummary",
+   "code": "T = table([1;1;2], [2;4;8], 'VariableNames', {'G','X'}); r = groupsummary(T,'G','mean','X')",
+   "group": "JSON ve tablo temelleri",
+   "kind": "kısmi ölçüm",
+   "matlab": "table|2x3|<partial:unsupported-object>",
+   "octave": "table|2x3|<partial:unsupported-object>",
+   "coverage": {
+    "matlab": {
+     "status": "partial",
+     "complete": false,
+     "reasons": [
+      "unsupported-object"
+     ]
+    },
+    "octave": {
+     "status": "partial",
+     "complete": false,
+     "reasons": [
+      "unsupported-object"
+     ]
+    }
+   }
+  },
+  {
+   "id": "ys-table-varfun",
+   "code": "T = table([1;2], [3;4], 'VariableNames', {'A','B'}); r = varfun(@mean,T)",
+   "group": "JSON ve tablo temelleri",
+   "kind": "kısmi ölçüm",
+   "matlab": "table|1x2|<partial:unsupported-object>",
+   "octave": "table|1x2|<partial:unsupported-object>",
+   "coverage": {
+    "matlab": {
+     "status": "partial",
+     "complete": false,
+     "reasons": [
+      "unsupported-object"
+     ]
+    },
+    "octave": {
+     "status": "partial",
+     "complete": false,
+     "reasons": [
+      "unsupported-object"
+     ]
+    }
+   }
+  },
+  {
+   "id": "ys-table-rowfun",
+   "code": "T = table([1;2], [3;4], 'VariableNames', {'A','B'}); r = rowfun(@sum,T)",
+   "group": "JSON ve tablo temelleri",
+   "kind": "kısmi ölçüm",
+   "matlab": "table|2x1|<partial:unsupported-object>",
+   "octave": "table|2x1|<partial:unsupported-object>",
+   "coverage": {
+    "matlab": {
+     "status": "partial",
+     "complete": false,
+     "reasons": [
+      "unsupported-object"
+     ]
+    },
+    "octave": {
+     "status": "partial",
+     "complete": false,
+     "reasons": [
+      "unsupported-object"
+     ]
+    }
+   }
+  },
+  {
+   "id": "ys-table-rmmissing",
+   "code": "T = table([1;NaN;3], 'VariableNames', {'X'}); r = rmmissing(T)",
+   "group": "JSON ve tablo temelleri",
+   "kind": "kısmi ölçüm",
+   "matlab": "table|2x1|<partial:unsupported-object>",
+   "octave": "table|2x1|<partial:unsupported-object>",
+   "coverage": {
+    "matlab": {
+     "status": "partial",
+     "complete": false,
+     "reasons": [
+      "unsupported-object"
+     ]
+    },
+    "octave": {
+     "status": "partial",
+     "complete": false,
+     "reasons": [
+      "unsupported-object"
+     ]
+    }
+   }
+  },
+  {
+   "id": "ys-table-fillmissing",
+   "code": "T = table([1;NaN;3], 'VariableNames', {'X'}); r = fillmissing(T,'constant',0)",
+   "group": "JSON ve tablo temelleri",
+   "kind": "kısmi ölçüm",
+   "matlab": "table|3x1|<partial:unsupported-object>",
+   "octave": "table|3x1|<partial:unsupported-object>",
+   "coverage": {
+    "matlab": {
+     "status": "partial",
+     "complete": false,
+     "reasons": [
+      "unsupported-object"
+     ]
+    },
+    "octave": {
+     "status": "partial",
+     "complete": false,
+     "reasons": [
+      "unsupported-object"
+     ]
+    }
+   }
+  },
+  {
+   "id": "ys-table-standardizemissing",
+   "code": "T = table([1;-99;3], 'VariableNames', {'X'}); r = standardizeMissing(T,-99)",
+   "group": "JSON ve tablo temelleri",
+   "kind": "kısmi ölçüm",
+   "matlab": "table|3x1|<partial:unsupported-object>",
+   "octave": "table|3x1|<partial:unsupported-object>",
+   "coverage": {
+    "matlab": {
+     "status": "partial",
+     "complete": false,
+     "reasons": [
+      "unsupported-object"
+     ]
+    },
+    "octave": {
+     "status": "partial",
+     "complete": false,
+     "reasons": [
+      "unsupported-object"
+     ]
+    }
+   }
+  },
+  {
+   "id": "ys-table-categorical",
+   "code": "T = table(categorical({'a';'b'}), [1;2], 'VariableNames', {'G','X'}); r = T.G",
+   "group": "JSON ve tablo temelleri",
+   "kind": "kısmi ölçüm",
+   "matlab": "categorical|2x1|<partial:unsupported-object>",
+   "octave": "categorical|2x1|<partial:unsupported-object>",
+   "coverage": {
+    "matlab": {
+     "status": "partial",
+     "complete": false,
+     "reasons": [
+      "unsupported-object"
+     ]
+    },
+    "octave": {
+     "status": "partial",
+     "complete": false,
+     "reasons": [
+      "unsupported-object"
+     ]
+    }
+   }
   },
   {
    "id": "ys-zpk-construction",
@@ -703,7 +2406,19 @@
    "group": "Kontrol sistemleri",
    "kind": "değer farklı",
    "matlab": "cell|1x2|{char|1x3|u122,112,107,;double|1x2|1,1,;}",
-   "octave": "cell|1x2|{char|1x2|u116,102,;double|1x2|1,1,;}"
+   "octave": "cell|1x2|{char|1x2|u116,102,;double|1x2|1,1,;}",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "ys-zpkdata-outputs",
@@ -711,23 +2426,59 @@
    "group": "Kontrol sistemleri",
    "kind": "değer farklı",
    "matlab": "cell|1x3|{cell|1x1|{double|2x1|-1,-2,;};cell|1x1|{double|2x1|-3,-4,;};double|1x1|2,;}",
-   "octave": "cell|1x3|{cell|1x1|{double|2x1|-2,-1,;};cell|1x1|{double|2x1|-4,-3,;};double|1x1|2,;}"
+   "octave": "cell|1x3|{cell|1x1|{double|2x1|-2,-1,;};cell|1x1|{double|2x1|-4,-3,;};double|1x1|2,;}",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "ys-lsim-output",
    "code": "[y,t] = lsim(tf(1,[1 1]),[0;1;0],[0;1;2]); r = {size(y),round(y,6)}",
    "group": "Kontrol sistemleri",
    "kind": "değer farklı",
-   "matlab": "cell|1x2|{double|1x2|3,1,;double|3x1|0,0,0.632121,;}",
-   "octave": "cell|1x2|{double|1x2|3,1,;double|3x1|0,0.367879,0.399576,;}"
+   "matlab": "cell|1x2|{double|1x2|3,1,;double|3x1|0,0,0.63212100000000004,;}",
+   "octave": "cell|1x2|{double|1x2|3,1,;double|3x1|0,0.36787900000000001,0.39957599999999999,;}",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "ys-stepinfo-fields",
    "code": "s = stepinfo(tf(1,[1 1])); r = round([s.RiseTime,s.SettlingTime,s.Overshoot,s.Peak],6)",
    "group": "Kontrol sistemleri",
    "kind": "değer farklı",
-   "matlab": "double|1x4|2.197006,3.912074,0,0.999339,",
-   "octave": "double|1x4|2.197095,3.912559,0,1,"
+   "matlab": "double|1x4|2.197006,3.9120740000000001,0,0.99933899999999998,",
+   "octave": "double|1x4|2.197095,3.9125589999999999,0,1,",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "ys-pid-class",
@@ -735,7 +2486,19 @@
    "group": "Kontrol sistemleri",
    "kind": "Octave hata verir",
    "matlab": "cell|1x2|{char|1x3|u112,105,100,;char|1x3|u112,105,100,;}",
-   "octave": "HATA|Octave:undefined-function|'pidtune' undefined near line 3, column 33  The 'pidtune' function belongs to the 'control' package indexed in Octave Packages at <https://packages.octave.org> but has not yet been implemented."
+   "octave": "HATA|Octave:undefined-function|'pidtune' undefined near line 3, column 33  The 'pidtune' function belongs to the 'control' package indexed in Octave Packages at <https://packages.octave.org> but has not yet been implemented.",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "error",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "ys-tf-zpk-ss-convert",
@@ -743,15 +2506,39 @@
    "group": "Kontrol sistemleri",
    "kind": "değer farklı",
    "matlab": "cell|1x2|{char|1x3|u122,112,107,;char|1x2|u115,115,;}",
-   "octave": "cell|1x2|{char|1x2|u116,102,;char|1x2|u115,115,;}"
+   "octave": "cell|1x2|{char|1x2|u116,102,;char|1x2|u115,115,;}",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "ys-firpm-basic",
    "code": "r = round(firpm(4,[0 0.3 0.5 1],[1 1 0 0]),8)",
    "group": "Sinyal işleme",
    "kind": "değer farklı",
-   "matlab": "double|1x5|0.06553393,0.36893215,0.36893215,0.36893215,0.06553393,",
-   "octave": "double|1x5|0.06553198,0.36893604,0.36892732,0.36893604,0.06553198,"
+   "matlab": "double|1x5|0.065533930000000004,0.36893215000000001,0.36893215000000001,0.36893215000000001,0.065533930000000004,",
+   "octave": "double|1x5|0.065531980000000004,0.36893604000000002,0.36892732,0.36893604000000002,0.065531980000000004,",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "ys-interp-values",
@@ -759,15 +2546,39 @@
    "group": "Sinyal işleme",
    "kind": "yalnız MATLAB hata verir",
    "matlab": "HATA|signal:interp:InvalidDimensions|Length of data sequence must be at least 9.  You either need more data or a shorter filter (L).",
-   "octave": "double|1x6|1.34598874,1.89931727,2.24327164,2.21583817,1.79895823,1.14646695,"
+   "octave": "double|1x6|1.3459887399999999,1.8993172700000001,2.2432716400000001,2.2158381700000001,1.79895823,1.14646695,",
+   "coverage": {
+    "matlab": {
+     "status": "error",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "ys-sos2tf",
    "code": "[b,a] = sos2tf([1 0 0 1 -0.5 0.1;1 0 0 1 -0.2 0.05]); r = round([b,a],8)",
    "group": "Sinyal işleme",
    "kind": "boyut farklı",
-   "matlab": "double|1x9|1,0,0,0,1,-0.7,0.25,-0.045,0.005,",
-   "octave": "double|1x10|1,0,0,0,0,1,-0.7,0.25,-0.045,0.005,"
+   "matlab": "double|1x9|1,0,0,0,1,-0.69999999999999996,0.25,-0.044999999999999998,0.0050000000000000001,",
+   "octave": "double|1x10|1,0,0,0,0,1,-0.69999999999999996,0.25,-0.044999999999999998,0.0050000000000000001,",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "ys-strrep-char-matrix",
@@ -775,7 +2586,19 @@
    "group": "Ek metin biçimleri ve seçenekler",
    "kind": "yalnız MATLAB hata verir",
    "matlab": "HATA|MATLAB:strrep:MultiRowInput|Char inputs must be row vectors.",
-   "octave": "char|2x5|u88,98,89,88,98,89,88,98,89,0,"
+   "octave": "char|2x5|u88,98,89,88,98,89,88,98,89,0,",
+   "coverage": {
+    "matlab": {
+     "status": "error",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "ys-contains-string-pattern",
@@ -783,7 +2606,19 @@
    "group": "Ek metin biçimleri ve seçenekler",
    "kind": "boyut farklı",
    "matlab": "logical|1x2|10",
-   "octave": "logical|1x1|1"
+   "octave": "logical|1x1|1",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "ys-startswith-string-pattern",
@@ -791,7 +2626,19 @@
    "group": "Ek metin biçimleri ve seçenekler",
    "kind": "boyut farklı",
    "matlab": "logical|1x2|10",
-   "octave": "logical|1x1|1"
+   "octave": "logical|1x1|1",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "ys-replace-string-pattern",
@@ -799,7 +2646,19 @@
    "group": "Ek metin biçimleri ve seçenekler",
    "kind": "sınıf farklı",
    "matlab": "string|1x2|{char|1x2|u97,78,;char|1x2|u98,78,;}",
-   "octave": "char|1x4|u97,78,98,78,"
+   "octave": "char|1x4|u97,78,98,78,",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "ys-pad-string-left",
@@ -807,7 +2666,19 @@
    "group": "Ek metin biçimleri ve seçenekler",
    "kind": "sınıf farklı",
    "matlab": "string|1x1|{char|1x6|u48,48,48,97,98,99,;}",
-   "octave": "char|1x6|u48,48,48,97,98,99,"
+   "octave": "char|1x6|u48,48,48,97,98,99,",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "ys-extractbefore-string",
@@ -815,7 +2686,19 @@
    "group": "Ek metin biçimleri ve seçenekler",
    "kind": "sınıf farklı",
    "matlab": "string|1x1|{char|1x3|u97,98,99,;}",
-   "octave": "char|1x3|u97,98,99,"
+   "octave": "char|1x3|u97,98,99,",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "ys-extractafter-string",
@@ -823,7 +2706,19 @@
    "group": "Ek metin biçimleri ve seçenekler",
    "kind": "sınıf farklı",
    "matlab": "string|1x1|{char|1x3|u100,101,102,;}",
-   "octave": "char|1x3|u100,101,102,"
+   "octave": "char|1x3|u100,101,102,",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "ys-extractbetween-string",
@@ -831,7 +2726,19 @@
    "group": "Ek metin biçimleri ve seçenekler",
    "kind": "sınıf farklı",
    "matlab": "string|1x2|{char|1x1|u97,;char|1x1|u98,;}",
-   "octave": "cell|2x1|{char|1x1|u97,;char|1x1|u98,;}"
+   "octave": "cell|2x1|{char|1x1|u97,;char|1x1|u98,;}",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "ys-splitlines-string",
@@ -839,7 +2746,19 @@
    "group": "Ek metin biçimleri ve seçenekler",
    "kind": "Octave hata verir",
    "matlab": "string|2x1|{char|1x1|u97,;char|1x1|u98,;}",
-   "octave": "HATA||splitlines: STR must be a character vector or cell array of character vectors"
+   "octave": "HATA||splitlines: STR must be a character vector or cell array of character vectors",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "error",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "ys-reverse-string",
@@ -847,7 +2766,19 @@
    "group": "Ek metin biçimleri ve seçenekler",
    "kind": "sınıf farklı",
    "matlab": "string|1x2|{char|1x3|u99,98,97,;char|1x3|u122,121,120,;}",
-   "octave": "char|1x6|u122,121,120,99,98,97,"
+   "octave": "char|1x6|u122,121,120,99,98,97,",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "ys-insertbefore-string",
@@ -855,7 +2786,19 @@
    "group": "Ek metin biçimleri ve seçenekler",
    "kind": "sınıf farklı",
    "matlab": "string|1x1|{char|1x5|u97,33,98,99,100,;}",
-   "octave": "char|1x5|u97,33,98,99,100,"
+   "octave": "char|1x5|u97,33,98,99,100,",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "ys-insertafter-string",
@@ -863,7 +2806,19 @@
    "group": "Ek metin biçimleri ve seçenekler",
    "kind": "sınıf farklı",
    "matlab": "string|1x1|{char|1x5|u97,98,33,99,100,;}",
-   "octave": "char|1x5|u97,98,33,99,100,"
+   "octave": "char|1x5|u97,98,33,99,100,",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "ys-insertbefore-pattern",
@@ -871,7 +2826,19 @@
    "group": "Ek metin biçimleri ve seçenekler",
    "kind": "sınıf farklı",
    "matlab": "string|1x1|{char|1x6|u97,95,49,98,95,50,;}",
-   "octave": "char|1x6|u97,95,49,98,95,50,"
+   "octave": "char|1x6|u97,95,49,98,95,50,",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "ys-insertafter-pattern",
@@ -879,7 +2846,19 @@
    "group": "Ek metin biçimleri ve seçenekler",
    "kind": "sınıf farklı",
    "matlab": "string|1x1|{char|1x6|u97,49,95,98,50,95,;}",
-   "octave": "char|1x6|u97,49,95,98,50,95,"
+   "octave": "char|1x6|u97,49,95,98,50,95,",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "ys-string-mixed-contains",
@@ -887,7 +2866,19 @@
    "group": "Ek metin biçimleri ve seçenekler",
    "kind": "boyut farklı",
    "matlab": "logical|1x2|11",
-   "octave": "logical|1x1|1"
+   "octave": "logical|1x1|1",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "ys-pattern-optional",
@@ -895,31 +2886,223 @@
    "group": "Ek metin biçimleri ve seçenekler",
    "kind": "sınıf farklı",
    "matlab": "string|1x2|{char|1x3|u120,49,50,;char|1x1|u120,;}",
-   "octave": "cell|2x1|{char|1x3|u120,49,50,;char|1x1|u120,;}"
+   "octave": "cell|2x1|{char|1x3|u120,49,50,;char|1x1|u120,;}",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
+  },
+  {
+   "id": "ys-table-variable-index",
+   "code": "T = table([1;2],[3;4],'VariableNames',{'A','B'}); r = T(:,{'B','A'})",
+   "group": "JSON, tablo ve kategorik ek biçimler",
+   "kind": "kısmi ölçüm",
+   "matlab": "table|2x2|<partial:unsupported-object>",
+   "octave": "table|2x2|<partial:unsupported-object>",
+   "coverage": {
+    "matlab": {
+     "status": "partial",
+     "complete": false,
+     "reasons": [
+      "unsupported-object"
+     ]
+    },
+    "octave": {
+     "status": "partial",
+     "complete": false,
+     "reasons": [
+      "unsupported-object"
+     ]
+    }
+   }
+  },
+  {
+   "id": "ys-table-addvars-position",
+   "code": "T = table([1;2],'VariableNames',{'A'}); r = addvars(T,[3;4],'Before','A','NewVariableNames','B')",
+   "group": "JSON, tablo ve kategorik ek biçimler",
+   "kind": "kısmi ölçüm",
+   "matlab": "table|2x2|<partial:unsupported-object>",
+   "octave": "table|2x2|<partial:unsupported-object>",
+   "coverage": {
+    "matlab": {
+     "status": "partial",
+     "complete": false,
+     "reasons": [
+      "unsupported-object"
+     ]
+    },
+    "octave": {
+     "status": "partial",
+     "complete": false,
+     "reasons": [
+      "unsupported-object"
+     ]
+    }
+   }
+  },
+  {
+   "id": "ys-table-renamevars-multiple",
+   "code": "T = table([1;2],[3;4],'VariableNames',{'A','B'}); r = renamevars(T,{'A','B'},{'X','Y'})",
+   "group": "JSON, tablo ve kategorik ek biçimler",
+   "kind": "kısmi ölçüm",
+   "matlab": "table|2x2|<partial:unsupported-object>",
+   "octave": "table|2x2|<partial:unsupported-object>",
+   "coverage": {
+    "matlab": {
+     "status": "partial",
+     "complete": false,
+     "reasons": [
+      "unsupported-object"
+     ]
+    },
+    "octave": {
+     "status": "partial",
+     "complete": false,
+     "reasons": [
+      "unsupported-object"
+     ]
+    }
+   }
+  },
+  {
+   "id": "ys-table-sortrows-desc",
+   "code": "T = table([2;1;3],'VariableNames',{'A'}); r = sortrows(T,'A','descend')",
+   "group": "JSON, tablo ve kategorik ek biçimler",
+   "kind": "kısmi ölçüm",
+   "matlab": "table|3x1|<partial:unsupported-object>",
+   "octave": "table|3x1|<partial:unsupported-object>",
+   "coverage": {
+    "matlab": {
+     "status": "partial",
+     "complete": false,
+     "reasons": [
+      "unsupported-object"
+     ]
+    },
+    "octave": {
+     "status": "partial",
+     "complete": false,
+     "reasons": [
+      "unsupported-object"
+     ]
+    }
+   }
+  },
+  {
+   "id": "ys-table-fillmissing-linear",
+   "code": "T = table([1;NaN;3],'VariableNames',{'X'}); r = fillmissing(T,'linear')",
+   "group": "JSON, tablo ve kategorik ek biçimler",
+   "kind": "kısmi ölçüm",
+   "matlab": "table|3x1|<partial:unsupported-object>",
+   "octave": "table|3x1|<partial:unsupported-object>",
+   "coverage": {
+    "matlab": {
+     "status": "partial",
+     "complete": false,
+     "reasons": [
+      "unsupported-object"
+     ]
+    },
+    "octave": {
+     "status": "partial",
+     "complete": false,
+     "reasons": [
+      "unsupported-object"
+     ]
+    }
+   }
+  },
+  {
+   "id": "ys-table-struct2table-scalar",
+   "code": "r = struct2table(struct('a',1,'b',2))",
+   "group": "JSON, tablo ve kategorik ek biçimler",
+   "kind": "kısmi ölçüm",
+   "matlab": "table|1x2|<partial:unsupported-object>",
+   "octave": "table|1x2|<partial:unsupported-object>",
+   "coverage": {
+    "matlab": {
+     "status": "partial",
+     "complete": false,
+     "reasons": [
+      "unsupported-object"
+     ]
+    },
+    "octave": {
+     "status": "partial",
+     "complete": false,
+     "reasons": [
+      "unsupported-object"
+     ]
+    }
+   }
   },
   {
    "id": "ys-zpk-static",
    "code": "sys = zpk([],[],3); r = {class(sys),zpkdata(sys)}",
    "group": "Kontrol ve sinyal ek biçimler",
    "kind": "değer farklı",
-   "matlab": "cell|1x2|{char|1x3|u122,112,107,;cell|1x1|{double|0x1|,;};}",
-   "octave": "cell|1x2|{char|1x2|u116,102,;cell|1x1|{double|0x1|,;};}"
+   "matlab": "cell|1x2|{char|1x3|u122,112,107,;cell|1x1|{double|0x1|;};}",
+   "octave": "cell|1x2|{char|1x2|u116,102,;cell|1x1|{double|0x1|;};}",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "ys-stepinfo-extra",
    "code": "s = stepinfo(tf(1,[1 1])); r = round([s.SettlingMin,s.SettlingMax,s.PeakTime],6)",
    "group": "Kontrol ve sinyal ek biçimler",
    "kind": "değer farklı",
-   "matlab": "double|1x3|0.904501,0.999339,7.322221,",
-   "octave": "double|1x3|0.9,1,15,"
+   "matlab": "double|1x3|0.904501,0.99933899999999998,7.3222209999999999,",
+   "octave": "double|1x3|0.90000000000000002,1,15,",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "ys-norminv-logtail",
    "code": "r = norminv([0.1 0.5 0.9],0,1,'upper')",
    "group": "İstatistik ek biçimler",
    "kind": "Octave hata verir",
-   "matlab": "double|1x3|-1.28155156554,0,1.28155156554,",
-   "octave": "HATA|Octave:invalid-fun-call|norminv: function called with too many inputs"
+   "matlab": "double|1x3|-1.2815515655446006,0,1.2815515655446006,",
+   "octave": "HATA|Octave:invalid-fun-call|norminv: function called with too many inputs",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "error",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "yk-string-array",
@@ -927,7 +3110,19 @@
    "group": "String functions — documentation-oriented, MATLAB results not yet measured",
    "kind": "boyut farklı",
    "matlab": "string|1x2|{char|1x3|u97,98,99,;char|1x3|u120,121,122,;}",
-   "octave": "string|1x1|{char|1x6|u97,98,99,120,121,122,;}"
+   "octave": "string|1x1|{char|1x6|u97,98,99,120,121,122,;}",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "yk-strings-scalar",
@@ -935,7 +3130,19 @@
    "group": "String functions — documentation-oriented, MATLAB results not yet measured",
    "kind": "boyut farklı",
    "matlab": "string|1x1|{char|0x0|u,;}",
-   "octave": "string|1x3|{char|0x0|u,;char|0x0|u,;char|0x0|u,;}"
+   "octave": "string|1x3|{char|0x0|u,;char|0x0|u,;char|0x0|u,;}",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "yk-strings-empty",
@@ -943,7 +3150,19 @@
    "group": "String functions — documentation-oriented, MATLAB results not yet measured",
    "kind": "boyut farklı",
    "matlab": "string|1x1|{char|0x0|u,;}",
-   "octave": "string|0x0|{}"
+   "octave": "string|0x0|{}",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "yk-strings-array",
@@ -951,7 +3170,19 @@
    "group": "String functions — documentation-oriented, MATLAB results not yet measured",
    "kind": "boyut farklı",
    "matlab": "string|1x2|{char|0x0|u,;char|0x0|u,;}",
-   "octave": "string|1x6|{char|0x0|u,;char|0x0|u,;char|0x0|u,;char|0x0|u,;char|0x0|u,;char|0x0|u,;}"
+   "octave": "string|1x6|{char|0x0|u,;char|0x0|u,;char|0x0|u,;char|0x0|u,;char|0x0|u,;char|0x0|u,;}",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "yk-isstring-scalar",
@@ -959,7 +3190,19 @@
    "group": "String functions — documentation-oriented, MATLAB results not yet measured",
    "kind": "değer farklı",
    "matlab": "logical|1x1|1",
-   "octave": "logical|1x1|0"
+   "octave": "logical|1x1|0",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "yk-isstring-empty",
@@ -967,7 +3210,19 @@
    "group": "String functions — documentation-oriented, MATLAB results not yet measured",
    "kind": "değer farklı",
    "matlab": "logical|1x1|1",
-   "octave": "logical|1x1|0"
+   "octave": "logical|1x1|0",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "yk-isstring-array",
@@ -975,7 +3230,19 @@
    "group": "String functions — documentation-oriented, MATLAB results not yet measured",
    "kind": "değer farklı",
    "matlab": "logical|1x1|1",
-   "octave": "logical|1x1|0"
+   "octave": "logical|1x1|0",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "yk-strlength-array",
@@ -983,7 +3250,19 @@
    "group": "String functions — documentation-oriented, MATLAB results not yet measured",
    "kind": "boyut farklı",
    "matlab": "double|1x2|3,3,",
-   "octave": "double|1x1|6,"
+   "octave": "double|1x1|6,",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "yk-upper-scalar",
@@ -991,7 +3270,19 @@
    "group": "String functions — documentation-oriented, MATLAB results not yet measured",
    "kind": "sınıf farklı",
    "matlab": "string|1x1|{char|1x3|u65,66,67,;}",
-   "octave": "char|1x3|u65,66,67,"
+   "octave": "char|1x3|u65,66,67,",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "yk-upper-empty",
@@ -999,7 +3290,19 @@
    "group": "String functions — documentation-oriented, MATLAB results not yet measured",
    "kind": "sınıf farklı",
    "matlab": "string|1x1|{char|0x0|u,;}",
-   "octave": "char|0x0|u,"
+   "octave": "char|0x0|u,",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "yk-upper-array",
@@ -1007,7 +3310,19 @@
    "group": "String functions — documentation-oriented, MATLAB results not yet measured",
    "kind": "sınıf farklı",
    "matlab": "string|1x2|{char|1x3|u65,66,67,;char|1x3|u88,89,90,;}",
-   "octave": "char|1x6|u65,66,67,88,89,90,"
+   "octave": "char|1x6|u65,66,67,88,89,90,",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "yk-upper-mixed",
@@ -1015,7 +3330,19 @@
    "group": "String functions — documentation-oriented, MATLAB results not yet measured",
    "kind": "sınıf farklı",
    "matlab": "string|1x1|{char|1x3|u65,66,201,;}",
-   "octave": "char|1x4|u65,66,195,137,"
+   "octave": "char|1x4|u65,66,195,137,",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "yk-lower-scalar",
@@ -1023,7 +3350,19 @@
    "group": "String functions — documentation-oriented, MATLAB results not yet measured",
    "kind": "sınıf farklı",
    "matlab": "string|1x1|{char|1x3|u97,98,99,;}",
-   "octave": "char|1x3|u97,98,99,"
+   "octave": "char|1x3|u97,98,99,",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "yk-lower-empty",
@@ -1031,7 +3370,19 @@
    "group": "String functions — documentation-oriented, MATLAB results not yet measured",
    "kind": "sınıf farklı",
    "matlab": "string|1x1|{char|0x0|u,;}",
-   "octave": "char|0x0|u,"
+   "octave": "char|0x0|u,",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "yk-lower-array",
@@ -1039,7 +3390,19 @@
    "group": "String functions — documentation-oriented, MATLAB results not yet measured",
    "kind": "sınıf farklı",
    "matlab": "string|1x2|{char|1x3|u97,98,99,;char|1x3|u120,121,122,;}",
-   "octave": "char|1x6|u97,98,99,120,121,122,"
+   "octave": "char|1x6|u97,98,99,120,121,122,",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "yk-lower-mixed",
@@ -1047,7 +3410,19 @@
    "group": "String functions — documentation-oriented, MATLAB results not yet measured",
    "kind": "sınıf farklı",
    "matlab": "string|1x1|{char|1x3|u97,98,233,;}",
-   "octave": "char|1x4|u97,98,195,169,"
+   "octave": "char|1x4|u97,98,195,169,",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "yk-strtrim-scalar",
@@ -1055,7 +3430,19 @@
    "group": "String functions — documentation-oriented, MATLAB results not yet measured",
    "kind": "sınıf farklı",
    "matlab": "string|1x1|{char|1x3|u97,98,99,;}",
-   "octave": "char|1x3|u97,98,99,"
+   "octave": "char|1x3|u97,98,99,",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "yk-strtrim-empty",
@@ -1063,7 +3450,19 @@
    "group": "String functions — documentation-oriented, MATLAB results not yet measured",
    "kind": "sınıf farklı",
    "matlab": "string|1x1|{char|0x0|u,;}",
-   "octave": "char|0x0|u,"
+   "octave": "char|0x0|u,",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "yk-strtrim-array",
@@ -1071,7 +3470,19 @@
    "group": "String functions — documentation-oriented, MATLAB results not yet measured",
    "kind": "sınıf farklı",
    "matlab": "string|1x2|{char|1x3|u97,98,99,;char|1x3|u120,121,122,;}",
-   "octave": "char|1x6|u97,98,99,120,121,122,"
+   "octave": "char|1x6|u97,98,99,120,121,122,",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "yk-strtrim-mixed",
@@ -1079,7 +3490,19 @@
    "group": "String functions — documentation-oriented, MATLAB results not yet measured",
    "kind": "sınıf farklı",
    "matlab": "string|1x1|{char|1x1|u97,;}",
-   "octave": "char|1x1|u97,"
+   "octave": "char|1x1|u97,",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "yk-strip-scalar",
@@ -1087,7 +3510,19 @@
    "group": "String functions — documentation-oriented, MATLAB results not yet measured",
    "kind": "sınıf farklı",
    "matlab": "string|1x1|{char|1x3|u97,98,99,;}",
-   "octave": "char|1x3|u97,98,99,"
+   "octave": "char|1x3|u97,98,99,",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "yk-strip-empty",
@@ -1095,7 +3530,19 @@
    "group": "String functions — documentation-oriented, MATLAB results not yet measured",
    "kind": "sınıf farklı",
    "matlab": "string|1x1|{char|0x0|u,;}",
-   "octave": "char|0x0|u,"
+   "octave": "char|0x0|u,",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "yk-strip-array",
@@ -1103,7 +3550,19 @@
    "group": "String functions — documentation-oriented, MATLAB results not yet measured",
    "kind": "sınıf farklı",
    "matlab": "string|1x2|{char|1x3|u97,98,99,;char|1x3|u120,121,122,;}",
-   "octave": "char|1x6|u97,98,99,120,121,122,"
+   "octave": "char|1x6|u97,98,99,120,121,122,",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "yk-strip-mixed",
@@ -1111,7 +3570,19 @@
    "group": "String functions — documentation-oriented, MATLAB results not yet measured",
    "kind": "sınıf farklı",
    "matlab": "string|1x1|{char|1x1|u97,;}",
-   "octave": "char|1x1|u97,"
+   "octave": "char|1x1|u97,",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "yk-pad-scalar",
@@ -1119,7 +3590,19 @@
    "group": "String functions — documentation-oriented, MATLAB results not yet measured",
    "kind": "sınıf farklı",
    "matlab": "string|1x1|{char|1x7|u32,32,32,32,97,98,99,;}",
-   "octave": "char|1x7|u32,32,32,32,97,98,99,"
+   "octave": "char|1x7|u32,32,32,32,97,98,99,",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "yk-pad-empty",
@@ -1127,7 +3610,19 @@
    "group": "String functions — documentation-oriented, MATLAB results not yet measured",
    "kind": "sınıf farklı",
    "matlab": "string|1x1|{char|1x7|u32,32,32,32,32,32,32,;}",
-   "octave": "char|1x7|u32,32,32,32,32,32,32,"
+   "octave": "char|1x7|u32,32,32,32,32,32,32,",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "yk-pad-array",
@@ -1135,7 +3630,19 @@
    "group": "String functions — documentation-oriented, MATLAB results not yet measured",
    "kind": "sınıf farklı",
    "matlab": "string|1x2|{char|1x7|u32,32,32,32,97,98,99,;char|1x7|u32,32,32,32,120,121,122,;}",
-   "octave": "char|1x7|u32,97,98,99,120,121,122,"
+   "octave": "char|1x7|u32,97,98,99,120,121,122,",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "yk-pad-mixed",
@@ -1143,7 +3650,19 @@
    "group": "String functions — documentation-oriented, MATLAB results not yet measured",
    "kind": "sınıf farklı",
    "matlab": "string|1x1|{char|1x4|u45,97,45,45,;}",
-   "octave": "char|1x4|u45,97,45,45,"
+   "octave": "char|1x4|u45,97,45,45,",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "yk-reverse-scalar",
@@ -1151,7 +3670,19 @@
    "group": "String functions — documentation-oriented, MATLAB results not yet measured",
    "kind": "sınıf farklı",
    "matlab": "string|1x1|{char|1x3|u99,98,97,;}",
-   "octave": "char|1x3|u99,98,97,"
+   "octave": "char|1x3|u99,98,97,",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "yk-reverse-empty",
@@ -1159,7 +3690,19 @@
    "group": "String functions — documentation-oriented, MATLAB results not yet measured",
    "kind": "sınıf farklı",
    "matlab": "string|1x1|{char|0x0|u,;}",
-   "octave": "char|0x0|u,"
+   "octave": "char|0x0|u,",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "yk-reverse-array",
@@ -1167,7 +3710,19 @@
    "group": "String functions — documentation-oriented, MATLAB results not yet measured",
    "kind": "sınıf farklı",
    "matlab": "string|1x2|{char|1x3|u99,98,97,;char|1x3|u122,121,120,;}",
-   "octave": "char|1x6|u122,121,120,99,98,97,"
+   "octave": "char|1x6|u122,121,120,99,98,97,",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "yk-reverse-mixed",
@@ -1175,7 +3730,19 @@
    "group": "String functions — documentation-oriented, MATLAB results not yet measured",
    "kind": "Octave hata verir",
    "matlab": "string|1x2|{char|1x2|u97,233,;char|1x3|u56832,55357,97,;}",
-   "octave": "HATA||reverse: supplementary Unicode characters are not supported"
+   "octave": "HATA||reverse: supplementary Unicode characters are not supported",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "error",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "yk-replace-scalar",
@@ -1183,7 +3750,19 @@
    "group": "String functions — documentation-oriented, MATLAB results not yet measured",
    "kind": "sınıf farklı",
    "matlab": "string|1x1|{char|1x4|u97,66,66,99,;}",
-   "octave": "char|1x4|u97,66,66,99,"
+   "octave": "char|1x4|u97,66,66,99,",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "yk-replace-empty",
@@ -1191,7 +3770,19 @@
    "group": "String functions — documentation-oriented, MATLAB results not yet measured",
    "kind": "sınıf farklı",
    "matlab": "string|1x1|{char|0x0|u,;}",
-   "octave": "char|0x0|u,"
+   "octave": "char|0x0|u,",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "yk-replace-array",
@@ -1199,7 +3790,19 @@
    "group": "String functions — documentation-oriented, MATLAB results not yet measured",
    "kind": "sınıf farklı",
    "matlab": "string|1x2|{char|1x4|u97,66,66,99,;char|1x3|u120,121,122,;}",
-   "octave": "char|1x7|u97,66,66,99,120,121,122,"
+   "octave": "char|1x7|u97,66,66,99,120,121,122,",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "yk-erase-scalar",
@@ -1207,7 +3810,19 @@
    "group": "String functions — documentation-oriented, MATLAB results not yet measured",
    "kind": "sınıf farklı",
    "matlab": "string|1x1|{char|1x2|u97,99,;}",
-   "octave": "char|1x2|u97,99,"
+   "octave": "char|1x2|u97,99,",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "yk-erase-empty",
@@ -1215,7 +3830,19 @@
    "group": "String functions — documentation-oriented, MATLAB results not yet measured",
    "kind": "sınıf farklı",
    "matlab": "string|1x1|{char|0x0|u,;}",
-   "octave": "char|0x0|u,"
+   "octave": "char|0x0|u,",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "yk-erase-array",
@@ -1223,7 +3850,19 @@
    "group": "String functions — documentation-oriented, MATLAB results not yet measured",
    "kind": "sınıf farklı",
    "matlab": "string|1x2|{char|1x2|u97,99,;char|1x3|u120,121,122,;}",
-   "octave": "char|1x5|u97,99,120,121,122,"
+   "octave": "char|1x5|u97,99,120,121,122,",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "yk-insertbefore-scalar",
@@ -1231,7 +3870,19 @@
    "group": "String functions — documentation-oriented, MATLAB results not yet measured",
    "kind": "sınıf farklı",
    "matlab": "string|1x1|{char|1x4|u97,88,98,99,;}",
-   "octave": "char|1x4|u97,88,98,99,"
+   "octave": "char|1x4|u97,88,98,99,",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "yk-insertbefore-empty",
@@ -1239,7 +3890,19 @@
    "group": "String functions — documentation-oriented, MATLAB results not yet measured",
    "kind": "sınıf farklı",
    "matlab": "string|1x1|{char|0x0|u,;}",
-   "octave": "char|0x0|u,"
+   "octave": "char|0x0|u,",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "yk-insertbefore-array",
@@ -1247,7 +3910,19 @@
    "group": "String functions — documentation-oriented, MATLAB results not yet measured",
    "kind": "sınıf farklı",
    "matlab": "string|1x2|{char|1x4|u97,88,98,99,;char|1x3|u120,121,122,;}",
-   "octave": "char|1x7|u97,88,98,99,120,121,122,"
+   "octave": "char|1x7|u97,88,98,99,120,121,122,",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "yk-insertafter-scalar",
@@ -1255,7 +3930,19 @@
    "group": "String functions — documentation-oriented, MATLAB results not yet measured",
    "kind": "sınıf farklı",
    "matlab": "string|1x1|{char|1x4|u97,98,88,99,;}",
-   "octave": "char|1x4|u97,98,88,99,"
+   "octave": "char|1x4|u97,98,88,99,",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "yk-insertafter-empty",
@@ -1263,7 +3950,19 @@
    "group": "String functions — documentation-oriented, MATLAB results not yet measured",
    "kind": "sınıf farklı",
    "matlab": "string|1x1|{char|0x0|u,;}",
-   "octave": "char|0x0|u,"
+   "octave": "char|0x0|u,",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "yk-insertafter-array",
@@ -1271,7 +3970,19 @@
    "group": "String functions — documentation-oriented, MATLAB results not yet measured",
    "kind": "sınıf farklı",
    "matlab": "string|1x2|{char|1x4|u97,98,88,99,;char|1x3|u120,121,122,;}",
-   "octave": "char|1x7|u97,98,88,99,120,121,122,"
+   "octave": "char|1x7|u97,98,88,99,120,121,122,",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "yk-extractbefore-scalar",
@@ -1279,7 +3990,19 @@
    "group": "String functions — documentation-oriented, MATLAB results not yet measured",
    "kind": "sınıf farklı",
    "matlab": "string|1x1|{char|1x1|u97,;}",
-   "octave": "char|1x1|u97,"
+   "octave": "char|1x1|u97,",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "yk-extractbefore-empty",
@@ -1287,7 +4010,19 @@
    "group": "String functions — documentation-oriented, MATLAB results not yet measured",
    "kind": "sınıf farklı",
    "matlab": "string|1x1|{<missing>;}",
-   "octave": "char|0x0|u,"
+   "octave": "char|0x0|u,",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "yk-extractbefore-array",
@@ -1295,7 +4030,19 @@
    "group": "String functions — documentation-oriented, MATLAB results not yet measured",
    "kind": "sınıf farklı",
    "matlab": "string|1x2|{char|1x1|u97,;<missing>;}",
-   "octave": "char|1x1|u97,"
+   "octave": "char|1x1|u97,",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "yk-extractbefore-mixed",
@@ -1303,7 +4050,19 @@
    "group": "String functions — documentation-oriented, MATLAB results not yet measured",
    "kind": "Octave hata verir",
    "matlab": "string|1x2|{char|1x1|u97,;char|1x2|u100,101,;}",
-   "octave": "HATA||string.extractBefore: POS must be scalar or the same size as STR."
+   "octave": "HATA||string.extractBefore: POS must be scalar or the same size as STR.",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "error",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "yk-extractafter-scalar",
@@ -1311,7 +4070,19 @@
    "group": "String functions — documentation-oriented, MATLAB results not yet measured",
    "kind": "sınıf farklı",
    "matlab": "string|1x1|{char|1x1|u99,;}",
-   "octave": "char|1x1|u99,"
+   "octave": "char|1x1|u99,",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "yk-extractafter-empty",
@@ -1319,7 +4090,19 @@
    "group": "String functions — documentation-oriented, MATLAB results not yet measured",
    "kind": "sınıf farklı",
    "matlab": "string|1x1|{<missing>;}",
-   "octave": "char|0x0|u,"
+   "octave": "char|0x0|u,",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "yk-extractafter-array",
@@ -1327,7 +4110,19 @@
    "group": "String functions — documentation-oriented, MATLAB results not yet measured",
    "kind": "sınıf farklı",
    "matlab": "string|1x2|{char|1x1|u99,;<missing>;}",
-   "octave": "char|1x4|u99,120,121,122,"
+   "octave": "char|1x4|u99,120,121,122,",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "yk-extractafter-mixed",
@@ -1335,7 +4130,19 @@
    "group": "String functions — documentation-oriented, MATLAB results not yet measured",
    "kind": "Octave hata verir",
    "matlab": "string|1x2|{char|1x2|u98,99,;char|1x1|u102,;}",
-   "octave": "HATA||string.extractAfter: POS must be scalar or the same size as STR."
+   "octave": "HATA||string.extractAfter: POS must be scalar or the same size as STR.",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "error",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "yk-extractbetween-scalar",
@@ -1343,7 +4150,19 @@
    "group": "String functions — documentation-oriented, MATLAB results not yet measured",
    "kind": "sınıf farklı",
    "matlab": "string|1x1|{char|1x1|u98,;}",
-   "octave": "cell|1x1|{char|1x1|u98,;}"
+   "octave": "cell|1x1|{char|1x1|u98,;}",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "yk-extractbetween-empty",
@@ -1351,7 +4170,19 @@
    "group": "String functions — documentation-oriented, MATLAB results not yet measured",
    "kind": "sınıf farklı",
    "matlab": "string|0x1|{}",
-   "octave": "cell|0x1|{}"
+   "octave": "cell|0x1|{}",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "yk-extractbetween-array",
@@ -1359,7 +4190,19 @@
    "group": "String functions — documentation-oriented, MATLAB results not yet measured",
    "kind": "yalnız MATLAB hata verir",
    "matlab": "HATA|MATLAB:string:MustHaveSameNumberOf|Element 2 of the text contains 0 substrings while the previous elements have 1. All elements must contain the same number of substrings.",
-   "octave": "cell|1x1|{char|1x1|u98,;}"
+   "octave": "cell|1x1|{char|1x1|u98,;}",
+   "coverage": {
+    "matlab": {
+     "status": "error",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "yk-extractbetween-mixed",
@@ -1367,7 +4210,19 @@
    "group": "String functions — documentation-oriented, MATLAB results not yet measured",
    "kind": "sınıf farklı",
    "matlab": "string|1x2x2|{char|1x1|u97,;char|1x1|u99,;char|1x1|u98,;char|1x1|u100,;}",
-   "octave": "cell|4x1|{char|1x1|u97,;char|1x1|u98,;char|1x1|u99,;char|1x1|u100,;}"
+   "octave": "cell|4x1|{char|1x1|u97,;char|1x1|u98,;char|1x1|u99,;char|1x1|u100,;}",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "yk-contains-array",
@@ -1375,7 +4230,19 @@
    "group": "String functions — documentation-oriented, MATLAB results not yet measured",
    "kind": "boyut farklı",
    "matlab": "logical|1x2|10",
-   "octave": "logical|1x1|1"
+   "octave": "logical|1x1|1",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "yk-startswith-array",
@@ -1383,7 +4250,19 @@
    "group": "String functions — documentation-oriented, MATLAB results not yet measured",
    "kind": "boyut farklı",
    "matlab": "logical|1x2|10",
-   "octave": "logical|1x1|1"
+   "octave": "logical|1x1|1",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "yk-endswith-array",
@@ -1391,7 +4270,19 @@
    "group": "String functions — documentation-oriented, MATLAB results not yet measured",
    "kind": "boyut farklı",
    "matlab": "logical|1x2|10",
-   "octave": "logical|1x1|0"
+   "octave": "logical|1x1|0",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "yk-count-array",
@@ -1399,7 +4290,19 @@
    "group": "String functions — documentation-oriented, MATLAB results not yet measured",
    "kind": "boyut farklı",
    "matlab": "double|1x2|1,0,",
-   "octave": "double|1x1|1,"
+   "octave": "double|1x1|1,",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "yk-split-scalar",
@@ -1407,7 +4310,19 @@
    "group": "String functions — documentation-oriented, MATLAB results not yet measured",
    "kind": "sınıf farklı",
    "matlab": "string|2x1|{char|1x1|u97,;char|1x1|u99,;}",
-   "octave": "cell|2x1|{char|1x1|u97,;char|1x1|u99,;}"
+   "octave": "cell|2x1|{char|1x1|u97,;char|1x1|u99,;}",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "yk-split-empty",
@@ -1415,7 +4330,19 @@
    "group": "String functions — documentation-oriented, MATLAB results not yet measured",
    "kind": "sınıf farklı",
    "matlab": "string|1x1|{char|0x0|u,;}",
-   "octave": "cell|1x1|{char|0x0|u,;}"
+   "octave": "cell|1x1|{char|0x0|u,;}",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "yk-split-array",
@@ -1423,7 +4350,19 @@
    "group": "String functions — documentation-oriented, MATLAB results not yet measured",
    "kind": "yalnız MATLAB hata verir",
    "matlab": "HATA|MATLAB:string:MustHaveSameNumberOf|Element 2 of the text contains 0 delimiters while the previous elements have 1. All elements must contain the same number of delimiters.",
-   "octave": "cell|2x1|{char|1x1|u97,;char|1x4|u99,120,121,122,;}"
+   "octave": "cell|2x1|{char|1x1|u97,;char|1x4|u99,120,121,122,;}",
+   "coverage": {
+    "matlab": {
+     "status": "error",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "yk-split-mixed",
@@ -1431,7 +4370,19 @@
    "group": "String functions — documentation-oriented, MATLAB results not yet measured",
    "kind": "Octave hata verir",
    "matlab": "string|2x2|{char|1x1|u97,;char|1x1|u99,;char|1x1|u98,;char|1x1|u100,;}",
-   "octave": "HATA||split: STR must be a character vector or cell array of character vectors"
+   "octave": "HATA||split: STR must be a character vector or cell array of character vectors",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "error",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "yk-join-scalar",
@@ -1439,7 +4390,19 @@
    "group": "String functions — documentation-oriented, MATLAB results not yet measured",
    "kind": "sınıf farklı",
    "matlab": "string|1x1|{char|1x3|u97,98,99,;}",
-   "octave": "cell|1x1|{char|1x3|u97,98,99,;}"
+   "octave": "cell|1x1|{char|1x3|u97,98,99,;}",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "yk-join-empty",
@@ -1447,7 +4410,19 @@
    "group": "String functions — documentation-oriented, MATLAB results not yet measured",
    "kind": "sınıf farklı",
    "matlab": "string|1x1|{char|0x0|u,;}",
-   "octave": "cell|1x1|{char|0x0|u,;}"
+   "octave": "cell|1x1|{char|0x0|u,;}",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "yk-join-array",
@@ -1455,7 +4430,19 @@
    "group": "String functions — documentation-oriented, MATLAB results not yet measured",
    "kind": "sınıf farklı",
    "matlab": "string|1x1|{char|1x7|u97,98,99,44,120,121,122,;}",
-   "octave": "cell|1x1|{char|1x6|u97,98,99,120,121,122,;}"
+   "octave": "cell|1x1|{char|1x6|u97,98,99,120,121,122,;}",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "yk-join-mixed",
@@ -1463,7 +4450,19 @@
    "group": "String functions — documentation-oriented, MATLAB results not yet measured",
    "kind": "Octave hata verir",
    "matlab": "string|2x1|{char|1x3|u97,45,98,;char|1x3|u99,45,100,;}",
-   "octave": "HATA||join: STR must be a character vector or cell array of character vectors"
+   "octave": "HATA||join: STR must be a character vector or cell array of character vectors",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "error",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "yk-splitlines-scalar",
@@ -1471,7 +4470,19 @@
    "group": "String functions — documentation-oriented, MATLAB results not yet measured",
    "kind": "sınıf farklı",
    "matlab": "string|1x1|{char|1x3|u97,98,99,;}",
-   "octave": "cell|1x1|{char|1x3|u97,98,99,;}"
+   "octave": "cell|1x1|{char|1x3|u97,98,99,;}",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "yk-splitlines-empty",
@@ -1479,7 +4490,19 @@
    "group": "String functions — documentation-oriented, MATLAB results not yet measured",
    "kind": "sınıf farklı",
    "matlab": "string|1x1|{char|0x0|u,;}",
-   "octave": "cell|1x1|{char|0x0|u,;}"
+   "octave": "cell|1x1|{char|0x0|u,;}",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "yk-splitlines-array",
@@ -1487,7 +4510,19 @@
    "group": "String functions — documentation-oriented, MATLAB results not yet measured",
    "kind": "sınıf farklı",
    "matlab": "string|1x2|{char|1x3|u97,98,99,;char|1x3|u120,121,122,;}",
-   "octave": "cell|1x1|{char|1x6|u97,98,99,120,121,122,;}"
+   "octave": "cell|1x1|{char|1x6|u97,98,99,120,121,122,;}",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "yk-splitlines-mixed",
@@ -1495,7 +4530,19 @@
    "group": "String functions — documentation-oriented, MATLAB results not yet measured",
    "kind": "Octave hata verir",
    "matlab": "string|2x1|{char|1x1|u97,;char|1x1|u98,;}",
-   "octave": "HATA||splitlines: STR must be a character vector or cell array of character vectors"
+   "octave": "HATA||splitlines: STR must be a character vector or cell array of character vectors",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "error",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "yk-strsplit-scalar",
@@ -1503,7 +4550,19 @@
    "group": "String functions — documentation-oriented, MATLAB results not yet measured",
    "kind": "sınıf farklı",
    "matlab": "string|1x2|{char|1x1|u97,;char|1x1|u99,;}",
-   "octave": "cell|1x2|{char|1x1|u97,;char|1x1|u99,;}"
+   "octave": "cell|1x2|{char|1x1|u97,;char|1x1|u99,;}",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "yk-strsplit-empty",
@@ -1511,7 +4570,19 @@
    "group": "String functions — documentation-oriented, MATLAB results not yet measured",
    "kind": "sınıf farklı",
    "matlab": "string|1x1|{char|0x0|u,;}",
-   "octave": "cell|1x1|{char|0x0|u,;}"
+   "octave": "cell|1x1|{char|0x0|u,;}",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "yk-strsplit-array",
@@ -1519,7 +4590,19 @@
    "group": "String functions — documentation-oriented, MATLAB results not yet measured",
    "kind": "yalnız MATLAB hata verir",
    "matlab": "HATA|MATLAB:strsplit:InvalidStringType|First input must be either a character vector or a string scalar.",
-   "octave": "cell|1x2|{char|1x1|u97,;char|1x4|u99,120,121,122,;}"
+   "octave": "cell|1x2|{char|1x1|u97,;char|1x4|u99,120,121,122,;}",
+   "coverage": {
+    "matlab": {
+     "status": "error",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "yk-strsplit-mixed",
@@ -1527,7 +4610,19 @@
    "group": "String functions — documentation-oriented, MATLAB results not yet measured",
    "kind": "sınıf farklı",
    "matlab": "string|1x3|{char|1x1|u97,;char|0x0|u,;char|1x1|u98,;}",
-   "octave": "cell|1x3|{char|1x1|u97,;char|0x0|u,;char|1x1|u98,;}"
+   "octave": "cell|1x3|{char|1x1|u97,;char|0x0|u,;char|1x1|u98,;}",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "yk-strjoin-scalar",
@@ -1535,7 +4630,19 @@
    "group": "String functions — documentation-oriented, MATLAB results not yet measured",
    "kind": "Octave hata verir",
    "matlab": "string|1x1|{char|1x3|u97,98,99,;}",
-   "octave": "HATA|Octave:invalid-fun-call|Invalid call to strjoin.  Correct usage is:   -- STR = strjoin (CSTR)  -- STR = strjoin (CSTR, DELIMITER)"
+   "octave": "HATA|Octave:invalid-fun-call|Invalid call to strjoin.  Correct usage is:   -- STR = strjoin (CSTR)  -- STR = strjoin (CSTR, DELIMITER)",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "error",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "yk-strjoin-empty",
@@ -1543,7 +4650,19 @@
    "group": "String functions — documentation-oriented, MATLAB results not yet measured",
    "kind": "Octave hata verir",
    "matlab": "string|1x1|{char|0x0|u,;}",
-   "octave": "HATA|Octave:invalid-fun-call|Invalid call to strjoin.  Correct usage is:   -- STR = strjoin (CSTR)  -- STR = strjoin (CSTR, DELIMITER)"
+   "octave": "HATA|Octave:invalid-fun-call|Invalid call to strjoin.  Correct usage is:   -- STR = strjoin (CSTR)  -- STR = strjoin (CSTR, DELIMITER)",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "error",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "yk-strjoin-array",
@@ -1551,7 +4670,19 @@
    "group": "String functions — documentation-oriented, MATLAB results not yet measured",
    "kind": "Octave hata verir",
    "matlab": "string|1x1|{char|1x7|u97,98,99,44,120,121,122,;}",
-   "octave": "HATA|Octave:invalid-fun-call|Invalid call to strjoin.  Correct usage is:   -- STR = strjoin (CSTR)  -- STR = strjoin (CSTR, DELIMITER)"
+   "octave": "HATA|Octave:invalid-fun-call|Invalid call to strjoin.  Correct usage is:   -- STR = strjoin (CSTR)  -- STR = strjoin (CSTR, DELIMITER)",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "error",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "yk-strjoin-mixed",
@@ -1559,7 +4690,19 @@
    "group": "String functions — documentation-oriented, MATLAB results not yet measured",
    "kind": "Octave hata verir",
    "matlab": "string|1x1|{char|1x3|u97,45,98,;}",
-   "octave": "HATA|Octave:invalid-fun-call|Invalid call to strjoin.  Correct usage is:   -- STR = strjoin (CSTR)  -- STR = strjoin (CSTR, DELIMITER)"
+   "octave": "HATA|Octave:invalid-fun-call|Invalid call to strjoin.  Correct usage is:   -- STR = strjoin (CSTR)  -- STR = strjoin (CSTR, DELIMITER)",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "error",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "yk-strcat-scalar",
@@ -1567,7 +4710,19 @@
    "group": "String functions — documentation-oriented, MATLAB results not yet measured",
    "kind": "sınıf farklı",
    "matlab": "string|1x1|{char|1x5|u97,98,99,32,88,;}",
-   "octave": "char|1x5|u97,98,99,32,88,"
+   "octave": "char|1x5|u97,98,99,32,88,",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "yk-strcat-empty",
@@ -1575,7 +4730,19 @@
    "group": "String functions — documentation-oriented, MATLAB results not yet measured",
    "kind": "sınıf farklı",
    "matlab": "string|1x1|{char|1x2|u32,88,;}",
-   "octave": "char|1x2|u32,88,"
+   "octave": "char|1x2|u32,88,",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "yk-strcat-array",
@@ -1583,7 +4750,19 @@
    "group": "String functions — documentation-oriented, MATLAB results not yet measured",
    "kind": "sınıf farklı",
    "matlab": "string|1x2|{char|1x5|u97,98,99,32,88,;char|1x5|u120,121,122,32,88,;}",
-   "octave": "char|1x8|u97,98,99,120,121,122,32,88,"
+   "octave": "char|1x8|u97,98,99,120,121,122,32,88,",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "yk-strcat-mixed",
@@ -1591,7 +4770,19 @@
    "group": "String functions — documentation-oriented, MATLAB results not yet measured",
    "kind": "sınıf farklı",
    "matlab": "string|1x1|{char|1x5|u32,97,32,98,32,;}",
-   "octave": "char|1x4|u32,97,32,98,"
+   "octave": "char|1x4|u32,97,32,98,",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "yk-append-scalar",
@@ -1599,7 +4790,19 @@
    "group": "String functions — documentation-oriented, MATLAB results not yet measured",
    "kind": "Octave hata verir",
    "matlab": "string|1x1|{char|1x6|u97,98,99,32,88,32,;}",
-   "octave": "HATA||blkdiag: all arguments must be numeric"
+   "octave": "HATA||blkdiag: all arguments must be numeric",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "error",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "yk-append-empty",
@@ -1607,7 +4810,19 @@
    "group": "String functions — documentation-oriented, MATLAB results not yet measured",
    "kind": "Octave hata verir",
    "matlab": "string|1x1|{char|1x3|u32,88,32,;}",
-   "octave": "HATA||blkdiag: all arguments must be numeric"
+   "octave": "HATA||blkdiag: all arguments must be numeric",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "error",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "yk-append-array",
@@ -1615,7 +4830,19 @@
    "group": "String functions — documentation-oriented, MATLAB results not yet measured",
    "kind": "Octave hata verir",
    "matlab": "string|1x2|{char|1x6|u97,98,99,32,88,32,;char|1x6|u120,121,122,32,88,32,;}",
-   "octave": "HATA||blkdiag: all arguments must be numeric"
+   "octave": "HATA||blkdiag: all arguments must be numeric",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "error",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "yk-append-mixed",
@@ -1623,7 +4850,19 @@
    "group": "String functions — documentation-oriented, MATLAB results not yet measured",
    "kind": "Octave hata verir",
    "matlab": "string|1x1|{char|1x6|u32,97,32,32,98,32,;}",
-   "octave": "HATA||blkdiag: all arguments must be numeric"
+   "octave": "HATA||blkdiag: all arguments must be numeric",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "error",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "yk-plus-scalar",
@@ -1631,7 +4870,19 @@
    "group": "String functions — documentation-oriented, MATLAB results not yet measured",
    "kind": "sınıf farklı",
    "matlab": "string|1x1|{char|1x6|u97,98,99,32,88,32,;}",
-   "octave": "double|1x3|129,186,131,"
+   "octave": "double|1x3|129,186,131,",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "yk-plus-empty",
@@ -1639,7 +4890,19 @@
    "group": "String functions — documentation-oriented, MATLAB results not yet measured",
    "kind": "Octave hata verir",
    "matlab": "string|1x1|{char|1x3|u32,88,32,;}",
-   "octave": "HATA|Octave:nonconformant-args|operator +: nonconformant arguments (op1 is 0x0, op2 is 1x3)"
+   "octave": "HATA|Octave:nonconformant-args|operator +: nonconformant arguments (op1 is 0x0, op2 is 1x3)",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "error",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "yk-plus-array",
@@ -1647,7 +4910,19 @@
    "group": "String functions — documentation-oriented, MATLAB results not yet measured",
    "kind": "Octave hata verir",
    "matlab": "string|1x2|{char|1x6|u97,98,99,32,88,32,;char|1x6|u120,121,122,32,88,32,;}",
-   "octave": "HATA|Octave:nonconformant-args|operator +: nonconformant arguments (op1 is 1x6, op2 is 1x3)"
+   "octave": "HATA|Octave:nonconformant-args|operator +: nonconformant arguments (op1 is 1x6, op2 is 1x3)",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "error",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "yk-plus-mixed",
@@ -1655,7 +4930,19 @@
    "group": "String functions — documentation-oriented, MATLAB results not yet measured",
    "kind": "sınıf farklı",
    "matlab": "string|1x2|{char|1x2|u120,49,;char|1x2|u120,50,;}",
-   "octave": "double|1x2|121,122,"
+   "octave": "double|1x2|121,122,",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "yk-compose-scalar",
@@ -1663,7 +4950,19 @@
    "group": "String functions — documentation-oriented, MATLAB results not yet measured",
    "kind": "sınıf farklı",
    "matlab": "string|1x1|{char|1x5|u60,97,98,99,62,;}",
-   "octave": "cell|1x1|{char|1x5|u60,97,98,99,62,;}"
+   "octave": "cell|1x1|{char|1x5|u60,97,98,99,62,;}",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "yk-compose-empty",
@@ -1671,7 +4970,19 @@
    "group": "String functions — documentation-oriented, MATLAB results not yet measured",
    "kind": "sınıf farklı",
    "matlab": "string|1x1|{char|1x2|u60,62,;}",
-   "octave": "cell|1x1|{char|1x2|u60,62,;}"
+   "octave": "cell|1x1|{char|1x2|u60,62,;}",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "yk-compose-array",
@@ -1679,7 +4990,19 @@
    "group": "String functions — documentation-oriented, MATLAB results not yet measured",
    "kind": "sınıf farklı",
    "matlab": "string|1x2|{char|1x5|u60,97,98,99,62,;char|1x5|u60,120,121,122,62,;}",
-   "octave": "cell|1x1|{char|1x8|u60,97,98,99,120,121,122,62,;}"
+   "octave": "cell|1x1|{char|1x8|u60,97,98,99,120,121,122,62,;}",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "yk-compose-mixed",
@@ -1687,7 +5010,19 @@
    "group": "String functions — documentation-oriented, MATLAB results not yet measured",
    "kind": "Octave hata verir",
    "matlab": "string|2x1|{char|1x5|u97,58,49,46,50,;char|1x5|u98,58,50,46,56,;}",
-   "octave": "HATA||compose: char data must be a row vector"
+   "octave": "HATA||compose: char data must be a row vector",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "error",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "yk-sprintf-scalar",
@@ -1695,7 +5030,19 @@
    "group": "String functions — documentation-oriented, MATLAB results not yet measured",
    "kind": "sınıf farklı",
    "matlab": "string|1x1|{char|1x5|u60,97,98,99,62,;}",
-   "octave": "char|1x5|u60,97,98,99,62,"
+   "octave": "char|1x5|u60,97,98,99,62,",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "yk-sprintf-empty",
@@ -1703,7 +5050,19 @@
    "group": "String functions — documentation-oriented, MATLAB results not yet measured",
    "kind": "sınıf farklı",
    "matlab": "string|1x1|{char|1x2|u60,62,;}",
-   "octave": "char|1x2|u60,62,"
+   "octave": "char|1x2|u60,62,",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "yk-sprintf-array",
@@ -1711,7 +5070,19 @@
    "group": "String functions — documentation-oriented, MATLAB results not yet measured",
    "kind": "sınıf farklı",
    "matlab": "string|1x1|{char|1x10|u60,97,98,99,62,60,120,121,122,62,;}",
-   "octave": "char|1x8|u60,97,98,99,120,121,122,62,"
+   "octave": "char|1x8|u60,97,98,99,120,121,122,62,",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "yk-num2str-array",
@@ -1719,7 +5090,19 @@
    "group": "String functions — documentation-oriented, MATLAB results not yet measured",
    "kind": "yalnız MATLAB hata verir",
    "matlab": "HATA|MATLAB:num2str:nonNumericInput|Input to num2str must be numeric.",
-   "octave": "char|1x6|u97,98,99,120,121,122,"
+   "octave": "char|1x6|u97,98,99,120,121,122,",
+   "coverage": {
+    "matlab": {
+     "status": "error",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "yk-str2double-array",
@@ -1727,15 +5110,39 @@
    "group": "String functions — documentation-oriented, MATLAB results not yet measured",
    "kind": "boyut farklı",
    "matlab": "double|1x2|NaN,NaN,",
-   "octave": "double|1x1|NaN,"
+   "octave": "double|1x1|NaN,",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "yk-str2double-mixed",
    "code": "r=str2double([\"1e3\",\"1,234\",\"2+3i\",\"bad\",\"\"]);",
    "group": "String functions — documentation-oriented, MATLAB results not yet measured",
    "kind": "boyut farklı",
-   "matlab": "double|1x5|1000+0i,1234+0i,2-3i,NaN+0i,NaN+0i,",
-   "octave": "double|1x1|Inf-3i,"
+   "matlab": "double|1x5|1000+0i,1234+0i,2+3i,NaN+0i,NaN+0i,",
+   "octave": "double|1x1|Inf+3i,",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "yk-double-scalar",
@@ -1743,7 +5150,19 @@
    "group": "String functions — documentation-oriented, MATLAB results not yet measured",
    "kind": "boyut farklı",
    "matlab": "double|1x1|NaN,",
-   "octave": "double|1x3|97,98,99,"
+   "octave": "double|1x3|97,98,99,",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "yk-double-empty",
@@ -1751,7 +5170,19 @@
    "group": "String functions — documentation-oriented, MATLAB results not yet measured",
    "kind": "boyut farklı",
    "matlab": "double|1x1|NaN,",
-   "octave": "double|0x0|,"
+   "octave": "double|0x0|",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "yk-double-array",
@@ -1759,15 +5190,39 @@
    "group": "String functions — documentation-oriented, MATLAB results not yet measured",
    "kind": "boyut farklı",
    "matlab": "double|1x2|NaN,NaN,",
-   "octave": "double|1x6|97,98,99,120,121,122,"
+   "octave": "double|1x6|97,98,99,120,121,122,",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "yk-double-mixed",
    "code": "r=double([\"1+2\",\"1,234\",\"2+3i\",\"bad\",\"\"]);",
    "group": "String functions — documentation-oriented, MATLAB results not yet measured",
    "kind": "boyut farklı",
-   "matlab": "double|1x5|NaN+0i,1234+0i,2-3i,NaN+0i,NaN+0i,",
-   "octave": "double|1x15|49,43,50,49,44,50,51,52,50,43,51,105,98,97,100,"
+   "matlab": "double|1x5|NaN+0i,1234+0i,2+3i,NaN+0i,NaN+0i,",
+   "octave": "double|1x15|49,43,50,49,44,50,51,52,50,43,51,105,98,97,100,",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "yk-char-array",
@@ -1775,7 +5230,19 @@
    "group": "String functions — documentation-oriented, MATLAB results not yet measured",
    "kind": "boyut farklı",
    "matlab": "char|1x3x2|u97,98,99,120,121,122,",
-   "octave": "char|1x6|u97,98,99,120,121,122,"
+   "octave": "char|1x6|u97,98,99,120,121,122,",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "yk-char-mixed",
@@ -1783,7 +5250,19 @@
    "group": "String functions — documentation-oriented, MATLAB results not yet measured",
    "kind": "boyut farklı",
    "matlab": "char|2x3x2|u97,99,32,99,32,99,98,100,98,32,32,32,",
-   "octave": "char|2x4|u97,99,98,99,98,99,32,100,"
+   "octave": "char|2x4|u97,99,98,99,98,99,32,100,",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "yk-cellstr-array",
@@ -1791,7 +5270,19 @@
    "group": "String functions — documentation-oriented, MATLAB results not yet measured",
    "kind": "boyut farklı",
    "matlab": "cell|1x2|{char|1x3|u97,98,99,;char|1x3|u120,121,122,;}",
-   "octave": "cell|1x1|{char|1x6|u97,98,99,120,121,122,;}"
+   "octave": "cell|1x1|{char|1x6|u97,98,99,120,121,122,;}",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "yk-ismissing-scalar",
@@ -1799,7 +5290,19 @@
    "group": "String functions — documentation-oriented, MATLAB results not yet measured",
    "kind": "boyut farklı",
    "matlab": "logical|1x1|0",
-   "octave": "logical|1x3|000"
+   "octave": "logical|1x3|000",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "yk-ismissing-empty",
@@ -1807,7 +5310,19 @@
    "group": "String functions — documentation-oriented, MATLAB results not yet measured",
    "kind": "boyut farklı",
    "matlab": "logical|1x1|0",
-   "octave": "logical|0x0|"
+   "octave": "logical|0x0|",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "yk-ismissing-array",
@@ -1815,7 +5330,19 @@
    "group": "String functions — documentation-oriented, MATLAB results not yet measured",
    "kind": "boyut farklı",
    "matlab": "logical|1x2|00",
-   "octave": "logical|1x6|000000"
+   "octave": "logical|1x6|000000",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "yk-ismissing-mixed",
@@ -1823,7 +5350,19 @@
    "group": "String functions — documentation-oriented, MATLAB results not yet measured",
    "kind": "değer farklı",
    "matlab": "logical|1x2|10",
-   "octave": "logical|1x2|11"
+   "octave": "logical|1x2|11",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "yk-strcmp-array",
@@ -1831,7 +5370,19 @@
    "group": "String functions — documentation-oriented, MATLAB results not yet measured",
    "kind": "boyut farklı",
    "matlab": "logical|1x2|10",
-   "octave": "logical|1x1|0"
+   "octave": "logical|1x1|0",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "yk-strcmpi-array",
@@ -1839,7 +5390,19 @@
    "group": "String functions — documentation-oriented, MATLAB results not yet measured",
    "kind": "boyut farklı",
    "matlab": "logical|1x2|10",
-   "octave": "logical|1x1|0"
+   "octave": "logical|1x1|0",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "yk-strncmp-array",
@@ -1847,7 +5410,19 @@
    "group": "String functions — documentation-oriented, MATLAB results not yet measured",
    "kind": "boyut farklı",
    "matlab": "logical|1x2|10",
-   "octave": "logical|1x1|1"
+   "octave": "logical|1x1|1",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "yk-strncmpi-array",
@@ -1855,7 +5430,19 @@
    "group": "String functions — documentation-oriented, MATLAB results not yet measured",
    "kind": "boyut farklı",
    "matlab": "logical|1x2|10",
-   "octave": "logical|1x1|1"
+   "octave": "logical|1x1|1",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "yk-regexp-scalar",
@@ -1863,7 +5450,19 @@
    "group": "String functions — documentation-oriented, MATLAB results not yet measured",
    "kind": "sınıf farklı",
    "matlab": "string|1x1|{char|1x3|u97,98,99,;}",
-   "octave": "cell|1x1|{char|1x3|u97,98,99,;}"
+   "octave": "cell|1x1|{char|1x3|u97,98,99,;}",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "yk-regexp-empty",
@@ -1871,7 +5470,19 @@
    "group": "String functions — documentation-oriented, MATLAB results not yet measured",
    "kind": "sınıf farklı",
    "matlab": "string|0x0|{}",
-   "octave": "cell|0x0|{}"
+   "octave": "cell|0x0|{}",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "yk-regexp-array",
@@ -1879,7 +5490,19 @@
    "group": "String functions — documentation-oriented, MATLAB results not yet measured",
    "kind": "boyut farklı",
    "matlab": "cell|1x2|{string|1x1|{char|1x3|u97,98,99,;};string|1x1|{char|1x3|u120,121,122,;};}",
-   "octave": "cell|1x1|{char|1x6|u97,98,99,120,121,122,;}"
+   "octave": "cell|1x1|{char|1x6|u97,98,99,120,121,122,;}",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "yk-regexprep-scalar",
@@ -1887,7 +5510,19 @@
    "group": "String functions — documentation-oriented, MATLAB results not yet measured",
    "kind": "sınıf farklı",
    "matlab": "string|1x1|{char|1x3|u88,88,88,;}",
-   "octave": "char|1x3|u88,88,88,"
+   "octave": "char|1x3|u88,88,88,",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "yk-regexprep-empty",
@@ -1895,7 +5530,19 @@
    "group": "String functions — documentation-oriented, MATLAB results not yet measured",
    "kind": "sınıf farklı",
    "matlab": "string|1x1|{char|0x0|u,;}",
-   "octave": "char|0x0|u,"
+   "octave": "char|0x0|u,",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "yk-regexprep-array",
@@ -1903,7 +5550,19 @@
    "group": "String functions — documentation-oriented, MATLAB results not yet measured",
    "kind": "sınıf farklı",
    "matlab": "string|1x2|{char|1x3|u88,88,88,;char|1x3|u88,88,88,;}",
-   "octave": "char|1x6|u88,88,88,88,88,88,"
+   "octave": "char|1x6|u88,88,88,88,88,88,",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "yk-regexpi-scalar",
@@ -1911,7 +5570,19 @@
    "group": "String functions — documentation-oriented, MATLAB results not yet measured",
    "kind": "sınıf farklı",
    "matlab": "string|1x1|{char|1x3|u97,98,99,;}",
-   "octave": "cell|1x1|{char|1x3|u97,98,99,;}"
+   "octave": "cell|1x1|{char|1x3|u97,98,99,;}",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "yk-regexpi-empty",
@@ -1919,7 +5590,19 @@
    "group": "String functions — documentation-oriented, MATLAB results not yet measured",
    "kind": "sınıf farklı",
    "matlab": "string|0x0|{}",
-   "octave": "cell|1x0|{}"
+   "octave": "cell|1x0|{}",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "yk-regexpi-array",
@@ -1927,7 +5610,19 @@
    "group": "String functions — documentation-oriented, MATLAB results not yet measured",
    "kind": "boyut farklı",
    "matlab": "cell|1x2|{string|1x1|{char|1x3|u97,98,99,;};string|1x1|{char|1x3|u120,121,122,;};}",
-   "octave": "cell|1x1|{char|1x6|u97,98,99,120,121,122,;}"
+   "octave": "cell|1x1|{char|1x6|u97,98,99,120,121,122,;}",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "yk-sort-scalar",
@@ -1935,7 +5630,19 @@
    "group": "String functions — documentation-oriented, MATLAB results not yet measured",
    "kind": "sınıf farklı",
    "matlab": "string|1x1|{char|1x3|u97,98,99,;}",
-   "octave": "char|1x3|u97,98,99,"
+   "octave": "char|1x3|u97,98,99,",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "yk-sort-empty",
@@ -1943,7 +5650,19 @@
    "group": "String functions — documentation-oriented, MATLAB results not yet measured",
    "kind": "sınıf farklı",
    "matlab": "string|1x1|{char|0x0|u,;}",
-   "octave": "char|0x0|u,"
+   "octave": "char|0x0|u,",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "yk-sort-array",
@@ -1951,7 +5670,19 @@
    "group": "String functions — documentation-oriented, MATLAB results not yet measured",
    "kind": "sınıf farklı",
    "matlab": "string|1x2|{char|1x3|u97,98,99,;char|1x3|u120,121,122,;}",
-   "octave": "char|1x6|u97,98,99,120,121,122,"
+   "octave": "char|1x6|u97,98,99,120,121,122,",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "yk-unique-scalar",
@@ -1959,7 +5690,19 @@
    "group": "String functions — documentation-oriented, MATLAB results not yet measured",
    "kind": "sınıf farklı",
    "matlab": "string|1x1|{char|1x3|u97,98,99,;}",
-   "octave": "char|1x3|u97,98,99,"
+   "octave": "char|1x3|u97,98,99,",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "yk-unique-empty",
@@ -1967,7 +5710,19 @@
    "group": "String functions — documentation-oriented, MATLAB results not yet measured",
    "kind": "sınıf farklı",
    "matlab": "string|1x1|{char|0x0|u,;}",
-   "octave": "char|0x0|u,"
+   "octave": "char|0x0|u,",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "yk-unique-array",
@@ -1975,7 +5730,19 @@
    "group": "String functions — documentation-oriented, MATLAB results not yet measured",
    "kind": "sınıf farklı",
    "matlab": "string|1x2|{char|1x3|u97,98,99,;char|1x3|u120,121,122,;}",
-   "octave": "char|1x6|u97,98,99,120,121,122,"
+   "octave": "char|1x6|u97,98,99,120,121,122,",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "yk-unique-mixed",
@@ -1983,7 +5750,19 @@
    "group": "String functions — documentation-oriented, MATLAB results not yet measured",
    "kind": "sınıf farklı",
    "matlab": "string|1x2|{char|1x1|u98,;char|1x1|u97,;}",
-   "octave": "char|1x2|u98,97,"
+   "octave": "char|1x2|u98,97,",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "yk-ismember-scalar",
@@ -1991,7 +5770,19 @@
    "group": "String functions — documentation-oriented, MATLAB results not yet measured",
    "kind": "boyut farklı",
    "matlab": "logical|1x1|1",
-   "octave": "logical|1x3|111"
+   "octave": "logical|1x3|111",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "yk-ismember-empty",
@@ -1999,7 +5790,19 @@
    "group": "String functions — documentation-oriented, MATLAB results not yet measured",
    "kind": "boyut farklı",
    "matlab": "logical|1x1|0",
-   "octave": "logical|0x0|"
+   "octave": "logical|0x0|",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "yk-ismember-array",
@@ -2007,7 +5810,19 @@
    "group": "String functions — documentation-oriented, MATLAB results not yet measured",
    "kind": "boyut farklı",
    "matlab": "logical|1x2|11",
-   "octave": "logical|1x6|111111"
+   "octave": "logical|1x6|111111",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "yk-ismember-missing",
@@ -2015,7 +5830,19 @@
    "group": "String functions — documentation-oriented, MATLAB results not yet measured",
    "kind": "değer farklı",
    "matlab": "logical|1x2|10",
-   "octave": "logical|1x2|00"
+   "octave": "logical|1x2|00",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "yk-ismember-mixed",
@@ -2023,7 +5850,19 @@
    "group": "String functions — documentation-oriented, MATLAB results not yet measured",
    "kind": "değer farklı",
    "matlab": "logical|1x2|11",
-   "octave": "logical|1x2|00"
+   "octave": "logical|1x2|00",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "yk-numel-scalar",
@@ -2031,7 +5870,19 @@
    "group": "String functions — documentation-oriented, MATLAB results not yet measured",
    "kind": "değer farklı",
    "matlab": "double|1x1|1,",
-   "octave": "double|1x1|3,"
+   "octave": "double|1x1|3,",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "yk-numel-empty",
@@ -2039,7 +5890,19 @@
    "group": "String functions — documentation-oriented, MATLAB results not yet measured",
    "kind": "değer farklı",
    "matlab": "double|1x1|1,",
-   "octave": "double|1x1|0,"
+   "octave": "double|1x1|0,",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "yk-numel-array",
@@ -2047,7 +5910,19 @@
    "group": "String functions — documentation-oriented, MATLAB results not yet measured",
    "kind": "değer farklı",
    "matlab": "double|1x1|2,",
-   "octave": "double|1x1|6,"
+   "octave": "double|1x1|6,",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "yk-size-scalar",
@@ -2055,7 +5930,19 @@
    "group": "String functions — documentation-oriented, MATLAB results not yet measured",
    "kind": "değer farklı",
    "matlab": "double|1x2|1,1,",
-   "octave": "double|1x2|1,3,"
+   "octave": "double|1x2|1,3,",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "yk-size-empty",
@@ -2063,7 +5950,19 @@
    "group": "String functions — documentation-oriented, MATLAB results not yet measured",
    "kind": "değer farklı",
    "matlab": "double|1x2|1,1,",
-   "octave": "double|1x2|0,0,"
+   "octave": "double|1x2|0,0,",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "yk-size-array",
@@ -2071,7 +5970,19 @@
    "group": "String functions — documentation-oriented, MATLAB results not yet measured",
    "kind": "değer farklı",
    "matlab": "double|1x2|1,2,",
-   "octave": "double|1x2|1,6,"
+   "octave": "double|1x2|1,6,",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "yk-isempty-empty",
@@ -2079,7 +5990,19 @@
    "group": "String functions — documentation-oriented, MATLAB results not yet measured",
    "kind": "değer farklı",
    "matlab": "logical|1x1|0",
-   "octave": "logical|1x1|1"
+   "octave": "logical|1x1|1",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "yk-indexing-scalar",
@@ -2087,7 +6010,19 @@
    "group": "String functions — documentation-oriented, MATLAB results not yet measured",
    "kind": "sınıf farklı",
    "matlab": "string|1x1|{char|1x3|u97,98,99,;}",
-   "octave": "char|1x1|u97,"
+   "octave": "char|1x1|u97,",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "yk-indexing-empty",
@@ -2095,7 +6030,19 @@
    "group": "String functions — documentation-oriented, MATLAB results not yet measured",
    "kind": "Octave hata verir",
    "matlab": "string|1x1|{char|0x0|u,;}",
-   "octave": "HATA|Octave:index-out-of-bounds|s(1): out of bound 0 (dimensions are 0x0)"
+   "octave": "HATA|Octave:index-out-of-bounds|s(1): out of bound 0 (dimensions are 0x0)",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "error",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "yk-indexing-array",
@@ -2103,7 +6050,19 @@
    "group": "String functions — documentation-oriented, MATLAB results not yet measured",
    "kind": "sınıf farklı",
    "matlab": "string|1x1|{char|1x3|u97,98,99,;}",
-   "octave": "char|1x1|u97,"
+   "octave": "char|1x1|u97,",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "yk-indexing-mixed",
@@ -2111,7 +6070,19 @@
    "group": "String functions — documentation-oriented, MATLAB results not yet measured",
    "kind": "sınıf farklı",
    "matlab": "string|1x2|{char|1x1|u97,;char|1x1|u99,;}",
-   "octave": "char|1x2|u97,99,"
+   "octave": "char|1x2|u97,99,",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "yk-concatenation-scalar",
@@ -2119,7 +6090,19 @@
    "group": "String functions — documentation-oriented, MATLAB results not yet measured",
    "kind": "sınıf farklı",
    "matlab": "string|1x2|{char|1x3|u97,98,99,;char|1x3|u97,98,99,;}",
-   "octave": "char|1x6|u97,98,99,97,98,99,"
+   "octave": "char|1x6|u97,98,99,97,98,99,",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "yk-concatenation-empty",
@@ -2127,7 +6110,19 @@
    "group": "String functions — documentation-oriented, MATLAB results not yet measured",
    "kind": "sınıf farklı",
    "matlab": "string|1x2|{char|0x0|u,;char|0x0|u,;}",
-   "octave": "char|0x0|u,"
+   "octave": "char|0x0|u,",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "yk-concatenation-array",
@@ -2135,7 +6130,19 @@
    "group": "String functions — documentation-oriented, MATLAB results not yet measured",
    "kind": "sınıf farklı",
    "matlab": "string|1x4|{char|1x3|u97,98,99,;char|1x3|u120,121,122,;char|1x3|u97,98,99,;char|1x3|u120,121,122,;}",
-   "octave": "char|1x12|u97,98,99,120,121,122,97,98,99,120,121,122,"
+   "octave": "char|1x12|u97,98,99,120,121,122,97,98,99,120,121,122,",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "yk-concatenation-mixed",
@@ -2143,7 +6150,19 @@
    "group": "String functions — documentation-oriented, MATLAB results not yet measured",
    "kind": "sınıf farklı",
    "matlab": "string|1x2|{char|1x1|u97,;char|1x1|u98,;}",
-   "octave": "char|1x2|u97,98,"
+   "octave": "char|1x2|u97,98,",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "yk-eq-scalar",
@@ -2151,7 +6170,19 @@
    "group": "String functions — documentation-oriented, MATLAB results not yet measured",
    "kind": "boyut farklı",
    "matlab": "logical|1x1|1",
-   "octave": "logical|1x3|111"
+   "octave": "logical|1x3|111",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "yk-eq-empty",
@@ -2159,7 +6190,19 @@
    "group": "String functions — documentation-oriented, MATLAB results not yet measured",
    "kind": "Octave hata verir",
    "matlab": "logical|1x1|0",
-   "octave": "HATA|Octave:nonconformant-args|mx_el_eq: nonconformant arguments (op1 is 0x0, op2 is 1x3)"
+   "octave": "HATA|Octave:nonconformant-args|mx_el_eq: nonconformant arguments (op1 is 0x0, op2 is 1x3)",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "error",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "yk-eq-array",
@@ -2167,7 +6210,19 @@
    "group": "String functions — documentation-oriented, MATLAB results not yet measured",
    "kind": "Octave hata verir",
    "matlab": "logical|1x2|10",
-   "octave": "HATA|Octave:nonconformant-args|mx_el_eq: nonconformant arguments (op1 is 1x6, op2 is 1x3)"
+   "octave": "HATA|Octave:nonconformant-args|mx_el_eq: nonconformant arguments (op1 is 1x6, op2 is 1x3)",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "error",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "yk-eq-mixed",
@@ -2175,7 +6230,19 @@
    "group": "String functions — documentation-oriented, MATLAB results not yet measured",
    "kind": "boyut farklı",
    "matlab": "logical|1x1|1",
-   "octave": "logical|1x2|11"
+   "octave": "logical|1x2|11",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "yk-ne-scalar",
@@ -2183,7 +6250,19 @@
    "group": "String functions — documentation-oriented, MATLAB results not yet measured",
    "kind": "boyut farklı",
    "matlab": "logical|1x1|0",
-   "octave": "logical|1x3|000"
+   "octave": "logical|1x3|000",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "yk-ne-empty",
@@ -2191,7 +6270,19 @@
    "group": "String functions — documentation-oriented, MATLAB results not yet measured",
    "kind": "Octave hata verir",
    "matlab": "logical|1x1|1",
-   "octave": "HATA|Octave:nonconformant-args|mx_el_ne: nonconformant arguments (op1 is 0x0, op2 is 1x3)"
+   "octave": "HATA|Octave:nonconformant-args|mx_el_ne: nonconformant arguments (op1 is 0x0, op2 is 1x3)",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "error",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "yk-ne-array",
@@ -2199,7 +6290,19 @@
    "group": "String functions — documentation-oriented, MATLAB results not yet measured",
    "kind": "Octave hata verir",
    "matlab": "logical|1x2|01",
-   "octave": "HATA|Octave:nonconformant-args|mx_el_ne: nonconformant arguments (op1 is 1x6, op2 is 1x3)"
+   "octave": "HATA|Octave:nonconformant-args|mx_el_ne: nonconformant arguments (op1 is 1x6, op2 is 1x3)",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "error",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "yk-lt-scalar",
@@ -2207,7 +6310,19 @@
    "group": "String functions — documentation-oriented, MATLAB results not yet measured",
    "kind": "boyut farklı",
    "matlab": "logical|1x1|0",
-   "octave": "logical|1x3|000"
+   "octave": "logical|1x3|000",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "yk-lt-empty",
@@ -2215,7 +6330,19 @@
    "group": "String functions — documentation-oriented, MATLAB results not yet measured",
    "kind": "Octave hata verir",
    "matlab": "logical|1x1|1",
-   "octave": "HATA|Octave:nonconformant-args|mx_el_lt: nonconformant arguments (op1 is 0x0, op2 is 1x3)"
+   "octave": "HATA|Octave:nonconformant-args|mx_el_lt: nonconformant arguments (op1 is 0x0, op2 is 1x3)",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "error",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "yk-lt-array",
@@ -2223,7 +6350,19 @@
    "group": "String functions — documentation-oriented, MATLAB results not yet measured",
    "kind": "Octave hata verir",
    "matlab": "logical|1x2|00",
-   "octave": "HATA|Octave:nonconformant-args|mx_el_lt: nonconformant arguments (op1 is 1x6, op2 is 1x3)"
+   "octave": "HATA|Octave:nonconformant-args|mx_el_lt: nonconformant arguments (op1 is 1x6, op2 is 1x3)",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "error",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "yk-gt-scalar",
@@ -2231,7 +6370,19 @@
    "group": "String functions — documentation-oriented, MATLAB results not yet measured",
    "kind": "boyut farklı",
    "matlab": "logical|1x1|0",
-   "octave": "logical|1x3|000"
+   "octave": "logical|1x3|000",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "yk-gt-empty",
@@ -2239,7 +6390,19 @@
    "group": "String functions — documentation-oriented, MATLAB results not yet measured",
    "kind": "Octave hata verir",
    "matlab": "logical|1x1|0",
-   "octave": "HATA|Octave:nonconformant-args|mx_el_gt: nonconformant arguments (op1 is 0x0, op2 is 1x3)"
+   "octave": "HATA|Octave:nonconformant-args|mx_el_gt: nonconformant arguments (op1 is 0x0, op2 is 1x3)",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "error",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "yk-gt-array",
@@ -2247,7 +6410,19 @@
    "group": "String functions — documentation-oriented, MATLAB results not yet measured",
    "kind": "Octave hata verir",
    "matlab": "logical|1x2|01",
-   "octave": "HATA|Octave:nonconformant-args|mx_el_gt: nonconformant arguments (op1 is 1x6, op2 is 1x3)"
+   "octave": "HATA|Octave:nonconformant-args|mx_el_gt: nonconformant arguments (op1 is 1x6, op2 is 1x3)",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "error",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "yk-isstringscalar-scalar",
@@ -2255,7 +6430,19 @@
    "group": "String functions — documentation-oriented, MATLAB results not yet measured",
    "kind": "değer farklı",
    "matlab": "logical|1x1|1",
-   "octave": "logical|1x1|0"
+   "octave": "logical|1x1|0",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "yk-isstringscalar-empty",
@@ -2263,7 +6450,19 @@
    "group": "String functions — documentation-oriented, MATLAB results not yet measured",
    "kind": "değer farklı",
    "matlab": "logical|1x1|1",
-   "octave": "logical|1x1|0"
+   "octave": "logical|1x1|0",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "yk-convertstringstochars-array",
@@ -2271,7 +6470,19 @@
    "group": "String functions — documentation-oriented, MATLAB results not yet measured",
    "kind": "sınıf farklı",
    "matlab": "cell|1x2|{char|1x3|u97,98,99,;char|1x3|u120,121,122,;}",
-   "octave": "char|1x6|u97,98,99,120,121,122,"
+   "octave": "char|1x6|u97,98,99,120,121,122,",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "yk-convertstringstochars-mixed",
@@ -2279,7 +6490,19 @@
    "group": "String functions — documentation-oriented, MATLAB results not yet measured",
    "kind": "değer farklı",
    "matlab": "cell|1x2|{string|1x1|{char|1x1|u97,;};string|1x1|{char|1x1|u98,;};}",
-   "octave": "cell|1x2|{char|1x1|u97,;char|1x1|u98,;}"
+   "octave": "cell|1x2|{char|1x1|u97,;char|1x1|u98,;}",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "yk-convertcharstostrings-array",
@@ -2287,7 +6510,19 @@
    "group": "String functions — documentation-oriented, MATLAB results not yet measured",
    "kind": "boyut farklı",
    "matlab": "string|1x2|{char|1x3|u97,98,99,;char|1x3|u120,121,122,;}",
-   "octave": "string|1x1|{char|1x6|u97,98,99,120,121,122,;}"
+   "octave": "string|1x1|{char|1x6|u97,98,99,120,121,122,;}",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "yk-bin2dec-row",
@@ -2295,7 +6530,19 @@
    "group": "String functions — documentation-oriented, MATLAB results not yet measured",
    "kind": "boyut farklı",
    "matlab": "double|1x2|1,2,",
-   "octave": "double|1x1|6,"
+   "octave": "double|1x1|6,",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "yk-hex2dec-row",
@@ -2303,7 +6550,19 @@
    "group": "String functions — documentation-oriented, MATLAB results not yet measured",
    "kind": "boyut farklı",
    "matlab": "double|1x2|10,255,",
-   "octave": "double|1x1|2815,"
+   "octave": "double|1x1|2815,",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    }
+   }
   },
   {
    "id": "yk-newline-mixed",
@@ -2311,7 +6570,19 @@
    "group": "String functions — documentation-oriented, MATLAB results not yet measured",
    "kind": "Octave hata verir",
    "matlab": "double|1x2|10,2,",
-   "octave": "HATA||strlength: STR must be a character vector or cell array of character vectors"
+   "octave": "HATA||strlength: STR must be a character vector or cell array of character vectors",
+   "coverage": {
+    "matlab": {
+     "status": "complete",
+     "complete": true,
+     "reasons": []
+    },
+    "octave": {
+     "status": "error",
+     "complete": true,
+     "reasons": []
+    }
+   }
   }
  ]
 }

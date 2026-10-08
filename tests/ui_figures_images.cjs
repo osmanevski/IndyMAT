@@ -61,6 +61,10 @@ const { assert, expect, openFigures, run, settle } = require("./figure_ui_suppor
     await page.setViewportSize({width:1280,height:820});await settle(page);b=await hook("box",0);assert(Math.abs(b.w/b.h-30/8)<.001,"resized axis image");
     await interactive("Equal image", "imagesc([1 2 3]);axis equal;");b=await hook("box",0);const view=JSON.parse(await canvas.getAttribute("data-view"))[0];assert(Math.abs(b.w/b.h-(view.x[1]-view.x[0])/(view.y[1]-view.y[0]))<.001,"axis equal data aspect");
     await interactive("Scalar image", "imagesc(7);colormap([1 0 0;0 1 0]);clim([7 8]);");await pixel(1,1,[255,0,0],"singleton");
+    await interactive("Top image tip", "imagesc([1 2;3 4]);hold on;plot(1,1,'ro','markersize',8);image([5 6;7 8]);");
+    await hover(1,1);await expect(tip).toHaveText("Satır = 1, Sütun = 1, Değer = 5");
+    await interactive("Top line tip", "imagesc([1 2;3 4]);hold on;image([5 6;7 8]);plot(1,1,'ro','markersize',8,'displayname','Visible overlay');");
+    await hover(1,1);await expect(tip).toHaveText("Visible overlay: x = 1, y = 1");
     await run(page,"close all;figure('name','Alpha image');h=imagesc([1 2;3 4]);set(h,'alphadata',.5);");await expect(page.locator("#figure-caption")).toContainText("saydamlık");await expect(page.locator("#plot-interactive")).toBeDisabled();await expect(page.locator("#plot-area img")).toBeVisible();
     assert.deepEqual(errors,[]);console.log("UI IMAGE PASS: Qt/native RGB, scaled/direct class colors, descending centers, half cells, directions, tips, zoom/pan, equal/image aspect, mixed line/colorbar, resize/enlarge, alpha fallback.");
   } finally { await browser.close(); }

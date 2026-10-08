@@ -209,11 +209,11 @@ class SourceAdapterJobTests(unittest.TestCase):
     def test_preparation_failure_leaves_kernel_idle(self):
         previous = self.kernel.snapshot()['job']
         folders = set(self.kernel.runtime.iterdir())
-        original_write = Path.write_text
+        original_write = Path.write_bytes
         def fail_source(path, *args, **kwargs):
             if path.name == 'source.json': raise OSError('preparation fixture')
             return original_write(path, *args, **kwargs)
-        with patch.object(Path, 'write_text', fail_source), self.assertRaises(ValueError):
+        with patch.object(Path, 'write_bytes', fail_source), self.assertRaises(ValueError):
             self.kernel.submit('r="x";', source_context=self.context('r="x";'))
         self.assertEqual(self.kernel.snapshot()['job'], previous)
         self.assertEqual(self.kernel.snapshot()['status'], 'idle')

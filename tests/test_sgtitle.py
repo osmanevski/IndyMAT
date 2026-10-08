@@ -106,6 +106,46 @@ class SgtitleTests(unittest.TestCase):
         self.assertEqual(len(axes), 2)
         self.assertTrue(all('title_layout_position' in a for a in axes))
 
+    def test_tiled_spans_before_and_after_title_keep_owned_base_geometry(self):
+        for span in ['[1 2]', '[2 1]', '[2 2]']:
+            with self.subTest(span=span):
+                data = self.snapshot("tiledlayout(4,4);a=nexttile(" + span + ");plot(1:3);title('Before');" +
+                                     "base=get(a,'position');sgtitle('one');p=get(a,'position');" +
+                                     "assert(p(4)<base(4));assert(isequal(p([1 3]),base([1 3])));" +
+                                     "b=nexttile(" + span + ");plot(1:3);title('After');q=get(b,'position');" +
+                                     "assert(abs(q(4)-p(4))<1e-12);assert(nexttile(1)==a);" +
+                                     "sgtitle('one');assert(isequal(p,get(a,'position')));" +
+                                     "assert(norm(q-get(b,'position'))<1e-12);" +
+                                     "sgtitle({'one','two'});assert(get(a,'position')(4)<p(4));" +
+                                     "assert(get(b,'position')(4)<q(4));" +
+                                     "sgtitle('one');assert(isequal(p,get(a,'position')));" +
+                                     "assert(norm(q-get(b,'position'))<1e-12);")
+                axes = [a for a in data['axes'] if a['visible']]
+                self.assertEqual(len(axes), 2)
+                for axis in axes:
+                    self.assertIn('title_layout_position', axis)
+                    self.assertGreater(axis['title_layout_position'][3], axis['position'][3])
+
+    def test_tiled_geometry_edits_and_reuse_end_title_ownership(self):
+        for span in ['[1 1]', '[1 2]']:
+            for before_title in [True, False]:
+                for edit in ["set(a,'position',[.1 .5 .3 .3])", "set(a,'units','pixels')"]:
+                    with self.subTest(span=span, before_title=before_title, edit=edit):
+                        data = self.snapshot("tiledlayout(2,2);a=nexttile(" + span + ");plot(1:3);" +
+                                             ("" if before_title else "sgtitle('one');") +
+                                             edit + ";p=get(a,'position');u=get(a,'units');" +
+                                             "assert(nexttile(1)==a);sgtitle('one');sgtitle({'one','two'});" +
+                                             "assert(isequal(p,get(a,'position')));assert(strcmp(u,get(a,'units')));")
+                        axis = next(a for a in data['axes'] if a['visible'])
+                        self.assertNotIn('title_layout_position', axis)
+
+    def test_tiled_units_edit_does_not_resume_ownership_when_restored(self):
+        self.run_code("tiledlayout(2,2);a=nexttile([1 2]);plot(1:3);" +
+                      "set(a,'units','pixels');p=get(a,'position');sgtitle('one');" +
+                      "assert(isequal(p,get(a,'position')));assert(strcmp(get(a,'units'),'pixels'));" +
+                      "set(a,'units','normalized');p=get(a,'position');assert(nexttile(1)==a);" +
+                      "sgtitle({'one','two'});assert(isequal(p,get(a,'position')));")
+
     def test_multiline_short_figure_has_top_anchor_and_more_room(self):
         data = self.snapshot("set(gcf,'position',[100 100 640 220]);a=subplot(2,2,1);plot(1:3);title('Panel');" +
                              "h=sgtitle({'first','second'});th=findall(h,'type','text');" +
