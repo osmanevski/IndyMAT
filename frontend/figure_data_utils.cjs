@@ -11,7 +11,7 @@ const REASON_CODES = Object.freeze(["no_axes", "budget_exceeded", "invalid_data"
   "unsupported_surface", "log_3d", "perspective", "manual_camera", "unsupported_units",
   "unsupported_colorbar", "json_budget", "patch_colors", "unsupported_patch", "unsupported_text"]);
 // Added with the 2D shapes/text records; older artifacts do not carry them.
-const OPTIONAL_LIMITS = Object.freeze({ text_lines: 256, text_chars: 65536 });
+const OPTIONAL_LIMITS = Object.freeze({ text_lines: 256, text_chars: 65536, image_pixels: 262144 });
 const STYLES = ["-", "--", ":", "-.", "none"];
 const MARKERS = ["none", "o", "s", "square", "^", "v", ">", "<", ".", "+", "x", "*"];
 const CLASSES = ["double", "single", "int8", "uint8", "int16", "uint16", "int32", "uint32", "int64", "uint64"];
@@ -35,7 +35,7 @@ function requireThat(ok, path, code = "invalid_data", args) {
 }
 function budget(n, key, path) {
   requireThat(integer(n), path);
-  if (n > LIMITS[key]) failure("budget_exceeded", path, { budget: key, actual: n, limit: LIMITS[key] });
+  if (n > (LIMITS[key] ?? OPTIONAL_LIMITS[key])) failure("budget_exceeded", path, { budget: key, actual: n, limit: LIMITS[key] ?? OPTIONAL_LIMITS[key] });
 }
 function numbers(a, n, path, nullable = false) {
   requireThat(Array.isArray(a) && (n === undefined || a.length === n), path);
@@ -65,6 +65,23 @@ function descriptor(d, path = "array", cap = LIMITS.vertices * 3, nullable = tru
   return d;
 }
 // Returns a copy; never coerces null into zero or mutates the descriptor.
+function image(s, p) {
+  const [rows, columns] = s.shape, count = rows * columns;
+  for (const [key, size] of [["x", columns], ["y", rows]]) {
+    numbers(s[key], 2, p + "." + key);
+    requireThat(size === 1 ? s[key][0] === s[key][1] : s[key][0] !== s[key][1], p + "." + key);
+    const delta = size > 1 ? (s[key][1] - s[key][0]) / (size - 1) : 1;
+    requireThat(Number.isFinite(delta) && Number.isFinite(s[key][0] - delta / 2) && Number.isFinite(s[key][1] + delta / 2), p + "." + key);
+  }
+  requireThat(["indexed", "truecolor"].includes(s.encoding) && ["scaled", "direct"].includes(s.mapping), p + ".encoding");
+  requireThat(["double", "single", "uint8", "uint16"].includes(s.cdata_class), p + ".cdata_class");
+  descriptor(s.cdata, p + ".cdata", OPTIONAL_LIMITS.image_pixels * 3, false);
+  requireThat(equal(s.cdata.shape, s.encoding === "truecolor" ? [rows, columns, 3] : [rows, columns]), p + ".cdata.shape");
+  const maximum = s.cdata_class === "uint8" ? 255 : s.cdata_class === "uint16" ? 65535 : null;
+  if (maximum !== null) requireThat(s.cdata.values.every((n) => integer(n) && n <= maximum), p + ".cdata.values");
+  requireThat(s.pixel_count === count && s.original_points === 0 && s.rendered_points === 0 && s.decimated === false, p + ".counts");
+}
+
 function decodeArray(d) {
   try {
     descriptor(d);
@@ -191,6 +208,7 @@ function patch2d(s, path) {
 function textRecord(s, path) {
   requireThat(typeof s.role === "string" && ["data", "normalized"].includes(s.units), path + ".units", "unsupported_text", { property: "units" });
   numbers(s.position, 2, path + ".position");
+  if (own(s, "figure_title")) requireThat(typeof s.figure_title === "boolean", path + ".figure_title");
   requireThat(Array.isArray(s.lines) && s.lines.every((line) => typeof line === "string"), path + ".lines");
   if (s.lines.length > OPTIONAL_LIMITS.text_lines) failure("budget_exceeded", path + ".lines", { budget: "text_lines", actual: s.lines.length, limit: OPTIONAL_LIMITS.text_lines });
   const chars = s.lines.reduce((sum, line) => sum + line.length, 0);
@@ -321,6 +339,10 @@ function validate(payload) {
     requireThat(Array.isArray(payload.axes), "axes");
     budget(payload.axes.length, "axes", "axes");
     jsonBudget(payload);
+    if (record(payload.source) && own(payload.source, "figure_size")) {
+      numbers(payload.source.figure_size, 2, "source.figure_size");
+      requireThat(payload.source.figure_size.every((n) => n > 0), "source.figure_size");
+    }
     if (payload.version === 2) payload = legacyArrays(payload);
     if (!payload.supported) {
       if (payload.version === 3 || own(payload, "reason_code")) requireThat(REASON_CODES.includes(payload.reason_code) && record(payload.reason_args), "reason_code");
@@ -336,7 +358,7 @@ function validate(payload) {
       requireThat(payload.reason_code === "" && record(payload.reason_args), "reason_code");
     }
     // Reject aggregate upper bounds before constructing expected cells/edges.
-    let estimatedVertices = 0, estimatedTriangles = 0, estimatedSeries = 0;
+    let estimatedVertices = 0, estimatedTriangles = 0, estimatedSeries = 0, estimatedPixels = 0;
     for (const a of payload.axes) {
       requireThat(record(a) && Array.isArray(a.series), "axes.series");
       estimatedSeries += a.series.length;
@@ -349,6 +371,10 @@ function validate(payload) {
           budget(n, "surface_vertices", "surface.shape");
           estimatedVertices += n;
           estimatedTriangles += 2 * (s.shape[0] - 1) * (s.shape[1] - 1);
+        } else if (s.kind === "image") {
+          requireThat(Array.isArray(s.shape) && s.shape.length === 2 && s.shape.every((n) => integer(n) && n > 0), "image.shape");
+          estimatedPixels += s.shape[0] * s.shape[1];
+          budget(estimatedPixels, "image_pixels", "image.shape");
         } else if (s.kind === "patch2d") {
           requireThat(record(s.vertices) && Array.isArray(s.vertices.shape) && integer(s.vertices.shape[0]), "patch2d.vertices");
           budget(s.vertices.shape[0], "patch_vertices", "patch2d.vertices");
@@ -362,11 +388,15 @@ function validate(payload) {
         budget(estimatedTriangles, "triangles", "triangle_count");
       }
     }
-    let vertices = 0, triangles = 0, seriesCount = 0, reduced = false;
+    let vertices = 0, triangles = 0, pixels = 0, seriesCount = 0, reduced = false;
     for (let i = 0; i < payload.axes.length; i++) {
       const a = payload.axes[i], path = "axes[" + i + "]";
       requireThat(record(a) && a.supported === true && Array.isArray(a.series), path);
       numbers(a.position, 4, path + ".position");
+      if (own(a, "title_layout_position")) {
+        numbers(a.title_layout_position, 4, path + ".title_layout_position");
+        requireThat(a.title_layout_position[2] > 0 && a.title_layout_position[3] > 0, path + ".title_layout_position");
+      }
       requireThat(a.position[2] > 0 && a.position[3] > 0, path + ".position");
       const dimension = payload.version === 2 ? 2 : a.dimension;
       requireThat([2, 3].includes(dimension), path + ".dimension");
@@ -417,6 +447,11 @@ function validate(payload) {
           surface(s, p);
           triangles += s.triangle_count;
           vertices += s.rendered_points;
+        } else if (s.kind === "image") {
+          requireThat(payload.version === 3 && dimension === 2 && a.xscale === "linear" && a.yscale === "linear", p + ".kind", "unsupported_object", { type: "image" });
+          requireThat(payload.limits.image_pixels === OPTIONAL_LIMITS.image_pixels, "limits.image_pixels");
+          image(s, p);
+          pixels += s.pixel_count;
         } else if (s.kind === "patch2d" || s.kind === "text") {
           // Filled shapes and free text exist only in 2D axes of a v3 figure.
           requireThat(payload.version === 3 && dimension === 2, p + ".kind", "unsupported_object", { type: s.kind });
@@ -437,6 +472,8 @@ function validate(payload) {
       requireThat(a.decimated === axisReduced, path + ".decimated");
       reduced ||= axisReduced;
     }
+    budget(pixels, "image_pixels", "pixel_count");
+    requireThat((own(payload, "pixel_count") ? payload.pixel_count : 0) === pixels, "pixel_count");
     budget(vertices, "vertices", "vertex_count");
     budget(triangles, "triangles", "triangle_count");
     requireThat(payload.decimated === reduced, "decimated");

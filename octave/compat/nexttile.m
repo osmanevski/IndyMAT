@@ -27,6 +27,10 @@ function ax = nexttile(varargin)
     if any(isgraphics(state.axes(covered),'axes')), error('nexttile: requested span overlaps an occupied tile'); endif
     ax=axes('parent',f,'position',p,'tag','__mf_tiledlayout_axes__');
     state.axes(covered)=ax;
+    if isfield(state,'sgtitle_reserve')
+      base=p;base([2 4])/=1-state.sgtitle_reserve;
+      setappdata(ax,'__mf_sgtitle_layout__',struct('base',base,'last',p,'subplot',[],'outer',[]));
+    endif
   endif
   setappdata(f,'__mf_tiledlayout_state__',state); axes(ax);
 endfunction

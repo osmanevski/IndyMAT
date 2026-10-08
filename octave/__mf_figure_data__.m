@@ -1,14 +1,19 @@
 function data = __mf_figure_data__(fig, source = struct('job','','figure',0))
   % Snapshot only: no set(), callbacks, evalin(), workspace or appdata writes.
   mlock();
+  % Read-only pixel conversion, independent of the figure's units.
+  if isgraphics(fig,'figure')
+    figure_position=__get_position__(fig,'pixels');
+    source.figure_size=__mf_array__(figure_position(3:4));
+  endif
   limits=struct('samples',2000,'surface_vertices',40000,'patch_vertices',40000,...
     'patch_triangles',80000,'vertices',100000,'triangles',200000,'axes',16,...
     'series',128,'colormap',4096,'json_bytes',8388608,'objects',1024,'depth',16,...
     'source_samples',1000000,'ticks',4096,'global_objects',12289,...
-    'text_lines',256,'text_chars',65536);
+    'text_lines',256,'text_chars',65536,'image_pixels',262144);
   data=struct('version',2,'supported',true,'decimated',false,'point_limit',2000,...
     'axes',{{}},'reason','','reason_code','','reason_args',struct(),...
-    'source',source,'limits',limits,'vertex_count',0,'triangle_count',0);
+    'source',source,'limits',limits,'vertex_count',0,'triangle_count',0,'pixel_count',0);
   [objects,tree,code,args]=__mf_walk__(fig,limits);
   if ~isempty(code),data=__mf_fail__(data,code,args);return;endif
   axes_handles=[]; bars=[];
@@ -30,7 +35,7 @@ function data = __mf_figure_data__(fig, source = struct('job','','figure',0))
   if isempty(axes_handles),data=__mf_fail__(data,'no_axes',struct());return;endif
   if ~isempty(bars),data.version=3;endif
   % Preflight aggregate upper bounds before conversion, grid expansion or sampling.
-  vertices=0;triangles=0;count=0;leaves=cell(1,numel(axes_handles));
+  vertices=0;triangles=0;pixels=0;count=0;leaves=cell(1,numel(axes_handles));
   for k=1:numel(axes_handles)
     ax=axes_handles(k);
     if ~isequal(get(ax,'view')(:).',[0 90]),data.version=3;endif
@@ -53,6 +58,9 @@ function data = __mf_figure_data__(fig, source = struct('job','','figure',0))
         fan=f(1)*max(0,f(2)-2);
         if fan>limits.patch_triangles,data=__mf_fail__(data,'budget_exceeded',__mf_budget__('patch_triangles',fan,limits.patch_triangles));return;endif
         vertices+=n;
+      elseif strcmp(type,'image')
+        data.version=3;c=__mf_prop__(h,'cdata',[]);sz=size(c);n=sz(1)*sz(2);pixels+=n;
+        if pixels>limits.image_pixels,data=__mf_fail__(data,'budget_exceeded',__mf_budget__('image_pixels',pixels,limits.image_pixels));return;endif
       elseif strcmp(type,'text')
         data.version=3;
       else
@@ -74,6 +82,7 @@ function data = __mf_figure_data__(fig, source = struct('job','','figure',0))
     for j=1:numel(item.series)
       s=item.series{j};
       data.vertex_count+=s.rendered_points;
+      if strcmp(s.kind,'image'),data.pixel_count+=s.pixel_count;endif
       if strcmp(s.kind,'surface'),data.triangle_count+=s.triangle_count;data.version=3;endif
     endfor
     if data.vertex_count>limits.vertices,data=__mf_fail__(data,'budget_exceeded',__mf_budget__('vertices',data.vertex_count,limits.vertices));return;endif
@@ -153,6 +162,15 @@ function [a,code,args]=__mf_axes__(ax,id,limits,tree,leaves)
     'ticks',__mf_prop__(ax,'ticklabelinterpreter','tex'));
   [a.position,ok]=__mf_position__(ax);
   if ~ok,code='unsupported_units';args=struct('property','units');return;endif
+  % Export only the project's validated layout coordinates, never appdata.
+  if isappdata(ax,'__mf_sgtitle_layout__') && strcmp(get(ax,'units'),'normalized')
+    layout=getappdata(ax,'__mf_sgtitle_layout__');
+    if isstruct(layout)&&isscalar(layout)&&isfield(layout,'base')&&isfield(layout,'last')&&...
+        ~isfield(layout,'manual')&&__mf_real__(layout.base)&&isvector(layout.base)&&numel(layout.base)==4&&...
+        all(isfinite(layout.base))&&all(layout.base(3:4)>0)&&isequal(layout.last,get(ax,'position'))
+      a.title_layout_position=__mf_array__(layout.base);
+    endif
+  endif
   for axis='xyz'
     key=axis(1);
     a.([key 'lim'])=__mf_array__(get(ax,[key 'lim']));
@@ -201,6 +219,9 @@ function [a,code,args]=__mf_axes__(ax,id,limits,tree,leaves)
   fixed_aspect=strcmp(a.data_aspect_ratio_mode,'manual')||strcmp(a.plot_box_aspect_ratio_mode,'manual');
   for leaf=leaves
     type=__mf_prop__(leaf.h,'type','');
+    if strcmp(type,'image')
+      if a.dimension~=2||any(strcmp({a.xscale,a.yscale},'log')),code='unsupported_object';args=struct('type','image');return;endif
+    endif
     if any(strcmp(type,{'patch','text'}))
       % Filled shapes and free text exist only in the 2D viewer.
       if a.dimension==3,code='unsupported_object';args=struct('type',type);return;endif
@@ -272,6 +293,7 @@ function [s,code,args]=__mf_series__(leaf,ax,limits,has_light,tree)
   if strcmp(type,'surface'),[s,code,args]=__mf_surface__(h,limits,has_light,tree);return;endif
   if strcmp(type,'patch'),[s,code,args]=__mf_patch__(leaf,ax,limits,has_light,tree);return;endif
   if strcmp(type,'text'),[s,code,args]=__mf_text_record__(leaf,limits);return;endif
+  if strcmp(type,'image'),[s,code,args]=__mf_image__(h,limits,tree);return;endif
   if strcmp(type,'hggroup')
     children=__mf_children__(h,tree);creator='';
     try creator=getappdata(h,'__creator__');catch end_try_catch
@@ -325,6 +347,37 @@ function [s,code,args]=__mf_series__(leaf,ax,limits,has_light,tree)
       elseif y(1)==y(2)&&x(1)~=x(2),s.span='horizontal';endif
     endif
   endif
+endfunction
+
+function [s,code,args]=__mf_image__(h,limits,tree)
+  s=[];code='';args=struct();c=get(h,'cdata');shape=size(c);n=shape(1)*shape(2);
+  if n>limits.image_pixels,code='budget_exceeded';args=__mf_budget__('image_pixels',n,limits.image_pixels);return;endif
+  if ~__mf_real__(c)||isempty(c)||~any(strcmp(class(c),{'double','single','uint8','uint16'}))||...
+      ~(ndims(c)==2||(ndims(c)==3&&shape(3)==3))||any(~isfinite(c(:)))
+    code='invalid_data';args=struct('property','image.cdata');return;
+  endif
+  if ~__mf_opaque__(h,tree)||~strcmp(get(h,'alphadatamapping'),'none'),code='transparency';return;endif
+  x=get(h,'xdata');y=get(h,'ydata');
+  for pair={x,y}
+    v=pair{1};if ~__mf_real__(v)||numel(v)~=2||any(~isfinite(v)),code='invalid_data';args=struct('property','image.coordinates');return;endif
+  endfor
+  % A singleton with distinct endpoints (or a collapsed multi-pixel range)
+  % has ambiguous native raster placement. Keep its exact Octave PNG.
+  if (shape(2)==1&&x(1)~=x(2))||(shape(1)==1&&y(1)~=y(2))||...
+      (shape(2)>1&&x(1)==x(2))||(shape(1)>1&&y(1)==y(2))
+    code='unsupported_object';args=struct('type','image_coordinates');return;
+  endif
+  for item={struct('v',x,'n',shape(2)),struct('v',y,'n',shape(1))}
+    entry=item{1};step=1;if entry.n>1,step=(entry.v(2)-entry.v(1))/(entry.n-1);endif
+    if ~isfinite(step)||any(~isfinite([entry.v(1)-step/2,entry.v(2)+step/2])),code='invalid_data';args=struct('property','image.coordinates');return;endif
+  endfor
+  encoding='indexed';if ndims(c)==3,encoding='truecolor';endif
+  mapping=get(h,'cdatamapping');
+  if ~any(strcmp(mapping,{'scaled','direct'})),code='unsupported_color';return;endif
+  s=struct('kind','image','shape',{__mf_array__(shape(1:2))},'x',{__mf_array__(x)},'y',{__mf_array__(y)},...
+    'cdata',__mf_descriptor__(c),'encoding',encoding,'mapping',mapping,'cdata_class',class(c),...
+    'pixel_count',n,'display_name',__mf_prop__(h,'displayname',''),'line_style','none',...
+    'decimated',false,'original_points',0,'rendered_points',0);
 endfunction
 
 function first=__mf_first_line__(leaf,tree)
@@ -437,6 +490,16 @@ function [s,code,args]=__mf_text_record__(leaf,limits)
     'line_style',get(h,'linestyle'),'line_width',double(get(h,'linewidth')),...
     'clipping',strcmp(get(h,'clipping'),'on'),'display_name','',...
     'decimated',false,'original_points',0,'rendered_points',0);
+  if ~isnan(leaf.group)&&strcmp(__mf_prop__(leaf.group,'tag',''),'__mf_sgtitle__')&&...
+      isappdata(leaf.group,'__mf_sgtitle_auto__')&&isequal(getappdata(leaf.group,'__mf_sgtitle_auto__'),true)&&...
+      isappdata(leaf.group,'__mf_sgtitle_auto_geometry__')
+    geometry=getappdata(leaf.group,'__mf_sgtitle_auto_geometry__');
+    % Post-creation user geometry edits end browser automatic title placement.
+    if isstruct(geometry)&&isscalar(geometry)&&isfield(geometry,'position')&&isfield(geometry,'units')&&...
+        isequal(geometry.position,get(leaf.group,'position'))&&isequal(geometry.units,get(leaf.group,'units'))
+      s.figure_title=true;
+    endif
+  endif
 endfunction
 
 function [lines,ok]=__mf_text_lines__(value)
@@ -522,7 +585,7 @@ function [color,code]=__mf_surface_color__(value,c,mapping,association='cell')
     elseif strcmp(value,'interp'),code='interpolated_color';return;
     elseif ~strcmp(value,'flat'),code='unsupported_surface';return;endif
     if ~any(strcmp(mapping,{'scaled','direct'})),code='unsupported_color';return;endif
-    encoding='indexed';if ndims(c)==3,encoding='truecolor';endif
+      encoding='indexed';if ndims(c)==3,encoding='truecolor';endif
     color=struct('mode','flat','association',association,'encoding',encoding,'mapping',mapping,...
       'cdata_class',class(c),'data',__mf_descriptor__(c));
   else
@@ -652,7 +715,7 @@ function args=__mf_budget__(name,actual,limit)
   args=struct('budget',name,'actual',actual,'limit',limit);
 endfunction
 function data=__mf_fail__(data,code,args)
-  data.supported=false;data.axes={};data.decimated=false;data.vertex_count=0;data.triangle_count=0;
+  data.supported=false;data.axes={};data.decimated=false;data.vertex_count=0;data.triangle_count=0;data.pixel_count=0;
   data.reason_code=code;data.reason_args=args;
   data.reason=sprintf(__mf_text__('Only the PNG view is available: %s.', 'Yalnızca PNG görünümü kullanılabilir: %s.'),code);
 endfunction

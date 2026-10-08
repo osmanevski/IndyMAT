@@ -3,8 +3,11 @@ import registry from "./registry.js";
 import { t, onLanguageChange } from "./i18n.js";
 import figureData from "./figure_data_utils.cjs";
 import shapes from "./figure_shape_utils.cjs";
+import images from "./figure_image_utils.cjs";
 import { Figure3D, drawColorbars } from "./figure3d.js";
 import { figureReasonText, figureReductionText, unmountFigureTools } from "./figure_tools.js";
+import viewports from "./figure_viewport_utils.cjs";
+import { mountFigureWindowControls } from "./figure_window_controls.js";
 
 let manifestRevision = 0;
 let manifestPending = false;
@@ -136,17 +139,21 @@ class InteractiveFigure {
     this.tip.hidden = true;
     this.wrap.append(this.canvas, this.tip);
     root.append(this.wrap);
+    this.unmountWindowControls = mountFigureWindowControls(this.wrap, () => this.reset());
     this.ctx = this.canvas.getContext("2d");
     this.drag = null;
     this.hits = [];
     this.faces = [];
     this.texts = [];
+    this.imageCanvases = new WeakMap();
     // Read-only hook for the browser tests: what was drawn, and where.
     this.wrap.figureTest = {
+      sourceSize: () => [...(this.data.source?.figure_size || [])],
       texts: () => this.texts.map((item) => ({ ...item })),
       faces: () => this.faces.length,
       axes: () => this.data.axes.map((axes) => axes.visible !== false),
       box: (axis) => this.box(axis),
+      viewport: () => ({ ...this.figureViewport }),
       project: (axis, x, y) => ({ x: this.dataPixel(x, axis, "x"), y: this.dataPixel(y, axis, "y") }),
       pixel: (x, y) => {
         const d = devicePixelRatio || 1;
@@ -160,6 +167,7 @@ class InteractiveFigure {
   }
   destroy() {
     this.observer?.disconnect();
+    this.unmountWindowControls?.();
   }
   bind() {
     let c = this.canvas;
@@ -222,6 +230,7 @@ class InteractiveFigure {
     let r = this.wrap.getBoundingClientRect(), d = devicePixelRatio || 1, w = Math.max(1, Math.round(r.width)), h = Math.max(1, Math.round(r.height));
     this.width = w;
     this.height = h;
+    this.figureViewport = viewports.fitFigureViewport(this.data.source?.figure_size, w, h);
     this.canvas.width = Math.round(w * d);
     this.canvas.height = Math.round(h * d);
     this.ctx.setTransform(d, 0, 0, d, 0, 0);
@@ -238,8 +247,19 @@ class InteractiveFigure {
     return { x: e.clientX - r.left, y: e.clientY - r.top };
   }
   box(i) {
-    let p = this.data.axes[i].position;
-    return { x: p[0] * this.width, y: (1 - p[1] - p[3]) * this.height, w: p[2] * this.width, h: p[3] * this.height };
+    const fitted = this.axesViewport(i);
+    const box = { x: fitted.x, y: fitted.y, w: fitted.width, h: fitted.height };
+    return this.data.axes[i].series.some((s) => s.kind === "image") ? images.aspectBox(box, this.data.axes[i], this.views[i]) : box;
+  }
+  axesViewport(i) {
+    const axes = this.data.axes[i], base = axes.title_layout_position;
+    if (!base) return viewports.fitAxes(axes.position, this.figureViewport);
+    const sourceReserve = Math.max(0, 1 - axes.position[3] / base[3]);
+    const title = this.data.axes.flatMap((item) => item.series).find((series) => series.figure_title);
+    const textHeight = title ? title.font_size * 1.2 * Math.max(1, title.lines.length) + title.margin * 2 + 36 : 0;
+    const viewportReserve = this.figureViewport.height > 0 ? textHeight / this.figureViewport.height : 0;
+    return viewports.fitAxes(base, this.figureViewport, Math.max(sourceReserve, viewportReserve));
+
   }
   axisAt(p) {
     for (let i = this.data.axes.length - 1; i >= 0; i--) {
@@ -392,7 +412,8 @@ class InteractiveFigure {
           c.clip();
         }
         c.lineWidth = 1;
-        if (s.kind === "patch2d") this.drawPatch(s, i, j);
+        if (s.kind === "image") this.drawImage(s, a, i);
+        else if (s.kind === "patch2d") this.drawPatch(s, i, j);
         else if (s.kind === "text") this.drawText(s, i, j);
         else this.drawSeries(s, a, i, j);
         c.restore();
@@ -411,12 +432,30 @@ class InteractiveFigure {
     this.drawLegend(a, i);
     if (this.data.version === 3) {
       const decode = (hex) => hex.slice(1).match(/../g).map((value) => parseInt(value, 16) / 255);
-      drawColorbars(c, a, this.width, this.height, { background: decode(p.background), text: decode(p.text), axis: decode(p.axis) });
+      drawColorbars(c, a, this.width, this.height, { background: decode(p.background), text: decode(p.text), axis: decode(p.axis) }, this.data.source?.figure_size);
     }
     c.restore();
   }
   // Filled faces keep their serialised colour; only the edge follows the
   // 3:1 contrast rule. The geometry is Octave's own patch, never recomputed.
+  drawImage(s, axes, i) {
+    this.imageCanvases ||= new WeakMap();
+    let bitmap = this.imageCanvases.get(s);
+    if (!bitmap) {
+      bitmap = document.createElement("canvas");
+      bitmap.width = s.shape[1];
+      bitmap.height = s.shape[0];
+      bitmap.getContext("2d").putImageData(new ImageData(images.rgba(s, axes), bitmap.width, bitmap.height), 0, 0);
+      this.imageCanvases.set(s, bitmap);
+    }
+    const bx = images.bounds(s.x, s.shape[1]), by = images.bounds(s.y, s.shape[0]);
+    const x0 = this.dataPixel(bx[0], i, "x"), x1 = this.dataPixel(bx[1], i, "x"), y0 = this.dataPixel(by[0], i, "y"), y1 = this.dataPixel(by[1], i, "y");
+    const c = this.ctx;
+    c.imageSmoothingEnabled = false;
+    c.translate(x0, y0);
+    c.scale(x1 >= x0 ? 1 : -1, y1 >= y0 ? 1 : -1);
+    c.drawImage(bitmap, 0, 0, Math.abs(x1 - x0), Math.abs(y1 - y0));
+  }
   drawPatch(s, i, j) {
     const c = this.ctx, face = s.face_color === "none" ? null : rawColor(s.face_color);
     const edge = s.edge_color === "none" || s.line_style === "none" ? null : plotColor(s.edge_color, this.palette);
@@ -465,6 +504,7 @@ class InteractiveFigure {
     } else {
       x = b.x + s.position[0] * b.w;
       y = b.y + (1 - s.position[1]) * b.h;
+      if (s.figure_title) y = Math.max(6, y);
     }
     const size = s.font_size, bold = s.font_weight === "bold", italic = s.font_angle === "italic";
     const lines = s.lines.map((line) => shapes.parseTex(line, s.interpreter));
@@ -607,7 +647,7 @@ class InteractiveFigure {
   drawLegend(a, i) {
     if (!a.legend?.visible) return;
     // Text and group baselines are never legend entries.
-    const p = this.palette, labels = a.legend.labels || [], items = a.series.filter((s) => s.kind !== "text" && !(s.span && s.role === "bar")).map((s, j) => ({ label: s.display_name || labels[j], series: s, style: this.seriesStyle(s) })).filter((x2) => x2.label);
+    const p = this.palette, labels = a.legend.labels || [], items = a.series.filter((s) => s.kind !== "text" && s.kind !== "image" && !(s.span && s.role === "bar")).map((s, j) => ({ label: s.display_name || labels[j], series: s, style: this.seriesStyle(s) })).filter((x2) => x2.label);
     if (!items.length) return;
     const c = this.ctx, b = this.box(i);
     c.font = sansFont(10);
@@ -667,13 +707,25 @@ class InteractiveFigure {
       }
     }
     if (!nearest) {
+      const axis = this.axisAt(p);
+      if (axis >= 0) {
+        const axes = this.data.axes[axis], x = this.pixelData(p.x, axis, "x"), y = this.pixelData(p.y, axis, "y");
+        for (let j = axes.series.length - 1; j >= 0 && !nearest; j--) {
+          const s = axes.series[j];
+          if (s.kind !== "image") continue;
+          const pixel = images.pick(s, x, y);
+          if (pixel) nearest = { x: p.x, y: p.y, vx: x, vy: y, axis, series: s, seriesIndex: j, pixel };
+        }
+      }
+    }
+    if (!nearest) {
       if (!this.pinned) this.tip.hidden = true;
       return;
     }
     this.pinned = pin;
     const value = (v) => Array.isArray(v) ? `[${plotFormat(Number(v[0]))}, ${plotFormat(Number(v[1]))}]` : plotFormat(Number(v));
     let label = shapes.plainText(nearest.series.display_name || this.data.axes[nearest.axis].legend?.labels?.[nearest.seriesIndex] || ""), name = label ? label + ": " : "";
-    this.tip.textContent = `${name}x = ${value(nearest.vx)}, y = ${value(nearest.vy)}`;
+    this.tip.textContent = nearest.pixel ? `${t("Row")} = ${nearest.pixel.row + 1}, ${t("Column")} = ${nearest.pixel.column + 1}, ${t("Value")} = ${Array.isArray(nearest.pixel.value) ? "[" + nearest.pixel.value.map(plotFormat).join(", ") + "]" : plotFormat(nearest.pixel.value)}` : `${name}x = ${value(nearest.vx)}, y = ${value(nearest.vy)}`;
     this.tip.hidden = false;
     this.tip.style.left = Math.max(2, Math.min(this.width - 190, nearest.x + 9)) + "px";
     this.tip.style.top = Math.max(2, nearest.y - 30) + "px";
@@ -696,7 +748,7 @@ function figureDetail(data, supported) {
 function supportedData(data) {
   return !!data?.supported && [2, 3].includes(data.version);
 }
-function paint2D(ctx, axes, width, height) {
+function paint2D(ctx, axes, width, height, figureSize) {
   const plot = Object.create(InteractiveFigure.prototype);
   plot.ctx = ctx;
   plot.width = width;
@@ -705,7 +757,8 @@ function paint2D(ctx, axes, width, height) {
   plot.hits = [];
   plot.faces = [];
   plot.texts = [];
-  plot.data = { axes: [axes] };
+  plot.data = { version: 3, axes: [axes], source: { figure_size: figureSize } };
+  plot.figureViewport = viewports.fitFigureViewport(figureSize, width, height);
   plot.views = [{ x: [...axes.xlim], y: [...axes.ylim] }];
   plot.initial = [{ x: [...axes.xlim], y: [...axes.ylim] }];
   plot.drawAxis(axes, 0);
@@ -783,6 +836,9 @@ function closeEnlarged(redraw = true) {
   const current = enlarged;
   enlarged = null;
   current.observer.disconnect();
+  registry.$("#modal").classList.remove("figure-expanded-dialog");
+  registry.$("#modal").style.width = "";
+  registry.$("#modal").style.height = "";
   registry.$("#modal").removeEventListener("close", current.close);
   if (current.controls) registry.$("#plot-area").before(current.controls);
   // A 3D camera is kept by its identity-scoped state; the 2D viewer's limits
@@ -825,6 +881,7 @@ function expandFigure() {
     if (!host.isConnected) closeEnlarged();
   });
   enlarged = { host, controls, close, observer };
+  registry.$("#modal").classList.add("figure-expanded-dialog");
   registry.modal(shared.figures[shared.figureIndex].name, host);
   registry.$("#modal").addEventListener("close", close);
   observer.observe(registry.$("#modal-body"), { childList: true });

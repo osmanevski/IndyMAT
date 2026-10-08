@@ -195,6 +195,10 @@ export function mountFigureTools(container, target) {
     reset: () => dispatch({ type: "reset" }),
     setMode: (mode) => dispatch({ type: "mode", mode }),
     getState: () => structuredClone(state),
+    reprojectPins: () => {
+      state = { ...state, pins: state.pins.map((pin) => ({ ...pin, anchor: target.projectTip?.(pin.hit) || pin.anchor })) };
+      refresh(true);
+    },
     dispose: () => {
       active = false;
       listeners.forEach((remove) => remove());
@@ -211,7 +215,7 @@ export function mountFigureTools(container, target) {
     }
   };
   refresh();
-  return { reset: mounted.reset, setMode: mounted.setMode, getState: mounted.getState };
+  return { reset: mounted.reset, setMode: mounted.setMode, getState: mounted.getState, reprojectPins: mounted.reprojectPins };
 }
 
 export function unmountFigureTools() {

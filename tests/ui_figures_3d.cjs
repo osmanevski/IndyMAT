@@ -29,11 +29,13 @@ const { assert, expect, openFigures, run, require3D, pixel, view } = require("./
         const swatches = await page.locator(".figure-3d").evaluate((node) => {
           const canvas = node.querySelector(".figure-labels");
           const ctx = canvas.getContext("2d");
-          // Octave eastoutside colorbar occupies the right part of the figure.
+          const vp = node.figureTest.viewport();
+          const scale = canvas.width / node.getBoundingClientRect().width;
+          // Sample the fitted source figure, including its letterbox offsets.
           // Find saturated swatches away from text/box lines at three heights.
           return [0.25, 0.5, 0.75].map((f) => {
-            const y = Math.floor(canvas.height * f);
-            const pixels = ctx.getImageData(Math.floor(canvas.width * 0.8), y, Math.max(1, Math.floor(canvas.width * 0.12)), 1).data;
+            const y = Math.floor((vp.y + vp.height * f) * scale);
+            const pixels = ctx.getImageData(Math.floor((vp.x + vp.width * 0.8) * scale), y, Math.max(1, Math.floor(vp.width * 0.12 * scale)), 1).data;
             return [...pixels].filter((_, i) => i % 4 === 3 && pixels[i] === 255).length;
           });
         });

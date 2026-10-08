@@ -56,6 +56,7 @@ class Node {
   addEventListener(name, callback) { this.listeners.set(name, callback); }
   removeEventListener(name) { this.listeners.delete(name); }
   close() { this.open = false; this.listeners.get("close")?.(); }
+  closest() { return null; }
   get isConnected() { return !!this.parent; }
   getBoundingClientRect() { return { width: 400, height: 240, x: 0, y: 0 }; }
   getContext() {
@@ -73,7 +74,7 @@ class Node {
   parent.append(nodes.get("#figure-tools"), nodes.get("#plot-area"));
   nodes.get("#modal").append(nodes.get("#modal-body"));
   global.devicePixelRatio = 1;
-  global.document = { body: new Node() };
+  global.document = Object.assign(new Node(), { body: new Node(), createElement: (tag) => new Node(tag) });
   global.getComputedStyle = () => ({ getPropertyValue: () => "#101010" });
   global.ResizeObserver = class { observe() {} disconnect() {} };
   global.MutationObserver = class { observe() {} disconnect() {} };

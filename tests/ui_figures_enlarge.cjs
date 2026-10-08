@@ -67,7 +67,7 @@ const { assert, expect, openFigures, run, settle } = require("./figure_ui_suppor
     await settle(page);
     assert.equal(execute.length, count, "enlarging submitted /api/execute");
     // A figure without interactive data enlarges as the PNG.
-    await run(page, "close all;figure('name','E2 image');imagesc(magic(4));");
+    await run(page, "close all;figure('name','E2 image');h=imagesc(magic(4));set(h,'alphadata',.5);");
     await expect(page.locator("#plot-interactive")).toBeDisabled();
     await expect(page.locator("#plot-area img")).toBeVisible();
     await page.locator("#plot-expand").click();

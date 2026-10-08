@@ -24,6 +24,7 @@ class Node extends Target {
     this.tag = tag;
     this.children = [];
     this.attrs = {};
+    this.dataset = {};
     const calls = this.calls = [];
     this.context = new Proxy({ measureText: (text) => ({ width: text.length * 6 }) }, {
       get(target, name) {
@@ -39,6 +40,7 @@ class Node extends Target {
   getBoundingClientRect() { return { left: 0, top: 0, width: 400, height: 300 }; }
   setAttribute(name, value) { this.attrs[name] = value; }
   getContext() { return this.context; }
+  closest() { return null; }
 }
 
 (async () => {
@@ -65,12 +67,12 @@ class Node extends Target {
   global.figure3dHarness = { Renderer, subscribers,
     mount: (host, target) => {
       mounted = { host, target };
-      return { reset: () => target.reset() };
+      return { reset: () => target.reset(), reprojectPins: () => {} };
     },
     unmount: () => { mounted = null; toolDisposals++; }
   };
   const win = global.window = new Target();
-  global.document = { body: {}, createElement: (tag) => new Node(tag) };
+  global.document = Object.assign(new Target(), { body: {}, createElement: (tag) => new Node(tag) });
   global.devicePixelRatio = 2;
   global.matchMedia = () => {
     const query = new Target();
@@ -90,7 +92,7 @@ class Node extends Target {
       build.onLoad({ filter: /.*/, namespace: "boundary" }, (args) => ({ contents: {
         "figure_webgl.js": "export const FigureWebGL = globalThis.figure3dHarness.Renderer;",
         "figure_tools.js": "export const mountFigureTools=globalThis.figure3dHarness.mount; export const unmountFigureTools=globalThis.figure3dHarness.unmount; export const figureCanvasDescription=()=> 'Interactive 3D';",
-        "i18n.js": "export const onLanguageChange=(fn)=> { const s=globalThis.figure3dHarness.subscribers; s.add(fn); return ()=>s.delete(fn); };"
+        "i18n.js": "export const t=(key)=>key; export const onLanguageChange=(fn)=> { const s=globalThis.figure3dHarness.subscribers; s.add(fn); return ()=>s.delete(fn); };"
       }[args.path], loader: "js" }));
     } }]
   });
@@ -132,7 +134,7 @@ class Node extends Target {
     viewer.reset();
     const point = viewer.wrap.figureTest.project(0, [2, 3, 4]);
     const hit = viewer.pick(point.x, point.y);
-    assert.deepEqual(hit, { x: 2, y: 3, z: 4, seriesName: "", index: 1 });
+    assert.deepEqual(hit, { x: 2, y: 3, z: 4, seriesName: "", index: 1, axis: 0 });
     assert.equal(viewer.pick(-1, -1), null);
     passed("real gap fixture picker adapts original XYZ/index to R2 hit shape");
     viewer.orbit(30, 10);
@@ -148,6 +150,7 @@ class Node extends Target {
     assert.equal(root.children.length, 0);
     assert.equal(wrap.listenerCount, 0);
     assert.equal(win.listenerCount, 0);
+    assert.equal(document.listenerCount, 0);
     assert.equal(subscribers.size, 0);
     assert(queries.every((query) => query.listenerCount === 0));
     assert(observers.every((observer) => observer.disconnected));

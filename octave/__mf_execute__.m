@@ -150,7 +150,7 @@ function __mf_execute__(folder, mode, argument)
             encoded_bytes=numel(unicode2native(encoded,'UTF-8'));
             if encoded_bytes>8388608
               figure_data.supported=false; figure_data.axes={}; figure_data.decimated=false;
-              figure_data.vertex_count=0; figure_data.triangle_count=0;
+              figure_data.vertex_count=0; figure_data.triangle_count=0; figure_data.pixel_count=0;
               figure_data.reason_code='json_budget';
               figure_data.reason_args=struct('actual',encoded_bytes,'limit',8388608);
               figure_data.reason=__mf_text__('Interactive figure data exceeds 8 MiB.', 'Etkileşimli grafik verisi 8 MiB sınırını aşıyor.');

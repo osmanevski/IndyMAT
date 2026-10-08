@@ -5,6 +5,8 @@ import picking from "./figure_pick_utils.cjs";
 import { FigureWebGL } from "./figure_webgl.js";
 import { figureCanvasDescription, mountFigureTools, unmountFigureTools } from "./figure_tools.js";
 import { onLanguageChange } from "./i18n.js";
+import viewports from "./figure_viewport_utils.cjs";
+import { mountFigureWindowControls } from "./figure_window_controls.js";
 
 const rgbText = (rgb) => `rgb(${rgb.map((v) => Math.round(v * 255)).join(",")})`;
 function theme() {
@@ -13,16 +15,16 @@ function theme() {
   const parse = (name) => read(name).slice(1).match(/../g).map((value) => parseInt(value, 16) / 255);
   return { background: parse("--plot-bg"), text: parse("--plot-text"), axis: parse("--plot-axis"), grid: parse("--plot-grid") };
 }
-function viewport(position, width, height) {
-  return { x: position[0] * width, y: (1 - position[1] - position[3]) * height, width: position[2] * width, height: position[3] * height };
+function viewport(position, width, height, figureSize, reserve = 0) {
+  return viewports.fitAxes(position, viewports.fitFigureViewport(figureSize, width, height), reserve);
 }
 
 // Shared with the v3 top-view 2D path; swatches encode values, never contrast.
-export function drawColorbars(ctx, axes, width, height, palette) {
+export function drawColorbars(ctx, axes, width, height, palette, figureSize) {
   ctx.save();
   ctx.font = '10px "JetBrains Mono", Menlo, monospace';
   for (const bar of axes.colorbars || []) {
-    const box = viewport(bar.position, width, height);
+    const box = viewport(bar.position, width, height, figureSize);
     const vertical = bar.orientation === "vertical";
     const stops = colorMath.colorbarGradient(bar);
     for (let i = 0; i < stops.length; i += 2) {
@@ -90,6 +92,10 @@ export class Figure3D {
     this.canvas.setAttribute("aria-label", figureCanvasDescription());
     this.wrap.append(this.canvas, this.overlay);
     root.append(this.wrap);
+    this.unmountWindowControls = mountFigureWindowControls(this.wrap, () => {
+      if (this.tools) this.tools.reset();
+      else this.reset();
+    });
     this.ctx = this.overlay.getContext("2d");
     this.scenes = data.axes.map((axes) => geometry.buildScene(axes.dimension === 3 ? axes : undefined));
     this.cameras = data.axes.map((axes) => cameraMath.createCamera(axes));
@@ -120,7 +126,9 @@ export class Figure3D {
     });
     // Deliberately small, local test hook. No numerical result or session access.
     this.wrap.figureTest = {
+      sourceSize: () => [...(this.data.source?.figure_size || [])],
       camera: () => this.states(),
+      viewport: () => viewports.fitFigureViewport(this.data.source?.figure_size, this.width, this.height),
       pixels: (points) => {
         this.render();
         return points.map(({ x, y }) => this.renderer.readPixels(x, y, this.dpr));
@@ -151,10 +159,22 @@ export class Figure3D {
       canvas.height = Math.round(this.height * this.dpr);
     }
     this.watchDpr();
+    this.tools?.reprojectPins();
     this.requestRender();
   }
   frames() {
-    return this.data.axes.map((axes, i) => ({ scene: this.scenes[i], camera: this.cameras[i], viewport: viewport(axes.position, this.width, this.height) }));
+    const figureViewport = viewports.fitFigureViewport(this.data.source?.figure_size, this.width, this.height);
+    return this.data.axes.map((axes, i) => {
+      const base = axes.title_layout_position;
+      let reserve = 0;
+      if (base) {
+        const sourceReserve = Math.max(0, 1 - axes.position[3] / base[3]);
+        const title = this.data.axes.flatMap((item) => item.series).find((series) => series.figure_title);
+        const textHeight = title ? title.font_size * 1.2 * Math.max(1, title.lines.length) + title.margin * 2 + 36 : 0;
+        reserve = Math.max(sourceReserve, figureViewport.height > 0 ? textHeight / figureViewport.height : 0);
+      }
+      return { scene: this.scenes[i], camera: this.cameras[i], viewport: viewport(base || axes.position, this.width, this.height, this.data.source?.figure_size, reserve) };
+    });
   }
   axisAt(x, y) {
     const frames = this.frames();
@@ -189,13 +209,18 @@ export class Figure3D {
     this.cameras.forEach((camera) => cameraMath.reset(camera));
     this.requestRender();
   }
+  projectTip(hit) {
+    const axis = hit?.axis;
+    if (!Number.isInteger(axis) || !this.cameras[axis] || !Number.isFinite(hit.x) || !Number.isFinite(hit.y) || !Number.isFinite(hit.z)) return null;
+    return cameraMath.project(this.cameras[axis], this.frames()[axis].viewport, cameraMath.dataToNormalised(this.data.axes[axis], [hit.x, hit.y, hit.z]));
+  }
   pick(x, y) {
     const axis = this.axisAt(x, y);
     if (axis < 0) return null;
     const hit = picking.pick(this.scenes[axis], this.cameras[axis], this.frames()[axis].viewport, x, y);
     if (!hit) return null;
     const series = this.data.axes[axis].series[hit.series];
-    return { ...hit.data, seriesName: series.display_name || this.data.axes[axis].legend.labels[hit.series] || "", ...(hit.kind === "surface" ? { row: hit.row, column: hit.column } : { index: hit.index }), ...(hit.colorValue === undefined ? {} : { colorValue: hit.colorValue }) };
+    return { ...hit.data, axis, seriesName: series.display_name || this.data.axes[axis].legend.labels[hit.series] || "", ...(hit.kind === "surface" ? { row: hit.row, column: hit.column } : { index: hit.index }), ...(hit.colorValue === undefined ? {} : { colorValue: hit.colorValue }) };
   }
   requestRender() {
     if (this.disposed) return;
@@ -214,13 +239,14 @@ export class Figure3D {
     const palette = theme();
     const frames = this.frames();
     this.renderer.render(frames, palette, this.dpr);
+    this.tools?.reprojectPins();
     const ctx = this.ctx;
     ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
     ctx.clearRect(0, 0, this.width, this.height);
     this.data.axes.forEach((axes, i) => {
       if (axes.dimension === 3) this.drawAxes(axes, frames[i], palette);
-      else this.paint2D?.(ctx, axes, this.width, this.height);
-      drawColorbars(ctx, axes, this.width, this.height, palette);
+      else this.paint2D?.(ctx, axes, this.width, this.height, this.data.source?.figure_size);
+      drawColorbars(ctx, axes, this.width, this.height, palette, this.data.source?.figure_size);
     });
   }
   drawAxes(axes, { camera, viewport: vp }, palette) {
@@ -385,6 +411,7 @@ export class Figure3D {
     this.saveState(this.states());
     this.disposed = true;
     unmountFigureTools();
+    this.unmountWindowControls?.();
     this.observer.disconnect();
     this.unsubscribe();
     window.removeEventListener("resize", this.windowResize);
