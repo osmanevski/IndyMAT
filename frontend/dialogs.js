@@ -105,7 +105,13 @@ async function packages() {
 }
 function examples() {
   let list = registry.el("div");
-  const descriptions = { "hosgeldin.m": [t("Signal and FFT"), t("5 Hz + 20 Hz · FFT · two figures")], "matrisler.m": [t("Linear Algebra"), t("Equation system · eigenvalues · SVD")], "yuzey_3d.m": [t("3-D Surface"), t("Peaks · colormap · 3-D view")], "diferansiyel_denklem.m": [t("Damped Oscillation"), t("ode45 · phase portrait")], "kontrol_sistemi.m": [t("Control System"), t("Transfer function · step · Bode · control package")], "filtre_tasarimi.m": [t("Filter Design"), t("Butterworth · filtfilt · signal package")], "veri_analizi.m": [t("Data Analysis"), t("Tables · string · datetime · datatypes package")] };
+  const descriptions = { "hosgeldin.m": [t("Signal and FFT"), t("5 Hz + 20 Hz · FFT · two figures")], "matrisler.m": [t("Linear Algebra"), t("Equation system · eigenvalues · SVD")], "yuzey_3d.m": [t("3-D Surface"), t("Peaks · colormap · 3-D view")], "diferansiyel_denklem.m": [t("Damped Oscillation"), t("ode45 · phase portrait")], "kontrol_sistemi.m": [t("Control System"), t("Transfer function · step · Bode · control package")], "filtre_tasarimi.m": [t("Filter Design"), t("Butterworth · filtfilt · signal package")], "veri_analizi.m": [t("Data Analysis"), t("Tables · string · datetime · datatypes package")],
+    "pid_kapali_cevrim.m": [t("PID Closed Loop"), t("P / PI / filtered PID · step response · reference checks")],
+    "kutle_yay_sonum.m": [t("Mass-Spring-Damper"), t("Initial condition · ss / ode45 · analytic reference")],
+    "ayrik_kontrol.m": [t("Discrete Control"), t("ZOH · two sample times · difference equation")],
+    "doyum_antiwindup.m": [t("Saturation and Anti-Windup"), t("PI · actuator limits · clamping · step refinement")],
+    "sinyal_suzme.m": [t("Signal Filtering"), t("Sine and noise · FIR / IIR · time and spectrum")]
+  };
   for (let [name, [title, desc]] of Object.entries(descriptions)) {
     let b = registry.el("button", "example-card");
     b.append(registry.el("b", "", title), registry.el("span", "", desc));

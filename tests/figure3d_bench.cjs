@@ -10,6 +10,7 @@ const esbuild = require("esbuild");
 const { validate } = require("../frontend/figure_data_utils.cjs");
 const geometry = require("../frontend/figure_geometry_utils.cjs");
 const camera = require("../frontend/figure_camera_utils.cjs");
+const { unbatchedSource } = require("./figure_marker_reference.cjs");
 
 const quick = process.argv.includes("--quick");
 const refArg = process.argv.find((arg) => arg.startsWith("--renderer-ref="));
@@ -121,15 +122,20 @@ const rendererPath = path.resolve("frontend/figure_webgl.js");
 const rendererSource = rendererRef
   ? execFileSync("git", ["show", `${rendererRef}:frontend/figure_webgl.js`], { encoding: "utf8" })
   : fs.readFileSync(rendererPath, "utf8");
-const rendererCjs = esbuild.transformSync(rendererSource, { format: "cjs", target: "node18" }).code;
-const rendererModule = new Module(rendererPath, module);
-rendererModule.filename = rendererPath;
-rendererModule.paths = Module._nodeModulePaths(path.dirname(rendererPath));
-rendererModule._compile(rendererCjs, rendererPath);
-const { FigureWebGL, screenPolyline } = rendererModule.exports;
+function loadRenderer(source) {
+  const rendererCjs = esbuild.transformSync(source, { format: "cjs", target: "node18" }).code;
+  const rendererModule = new Module(rendererPath, module);
+  rendererModule.filename = rendererPath;
+  rendererModule.paths = Module._nodeModulePaths(path.dirname(rendererPath));
+  rendererModule._compile(rendererCjs, rendererPath);
+  return rendererModule.exports;
+}
+const { FigureWebGL, screenPolyline } = loadRenderer(rendererSource);
+const UnbatchedMarkers = loadRenderer(unbatchedSource(rendererSource)).FigureWebGL;
 
-const counters = { uploadBytes: 0, bufferData: 0, drawArrays: 0, drawElements: 0 };
+const counters = { uploadBytes: 0, bufferData: 0, drawArrays: 0, drawElements: 0, markerDrawArrays: 0 };
 let nextObject = 1;
+let marker = 0;
 const noopCache = new Map();
 const glMethods = {
   createBuffer: () => ({ id: nextObject++ }),
@@ -145,7 +151,8 @@ const glMethods = {
     counters.bufferData++;
     counters.uploadBytes += values?.byteLength || 0;
   },
-  drawArrays: () => counters.drawArrays++,
+  uniform1i: (uniform, value) => { if (uniform.name === "marker") marker = value; },
+  drawArrays: () => { counters.drawArrays++; if (marker > 0) counters.markerDrawArrays++; },
   drawElements: () => counters.drawElements++
 };
 const glConstants = {
@@ -169,12 +176,12 @@ function createCanvas() {
 }
 
 function resetCounters() {
-  Object.assign(counters, { uploadBytes: 0, bufferData: 0, drawArrays: 0, drawElements: 0 });
+  Object.assign(counters, { uploadBytes: 0, bufferData: 0, drawArrays: 0, drawElements: 0, markerDrawArrays: 0 });
 }
 
-function drawBench(scene) {
+function drawBench(scene, Renderer = FigureWebGL) {
   resetCounters();
-  const renderer = new FigureWebGL(createCanvas(), [scene], () => {});
+  const renderer = new Renderer(createCanvas(), [scene], () => {});
   const uploads = { uploadBytes: counters.uploadBytes, bufferData: counters.bufferData };
   const cam = camera.createCamera(scene.axes);
   const viewport = { x: 0, y: 0, width: 800, height: 600 };
@@ -196,7 +203,7 @@ function drawBench(scene) {
   camera.project = (...args) => { projectionCalls++; return originalProject(...args); };
   try { render(); } finally { camera.project = originalProject; }
   const oneRedraw = { uploadBytes: counters.uploadBytes, bufferData: counters.bufferData,
-    drawArrays: counters.drawArrays, drawElements: counters.drawElements, projectionCalls };
+    drawArrays: counters.drawArrays, drawElements: counters.drawElements, markerDrawArrays: counters.markerDrawArrays, projectionCalls };
   renderer.dispose();
   return { unchanged, rotate, zoom, uploads, oneRedraw };
 }
@@ -227,7 +234,11 @@ function measureScene(label, payload) {
   }));
   const screenPolylineExpansionMs = medianMs(() => screenPolyline(expansionInput, 1, undefined, "-", { width: 800, height: 600 }));
   return { fixture: label, accepted: true, jsonBytes, validationMs, sceneBuildMs, projectionMs,
-    screenPolylineExpansionMs, counts: scene.counts, redraw: drawBench(scene) };
+    screenPolylineExpansionMs, counts: scene.counts, redraw: drawBench(scene),
+    ...(scene.points.length ? { markerRedrawComparison: {
+      reference: "frozen pre-batching marker loop; same scene/camera and NOOP WebGL2 sink",
+      before: drawBench(scene, UnbatchedMarkers), after: drawBench(scene)
+    } } : {}) };
 }
 
 const results = [];

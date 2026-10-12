@@ -15,30 +15,34 @@ precision highp float;
 layout(location=0) in vec3 position;
 layout(location=1) in vec3 color;
 layout(location=2) in vec2 uv;
+layout(location=3) in vec4 markerData;
 uniform mat4 matrix;
 uniform bool screen;
+uniform highp int marker;
 uniform vec2 viewport;
 uniform vec3 origin, pixelX, pixelY, depthVector;
 out vec3 world;
 smooth out vec3 ink;
 out vec2 markerUV;
+flat out float markerBorder;
 void main() {
-  world = screen ? origin + position.x*pixelX + position.y*pixelY + position.z*depthVector : position;
+  world = marker > 0 ? markerData.xyz : screen ? origin + position.x*pixelX + position.y*pixelY + position.z*depthVector : position;
   gl_Position = screen ? vec4(position.x*2.0/viewport.x-1.0, 1.0-position.y*2.0/viewport.y, position.z*2.0-1.0, 1.0) : matrix*vec4(position,1.0);
   ink = color;
   markerUV = uv;
+  markerBorder = markerData.w;
 }`;
 const FRAGMENT = `#version 300 es
 precision highp float;
 in vec3 world;
 smooth in vec3 ink;
 in vec2 markerUV;
+flat in float markerBorder;
 uniform vec3 low, high, faceInk, edgeInk;
 uniform bool clip;
 uniform float slack;
-uniform int marker;
+uniform highp int marker;
 uniform bool hasFace, hasEdge;
-uniform float border;
 out vec4 outputColor;
 ${surfaceColorShaderPath(colors.SURFACE_COLOR_INTERPOLATION)}
 float shape(vec2 p) {
@@ -61,12 +65,12 @@ void main() {
       float crossLine = min(abs(p.x),abs(p.y));
       float diagonal = min(abs(p.x-p.y),abs(p.x+p.y))*0.7071068;
       float d = marker == 8 ? crossLine : marker == 9 ? diagonal : min(crossLine,diagonal);
-      if (!hasEdge || d > border) discard;
+      if (!hasEdge || d > markerBorder) discard;
       rgb = edgeInk;
     } else {
       float d = shape(p);
       if (d > 1.0) discard;
-      if (hasEdge && (d > 1.0-border || marker == 7)) rgb = edgeInk;
+      if (hasEdge && (d > 1.0-markerBorder || marker == 7)) rgb = edgeInk;
       else if (hasFace) rgb = faceInk;
       else discard;
     }
@@ -186,14 +190,15 @@ export class FigureWebGL {
       }
       this.gl.linkProgram(this.program);
       if (!this.gl.getProgramParameter(this.program, this.gl.LINK_STATUS)) throw new Error("link");
-      this.uniforms = Object.fromEntries(["matrix", "screen", "viewport", "origin", "pixelX", "pixelY", "depthVector", "low", "high", "marker", "faceInk", "edgeInk", "hasFace", "hasEdge", "border", "clip", "slack"].map((name) => [name, this.gl.getUniformLocation(this.program, name)]));
+      this.uniforms = Object.fromEntries(["matrix", "screen", "viewport", "origin", "pixelX", "pixelY", "depthVector", "low", "high", "marker", "faceInk", "edgeInk", "hasFace", "hasEdge", "clip", "slack"].map((name) => [name, this.gl.getUniformLocation(this.program, name)]));
       this.meshes = scenes.map((scene) => scene.meshes.map((mesh) => this.upload(mesh)));
-      this.dynamic = this.upload({ positions: new Float32Array(), colors: new Float32Array() });
+      this.dynamic = this.upload({ positions: new Float32Array(), colors: new Float32Array(), markerData: new Float32Array() });
       this.zeroUV = new Float32Array();
       this.zeroRGB = new Float32Array();
       this.solidRGB = new Float32Array();
-      this.markerPositions = new Float32Array(18);
-      this.markerUV = new Float32Array([-1, -1, 1, -1, -1, 1, -1, 1, 1, -1, 1, 1]);
+      this.markerPositions = new Float32Array();
+      this.markerData = new Float32Array();
+      this.markerUV = new Float32Array();
     } catch {
       this.dispose();
       throw Object.assign(new Error("shader_failure"), { reason_code: "shader_failure" });
@@ -214,10 +219,12 @@ export class FigureWebGL {
     if (!vao) throw new Error("vertex array");
     this.vaos.push(vao);
     gl.bindVertexArray(vao);
-    const attributes = [mesh.positions, mesh.colors, mesh.uv || new Float32Array(mesh.positions.length / 3 * 2)].map((values, index) => {
+    const values = [mesh.positions, mesh.colors, mesh.uv || new Float32Array(mesh.positions.length / 3 * 2)];
+    if (mesh.markerData) values.push(mesh.markerData);
+    const attributes = values.map((values, index) => {
       const buffer = this.buffer(gl.ARRAY_BUFFER, values, gl.STATIC_DRAW);
       gl.enableVertexAttribArray(index);
-      gl.vertexAttribPointer(index, index === 2 ? 2 : 3, gl.FLOAT, false, 0, 0);
+      gl.vertexAttribPointer(index, index === 3 ? 4 : index === 2 ? 2 : 3, gl.FLOAT, false, 0, 0);
       return buffer;
     });
     const indices = mesh.indices ? this.buffer(gl.ELEMENT_ARRAY_BUFFER, mesh.indices, gl.STATIC_DRAW) : null;
@@ -235,14 +242,19 @@ export class FigureWebGL {
       if (!this.disposed) draw();
     });
   }
-  // Pixel geometry reuses three buffers; no resource accumulation per gesture.
-  pixels(positions, rgb, uv) {
+  // Pixel geometry reuses four buffers; no resource accumulation per gesture.
+  pixels(positions, rgb, uv, markerData) {
     if (!positions.length) return;
     const gl = this.gl;
     const uvLength = positions.length / 3 * 2;
     if (!uv && this.zeroUV.length < uvLength) this.zeroUV = new Float32Array(uvLength);
     const values = [positions, rgb, uv || this.zeroUV.subarray(0, uvLength)];
+    if (markerData) values.push(markerData);
     gl.bindVertexArray(this.dynamic.vao);
+    // An enabled attribute must have enough data even when its shader branch
+    // is unused. Lines/grid have no marker data and use the generic default.
+    if (markerData) gl.enableVertexAttribArray(3);
+    else gl.disableVertexAttribArray(3);
     values.forEach((value, index) => {
       gl.bindBuffer(gl.ARRAY_BUFFER, this.dynamic.attributes[index]);
       gl.bufferData(gl.ARRAY_BUFFER, value, gl.DYNAMIC_DRAW);
@@ -308,6 +320,7 @@ export class FigureWebGL {
         projectedBuffers.set(positions, projected);
         return projected;
       };
+      const contourColors = colors.contourDisplayColors(scene.axes, palette.background, palette.text);
       const adjust = (rgb) => colors.adjustForContrast(rgb, palette.background, palette.text);
       // A pixel-wide stroke lying on a limit plane leaves the box by half its
       // width; allow exactly that much so boundary data is not cut in half.
@@ -371,51 +384,70 @@ export class FigureWebGL {
         const width = edge.width * 96 / 72;
         for (let i = 0; i < projected.length; i += 2) {
           const start = positions.length;
-          appendScreenPolyline(projected, width, [i, i + 2], edge.style, local, positions);
+          // Patch edges retain source polygon order and continuous dash phase.
+          // Surface grid edges keep their existing independent-segment policy.
+          let end = i + 2;
+          if (edge.source.series.kind === "patch3d") {
+            while (end < projected.length && edge.source.faceIndices[end] === edge.source.faceIndices[i]) end += 2;
+            const path = [projected[i]];
+            for (let k = i + 1; k < end; k += 2) path.push(projected[k]);
+            appendScreenPolyline(path, width, [0, path.length], edge.style, local, positions);
+          } else appendScreenPolyline(projected, width, [i, i + 2], edge.style, local, positions);
           // An edge drawn on its own opaque faces is read against them, not the
           // plot background: keep the serialised colour (mesh edges on white).
           const raw = edge.colors.subarray(i * 3, i * 3 + 3);
           const ink = edge.faced ? raw : adjust(raw);
           for (let j = start; j < positions.length; j += 3) rgb.push(...ink);
+          i = end - 2;
         }
         slack(width);
         this.pixels(new Float32Array(positions), new Float32Array(rgb));
       }
       for (const line of scene.lines) {
         slack(line.width * 96 / 72);
-        this.solid(screenPolyline(project(line.positions), line.width * 96 / 72, line.breaks, line.style, local), adjust(line.color));
+        this.solid(screenPolyline(project(line.positions), line.width * 96 / 72, line.breaks, line.style, local), contourColors.get(line.source?.series) ?? adjust(line.color));
       }
       for (const points of scene.points) {
         const sizes = Array.from(points.sizes, (size) => (points.sizeUnits === "points-squared" ? Math.sqrt(size) : size) * 96 / 72);
         const projected = project(points.positions);
-        // Individual quads preserve each marker's size and edge thickness.
+        // One batch per series; centres and edge thickness travel per vertex.
         gl.uniform1i(u.marker, MARKERS[points.marker]);
         gl.uniform1i(u.hasFace, points.markerFaceAuto || points.faceColor !== "none");
         gl.uniform1i(u.hasEdge, points.edgeColor !== "none");
         gl.uniform3fv(u.faceInk, points.markerFaceAuto ? adjust(palette.background) : points.faceColor === "none" ? palette.text : adjust(points.faceColor));
         gl.uniform3fv(u.edgeInk, points.edgeColor === "none" ? palette.text : adjust(points.edgeColor));
+        const capacity = sizes.length * 18;
+        if (this.markerPositions.length < capacity) {
+          this.markerPositions = new Float32Array(capacity);
+          this.markerUV = new Float32Array(sizes.length * 12);
+          this.markerData = new Float32Array(sizes.length * 24);
+        }
+        const corners = [-1, -1, 1, -1, -1, 1, -1, 1, 1, -1, 1, 1];
+        let count = 0;
         for (let i = 0; i < sizes.length; i++) {
           const p = projected[i];
           const centre = points.positions.subarray(i * 3, i * 3 + 3);
-          // Float32 centres against float64 limits: a marker exactly on a limit stays.
+          // Clip centres, retaining complete glyphs exactly on axes limits.
           if (centre.some((v, k) => v < scene.bounds.min[k] - 0.00001 || v > scene.bounds.max[k] + 0.00001)) continue;
           const size = sizes[i];
           if (!(size > 0) || ![p.x, p.y, p.depth, size].every(Number.isFinite)) continue;
-          gl.uniform1f(u.border, Math.min(1, 2 * 96 / 72 / Math.max(1, sizes[i])));
-          // Clip marker centres, not their pixel offsets, to retain edge glyphs.
-          gl.uniform3fv(u.origin, centre);
-          gl.uniform3fv(u.pixelX, [0, 0, 0]);
-          gl.uniform3fv(u.pixelY, [0, 0, 0]);
-          gl.uniform3fv(u.depthVector, [0, 0, 0]);
-          // Each marker still has its own draw/uniforms. Reuse the same six
-          // vertices and UVs; bufferData copies them before the next marker.
+          const border = Math.min(1, 2 * 96 / 72 / Math.max(1, size));
           for (let vertex = 0; vertex < 6; vertex++) {
-            this.markerPositions[vertex * 3] = p.x + this.markerUV[vertex * 2] * size / 2;
-            this.markerPositions[vertex * 3 + 1] = p.y + this.markerUV[vertex * 2 + 1] * size / 2;
-            this.markerPositions[vertex * 3 + 2] = p.depth;
+            const offset = count * 6 + vertex;
+            const uvX = corners[vertex * 2];
+            const uvY = corners[vertex * 2 + 1];
+            this.markerPositions[offset * 3] = p.x + uvX * size / 2;
+            this.markerPositions[offset * 3 + 1] = p.y + uvY * size / 2;
+            this.markerPositions[offset * 3 + 2] = p.depth;
+            this.markerUV[offset * 2] = uvX;
+            this.markerUV[offset * 2 + 1] = uvY;
+            this.markerData.set(centre, offset * 4);
+            this.markerData[offset * 4 + 3] = border;
           }
-          this.solidMarker({ positions: this.markerPositions, uv: this.markerUV });
+          count++;
         }
+        this.solidMarker({ positions: this.markerPositions.subarray(0, count * 18),
+          uv: this.markerUV.subarray(0, count * 12), markerData: this.markerData.subarray(0, count * 24) });
       }
       gl.uniform1i(u.marker, 0);
     });
@@ -424,7 +456,7 @@ export class FigureWebGL {
   }
   solidMarker(expanded) {
     if (this.zeroRGB.length < expanded.positions.length) this.zeroRGB = new Float32Array(expanded.positions.length);
-    this.pixels(expanded.positions, this.zeroRGB.subarray(0, expanded.positions.length), expanded.uv);
+    this.pixels(expanded.positions, this.zeroRGB.subarray(0, expanded.positions.length), expanded.uv, expanded.markerData);
   }
   // Read immediately after a fresh draw, without preserveDrawingBuffer.
   readPixels(x, y, dpr) {
@@ -456,6 +488,7 @@ export class FigureWebGL {
     this.zeroRGB = null;
     this.solidRGB = null;
     this.markerPositions = null;
+    this.markerData = null;
     this.markerUV = null;
     this.program = null;
     this.gl = null;

@@ -104,7 +104,7 @@ function formatNumber(value) {
 // R3 supplies {x,y,z,seriesName,index} or {x,y,z,seriesName,row,column},
 // optionally colorValue (raw scalar or RGB triple). No artifact is changed.
 function tipText(hit, labels = {}) {
-  const words = { series: "Series", index: "Index", row: "Row", column: "Column", color: "Color value", ...labels };
+  const words = { series: "Series", index: "Index", row: "Row", column: "Column", color: "Color value", level: "Level", face: "Face", vertex: "Vertex", ...labels };
   const lines = [];
   if (typeof hit.seriesName === "string" && hit.seriesName) lines.push(`${words.series}: ${hit.seriesName}`);
   for (const key of ["x", "y", "z"]) {
@@ -113,6 +113,9 @@ function tipText(hit, labels = {}) {
   if (Number.isSafeInteger(hit.row) && hit.row >= 0 && Number.isSafeInteger(hit.column) && hit.column >= 0) {
     lines.push(`${words.row}: ${hit.row + 1}, ${words.column}: ${hit.column + 1}`);
   } else if (Number.isSafeInteger(hit.index) && hit.index >= 0) lines.push(`${words.index}: ${hit.index + 1}`);
+  if (Number.isSafeInteger(hit.face) && hit.face >= 0) lines.push(`${words.face}: ${hit.face + 1}`);
+  if (Number.isSafeInteger(hit.vertex) && hit.vertex >= 0) lines.push(`${words.vertex}: ${hit.vertex + 1}`);
+  if (Number.isFinite(hit.level)) lines.push(`${words.level}: ${formatNumber(hit.level)}`);
   if (Number.isFinite(hit.colorValue)) lines.push(`${words.color}: ${formatNumber(hit.colorValue)}`);
   else if (Array.isArray(hit.colorValue) && hit.colorValue.every(Number.isFinite)) lines.push(`${words.color}: [${hit.colorValue.map(formatNumber).join(", ")}]`);
   return lines.join("\n");

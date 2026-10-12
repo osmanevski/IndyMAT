@@ -65,7 +65,7 @@ async function poll() {
         shared.variables = s.variables || [];
         registry.renderVariables();
         try {
-          await registry.openDebugLocation(s.debug.file, s.debug.line);
+          if (s.debug.file && s.debug.line > 0) await registry.openDebugLocation(s.debug.file, s.debug.line);
         } catch (e) {
           registry.toast(e.message);
         }

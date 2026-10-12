@@ -1,0 +1,4 @@
+# Kernel input uses readline's event hook, with terminal echo disabled.
+# Do not inherit user editing macros or emit terminal paste-mode sequences.
+set enable-bracketed-paste off
+"\C-i": self-insert

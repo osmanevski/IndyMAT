@@ -144,6 +144,7 @@ function renderDebuggerPanel(state = shared.engine) {
   registry.$("#debugger-panel").hidden = !paused && !hasBreakpoints;
   registry.$("#debug-stack-section").hidden = !paused;
   registry.$("#debugger-state").textContent = paused ? state.run_to_cursor ? t("Waiting to run to cursor") : t("Paused") : t("Breakpoints");
+  if (paused && state.debug?.ready && !(state.debug.file && state.debug.line > 0)) registry.$("#debugger-state").textContent = t("Paused — no source location");
   renderStack(state.debug?.stack || [], !!state.debug?.ready);
   renderBreakpointRows();
 }

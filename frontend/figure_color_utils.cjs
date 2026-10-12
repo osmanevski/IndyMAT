@@ -101,10 +101,79 @@ function adjustForContrast(rgb, background, textRgb) {
   const bounded = Array.from(rgb, (v) => clamp(v, 0, 1));
   return contrast(bounded, background) < 3 ? Array.from(textRgb) : bounded;
 }
+// Preserve HSL hue/saturation while solving a target WCAG luminance.
+// Endpoints black/white are reachable for every hue; no desaturation is needed.
+function atLuminance(rgb, target) {
+  const min = Math.min(...rgb), max = Math.max(...rgb), light = (min + max) / 2;
+  const saturation = max === min ? 0 : (max - min) / (1 - Math.abs(2 * light - 1));
+  const at = (l) => {
+    const chroma = (1 - Math.abs(2 * l - 1)) * saturation;
+    return rgb.map((v) => l - chroma / 2 + (max === min ? 0 : (v - min) / (max - min)) * chroma);
+  };
+  let low = 0, high = 1;
+  for (let i = 0; i < 52; i++) {
+    const mid = (low + high) / 2;
+    if (luminance(at(mid)) < target) low = mid;
+    else high = mid;
+  }
+  return at((low + high) / 2).map((v) => clamp(v, 0, 1));
+}
+// One palette per source contour group. Map only the background-side tail by
+// an increasing affine luminance map [original extreme,P] -> [threshold,P].
+// The pivot is at most .20 luminance beyond threshold and bounded by the
+// original readable extreme where possible. All-unreadable palettes relax
+// that bound. Beyond-pivot entries (and all-readable palettes) are exact.
+function adjustContourPalette(rgbs, background, textRgb, minimum = 3) {
+  if (rgbs.every((rgb) => contrast(rgb, background) >= minimum)) return rgbs;
+  const bg = luminance(background);
+  const lighter = contrast([1, 1, 1], background) >= contrast([0, 0, 0], background);
+  const threshold = lighter ? minimum * (bg + .05) - .05 : (bg + .05) / minimum - .05;
+  if (threshold < 0 || threshold > 1) {
+    return rgbs.map((rgb) => contrast(rgb, background) >= minimum ? rgb : Array.from(textRgb));
+  }
+  const ys = rgbs.map(luminance);
+  // Work in a coordinate that increases away from the background.
+  const t = lighter ? threshold : 1 - threshold;
+  const xs = ys.map((y) => lighter ? y : 1 - y);
+  const start = Math.min(...xs), end = Math.max(...xs);
+  const pivot = end > t ? Math.min(t + .20, end) : Math.min(1, t + .20);
+  return rgbs.map((rgb, i) => {
+    if (xs[i] >= pivot) return rgb;
+    const x = start === end ? t : t + (xs[i] - start) * (pivot - t) / (pivot - start);
+    return atLuminance(rgb, lighter ? x : 1 - x);
+  });
+}
+function contourDisplayColors(axes, background, textRgb) {
+  const result = new Map(), groups = new Map();
+  for (const series of axes?.series || []) {
+    if (series.role !== "contour" || series.contour_color?.association !== "level") continue;
+    // Older v3 records lack group identity; their axes is the compatibility group.
+    const key = series.contour_group ?? "legacy";
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key).push(series);
+  }
+  for (const group of groups.values()) {
+    const adjusted = adjustContourPalette(group.map((s) => resolveContourColor(s, axes)), background, textRgb);
+    group.forEach((s, i) => result.set(s, adjusted[i]));
+  }
+  return result;
+}
 // Read original scalar or RGB CData units at column-major grid vertex index.
 function rawColorValue(surface, index) {
   const values = surface.cdata.values;
   const n = surface.shape[0] * surface.shape[1];
   return surface.cdata.shape.length === 3 ? [values[index], values[index + n], values[index + 2 * n]] : values[index];
 }
-module.exports = { SURFACE_COLOR_INTERPOLATION, resolveSurfaceColors, colorbarGradient, contrast, adjustForContrast, mapColor, descriptorColor, rawColorValue };
+function resolveContourColor(series, axes) {
+  return descriptorColor(series.contour_color, 0, axes) ?? "none";
+}
+function patchColor(descriptor, face, axes) {
+  return descriptorColor(descriptor, descriptor.mode === "flat" && descriptor.data.shape[0] === 1 ? 0 : face, axes);
+}
+function rawPatchColor(series, face) {
+  const c = [series.face_color, series.edge_color].find((c) => c.mode === "flat");
+  if (!c) return undefined;
+  const n = c.data.shape[0], i = n === 1 ? 0 : face;
+  return c.encoding === "truecolor" ? [c.data.values[i], c.data.values[i + n], c.data.values[i + 2 * n]] : c.data.values[i];
+}
+module.exports = { luminance, adjustContourPalette, contourDisplayColors, SURFACE_COLOR_INTERPOLATION, resolveSurfaceColors, resolveContourColor, patchColor, rawPatchColor, colorbarGradient, contrast, adjustForContrast, mapColor, descriptorColor, rawColorValue };

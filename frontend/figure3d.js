@@ -170,12 +170,12 @@ export class Figure3D {
     return this.data.axes.map((axes, i) => ({ scene: this.scenes[i], camera: this.cameras[i], viewport: viewports.fitFigureAxes(axes, figureViewport, this.data.axes) }));
   }
 
-  axisAt(x, y) {
+  axisAt(x, y, forTips = false) {
     const frames = this.frames();
     for (let i = frames.length - 1; i >= 0; i--) {
       const vp = frames[i].viewport;
-      if (this.data.axes[i].dimension === 3 && this.data.axes[i].visible !== false && x >= vp.x && x <= vp.x + vp.width && y >= vp.y && y <= vp.y + vp.height) {
-        this.axis = i;
+      if (this.data.axes[i].dimension === 3 && (forTips || this.data.axes[i].visible !== false) && x >= vp.x && x <= vp.x + vp.width && y >= vp.y && y <= vp.y + vp.height) {
+        if (!forTips) this.axis = i;
         return i;
       }
     }
@@ -211,14 +211,15 @@ export class Figure3D {
     return cameraMath.project(this.cameras[axis], this.frames()[axis].viewport, cameraMath.dataToNormalised(this.data.axes[axis], [hit.x, hit.y, hit.z]));
   }
   pick(x, y) {
-    const axis = this.axisAt(x, y);
+    // axis off hides rulers, not data. Keep gesture selection unchanged.
+    const axis = this.axisAt(x, y, true);
     if (axis < 0) return null;
     const hit = picking.pick(this.scenes[axis], this.cameras[axis], this.frames()[axis].viewport, x, y);
     if (!hit) return null;
     const series = this.data.axes[axis].series[hit.series];
     // Interp surfaces keep the picker's nearest original cell vertex XYZ and
     // raw CData, exactly like flat faces; display RGB is never reported as data.
-    return { ...hit.data, axis, seriesName: series.display_name || this.data.axes[axis].legend.labels[hit.series] || "", ...(hit.kind === "surface" ? { row: hit.row, column: hit.column } : { index: hit.index }), ...(hit.colorValue === undefined ? {} : { colorValue: hit.colorValue }) };
+    return { ...hit.data, axis, seriesName: series.display_name || this.data.axes[axis].legend.labels[hit.series] || "", ...(hit.kind === "surface" ? { row: hit.row, column: hit.column } : hit.kind === "patch3d" ? { face: hit.face, vertex: hit.vertex } : { index: hit.index }), ...(hit.level === undefined ? {} : { level: hit.level }), ...(hit.colorValue === undefined ? {} : { colorValue: hit.colorValue }) };
   }
   requestRender() {
     if (this.disposed) return;
@@ -336,6 +337,7 @@ export class Figure3D {
     ctx.strokeStyle = rgbText(colorMath.adjustForContrast(palette.axis, palette.background, palette.text));
     ctx.strokeRect(x, y, width, height);
     ctx.textAlign = "left";
+    const contourColors = colorMath.contourDisplayColors(axes, palette.background, palette.text);
     items.forEach(({ series, label }, i) => {
       const yy = y + 13 + i * 16;
       const raw = series.kind === "surface" ? colorMath.descriptorColor(series.face_color, series.cell_origins[0] || 0, axes) : series.line_color === "none" ? series.marker_edge_color : series.line_color;
@@ -349,7 +351,7 @@ export class Figure3D {
         }
       } else {
         if (series.line_color !== "none" && series.line_style !== "none") {
-          ctx.strokeStyle = rgbText(colorMath.adjustForContrast(raw, palette.background, palette.text));
+          ctx.strokeStyle = rgbText(contourColors.get(series) ?? colorMath.adjustForContrast(raw, palette.background, palette.text));
           ctx.setLineDash({ "--": [7, 4], ":": [2, 3], "-.": [7, 3, 2, 3] }[series.line_style] || []);
           ctx.lineWidth = Math.max(1, (series.line_width ?? 0.5) * 96 / 72);
           ctx.beginPath();

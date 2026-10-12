@@ -221,6 +221,19 @@ class FigureData2DTests(unittest.TestCase):
         self.assertEqual((hidden['axes'][0]['visible'], hidden['axes'][0]['title']), (False, 'T'))
 
     def test_08_excluded_forms_keep_png_with_precise_reasons(self):
+        # These former exclusions now belong to the stage 4 3D patch subset.
+        for code in [
+            "patch('vertices',[0 0 0;1 0 1;0 1 0],'faces',[1 2 3],'facecolor','r')",
+            "patch('vertices',[0 0 0;1 0 0;0 1 0],'faces',[1 2 3],'facecolor',[1 0 0]);view(3)",
+        ]:
+            with self.subTest(supported=code):
+                data = self.snapshot(code)
+                self.assertTrue(data['supported'], data)
+                self.assertEqual((data['version'], data['axes'][0]['dimension']), (3, 3))
+                patch = data['axes'][0]['series'][0]
+                self.assertEqual((patch['kind'], patch['triangle_count'], patch['index_base']), ('patch3d', 1, 0))
+                self.assertEqual(patch['triangle_indices']['values'], [0, 1, 2])
+                self.assertEqual(patch['face_color'], {'mode': 'constant', 'association': 'constant', 'rgb': [1, 0, 0]})
         cases = [
             ("fill([0 1 1],[0 0 1],'r','facealpha',.5)", 'transparency', {}),
             ("area(1:3,[1 2 3],'facealpha',.4)", 'transparency', {}),
@@ -230,8 +243,8 @@ class FigureData2DTests(unittest.TestCase):
             ("fill([0 1 1],[0 0 1],'r','marker','o')", 'unsupported_patch', {'property': 'marker'}),
             ("bar(1:3);set(gca,'yscale','log')", 'unsupported_patch', {'property': 'scale'}),
             ("pie([1 2 3])", 'unsupported_patch', {'property': 'dataaspectratio'}),
-            ("patch('vertices',[0 0 0;1 0 1;0 1 0],'faces',[1 2 3],'facecolor','r')", 'unsupported_object', {'type': 'patch'}),
-            ("patch('vertices',[0 0 0;1 0 0;0 1 0],'faces',[1 2 3],'facecolor',[1 0 0]);view(3)", 'unsupported_object', {'type': 'patch'}),
+            ("patch('vertices',[0 0 0;1 0 0;1 1 0;0 1 1],'faces',[1 2 3 4],'facecolor','r');view(3)", 'unsupported_patch', {'property': 'polygon', 'face': 1, 'detail': 'invalid_geometry'}),
+            ("patch('vertices',[0 0 0;1 0 0;0 1 0],'faces',[1 2 3],'facecolor',[1 0 0],'marker','o');view(3)", 'unsupported_patch', {'property': 'marker'}),
             ("plot3(1:3,1:3,1:3);text(1,1,1,'t')", 'unsupported_object', {'type': 'text'}),
             ("plot(1:3);text(40,40,'p','units','pixels')", 'unsupported_text', {'property': 'units'}),
             ("plot(1:3);text(1,2,'p','fontunits','normalized')", 'unsupported_text', {'property': 'fontunits'}),

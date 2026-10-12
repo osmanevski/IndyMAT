@@ -6,7 +6,7 @@ from backend.source_jobs import map_error
 from backend.source_files import SourceFile, adapt_file_source, map_file_errors, MAX_RETAINED_FILES, MAX_RETAINED_BYTES
 import codecs, json, os, queue, re, shutil, signal, subprocess, threading, time, uuid
 from pathlib import Path
-import sys
+import sys, termios, tty
 # Octave's Qt runtime registers the session as a macOS Dock app ("octave-gui"). Qt honours this
 # variable only when the process is not the direct child of a running parent, so on macOS the
 # session is started through a helper that forks, execs Octave and exits (see _Detached).
@@ -23,13 +23,13 @@ _OCTAVE_KEYWORDS=frozenset('''__FILE__ __LINE__ break case catch classdef contin
  until unwind_protect unwind_protect_cleanup while'''.split())
 
 class _Detached:
-    """Popen-like handle for an Octave process reparented to launchd; same pipes, session and process group."""
+    """Popen-like handle for an Octave process reparented to launchd, with piped output and its own process group."""
     _HELPER="import os,sys\nif os.fork():os._exit(0)\nos.execvp(sys.argv[1],sys.argv[1:])"
-    def __init__(self,argv,cwd,env=None):
+    def __init__(self,argv,cwd,env=None,stdin=subprocess.PIPE):
         # macOS gives a GUI process the identity named by __CFBundleIdentifier, which a terminal or app sets
         # for its children; Octave would then appear in the Dock under the launcher's icon (Ghostty).
         env={k:v for k,v in (os.environ if env is None else env).items() if k!='__CFBundleIdentifier'}
-        helper=subprocess.Popen([sys.executable,'-c',self._HELPER,*argv],stdin=subprocess.PIPE,stdout=subprocess.PIPE,stderr=subprocess.STDOUT,cwd=cwd,env=env,start_new_session=True,bufsize=0)
+        helper=subprocess.Popen([sys.executable,'-c',self._HELPER,*argv],stdin=stdin,stdout=subprocess.PIPE,stderr=subprocess.STDOUT,cwd=cwd,env=env,start_new_session=True,bufsize=0)
         helper.wait();self.stdin,self.stdout,self.pid=helper.stdin,helper.stdout,helper.pid
     def poll(self):
         try:os.killpg(self.pid,0)
@@ -46,6 +46,7 @@ class _Detached:
 class Kernel:
     # Class-level default: kernels assembled without __init__ (test doubles) still have the field.
     run_to_cursor_state = None
+    _debug_ticket = None
 
     def __init__(self, root, runtime, workspace, executable=None):
         self.root, self.runtime, self.workspace = map(Path, (root, runtime, workspace))
@@ -97,6 +98,15 @@ class Kernel:
         paused workspace.
         """
         with self.lock:
+            if getattr(self, '_debug_prompt_file', None):
+                # Arm inside Octave, as part of the command being executed.
+                # A callback left over from the previous prompt cannot attest
+                # this new ticket before Octave has actually read the command.
+                self._debug_ticket=uuid.uuid4().hex
+                arm=self.call('setenv','INDYMAT_DEBUG_TICKET',self._debug_ticket)
+                # Builtin arming preserves pending return; cleanup executes
+                # the original command even when a return skips the body.
+                command=''.join(f'unwind_protect; {arm} unwind_protect_cleanup; {line} end_unwind_protect\n' for line in command.splitlines())
             wanted = get_language()
             if wanted == getattr(self, '_octave_language', None):
                 proc.stdin.write(command.encode())
@@ -108,17 +118,32 @@ class Kernel:
 
     def start(self):
         self.generation += 1
+        self._debug_prompt_file=None
+        self._debug_ticket=None
         self._retained_file_jobs = set()
         self._file_request_count = 0
         self._file_staged_bytes = 0
         self.events = queue.Queue(maxsize=128)
-        argv=[self.executable, '--no-gui', '--quiet', '--no-init-file', '--no-site-file', '--no-history', '--no-line-editing', '--interactive']
+        argv=[self.executable, '--no-gui', '--quiet', '--no-init-file', '--no-site-file', '--no-history', '--line-editing', '--interactive']
         self._octave_language=get_language()
         env=os.environ.copy();env['INDYMAT_LANGUAGE']=self._octave_language
-        if sys.platform=='darwin':self.proc=_Detached(argv,self.workspace,env)
-        else:self.proc = subprocess.Popen(argv,
-            stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
-            cwd=self.workspace, env=env, start_new_session=True, bufsize=0)
+        env['INPUTRC']=str(self.root/'octave'/'readline.inputrc')
+        # Octave's input-event hooks require readline. A raw, echo-disabled
+        # input terminal keeps readline from echoing protocol commands; output
+        # remains a pipe, so user output is neither terminal-rewritten nor read
+        # as proof of a debugger pause.
+        master,slave=os.openpty()
+        tty.setraw(slave,termios.TCSANOW)
+        try:
+            if sys.platform=='darwin':self.proc=_Detached(argv,self.workspace,env,stdin=slave)
+            else:self.proc = subprocess.Popen(argv,
+                stdin=slave, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+                cwd=self.workspace, env=env, start_new_session=True, bufsize=0)
+            self.proc.stdin=os.fdopen(master,'wb',buffering=0)
+        except BaseException:
+            os.close(master)
+            raise
+        finally:os.close(slave)
         threading.Thread(target=self._reader,args=(self.proc,self.events),daemon=True).start()
         init = "more off; page_screen_output(false); page_output_immediately(true); crash_dumps_octave_core(false); warning('off','Octave:shadowed-function'); "
         # No user variable exists yet, so plain names are safe on this one line.
@@ -131,7 +156,10 @@ class Kernel:
             init += f"pkg('prefix',{self.quote(self.root/'.packages')},{self.quote(self.root/'.packages'/'.arch')}); pkg('local_list',{self.quote(self.root/'.packages'/'octave_packages')}); "
             init += "try; pkg load control signal datatypes; catch; end; try; pkg load statistics; catch; end; "
         init += "set(0,'defaultaxesfontname','Helvetica'); set(0,'defaulttextfontname','Helvetica'); PS1(''); PS2(''); clear ans; "
+        prompt_file=self.runtime/('debug-prompt-'+uuid.uuid4().hex)
+        init += self.call('__mf_debug_prompt__',str(prompt_file))
         self._write_command(self.proc, init + '\n')
+        self._debug_prompt_file=prompt_file
         self._submit('', 'code', '', 30, initializing=True)
 
     def _reader(self,proc,events):
@@ -271,7 +299,7 @@ class Kernel:
 
     def _collect(self,job,folder,proc,events,gen,timeout):
         marker=f'__MF_DONE_{job}__';clear_marker=f'__MF_CLC_{job}__';debug_marker=f'__MF_DEBUG_{job}__';debug_inspect_marker=f'__MF_DEBUG_INSPECT_{job}__';rtc_ready_marker=f'__MF_RTC_READY_{job}__'
-        raw=''; clear_count=0; debug_stops=0; debug_prompts=0; debug_serial=0; cleanup_marker=None; deadline=time.monotonic()+timeout if timeout else float('inf'); interrupted=None; reason=None; synced=False; ack=False
+        raw=''; snapshot_pending=False; clear_count=0; debug_serial=0; cleanup_marker=None; deadline=time.monotonic()+timeout if timeout else float('inf'); interrupted=None; reason=None; synced=False; ack=False
         decoder=codecs.getincrementaldecoder('utf-8')(errors='replace')
         def sync_file_fallback():
             # Called under the kernel lock. This job-local decision survives
@@ -326,16 +354,30 @@ class Kernel:
             if input_marker in raw:
                 raw=raw.replace(input_marker,'')
                 with self.lock:self.state['waiting_input']=True
-            prompts=raw.count('debug> ')
-            if prompts>debug_prompts:
-                debug_prompts=prompts
+            # Neither a printed prompt nor a printed stop location authorizes
+            # stdin. The input-wait hook must attest this executed command's
+            # ticket in its separate file, with an ordered stdout marker.
+            with self.lock:
+                if gen!=self.generation or self.closed:return
+                ticket=self._debug_ticket
+                prompt_marker=f'__MF_PROMPT_{ticket}__'
+                new_debug_prompt=False
+                if prompt_marker in raw:
+                    try:proof=self._debug_prompt_file.read_text()
+                    except OSError:proof=''
+                    if proof==ticket:
+                        new_debug_prompt=True
+                        raw=re.sub(r'(?:\[\d+\])?debug> \n'+re.escape(prompt_marker)+r'\n','',raw)
+                        raw=raw.replace(prompt_marker,'')
+            if new_debug_prompt:
                 with self.lock:stop_at_debug_prompt=self.state['status']=='stopping' and self.run_to_cursor_state is not None
                 if stop_at_debug_prompt:
                     with self.lock:cleanup=self._take_run_to_cursor_cleanup_locked()
                     try:self._write_command(proc, f"{cleanup} {self.call('dbquit')}\n")
                     except (BrokenPipeError,OSError):pass
                     ack=True;synced=True;interrupted=time.monotonic()
-            if rtc_ready_marker in raw:
+            pending_rtc_prompt=rtc_ready_marker in raw
+            if pending_rtc_prompt and new_debug_prompt:
                 raw=raw.replace(rtc_ready_marker,'')
                 with self.lock:
                     stopping=self.state['status']=='stopping'
@@ -356,25 +398,21 @@ class Kernel:
                         if self.run_to_cursor_state:self.run_to_cursor_state['continued']=True
                     try:self._write_command(proc, self.call('dbcont') + '\n')
                     except (BrokenPipeError,OSError):pass
-            stops=list(re.finditer(r'stopped in .*? at line (\d+) \[([^\]\r\n]+)\]',raw))
-            if len(stops)>debug_stops:
-                with self.lock:
+            # Source text is only presentation. The snapshot obtains the real
+            # location after the input-wait hook has proved a debugger pause.
+            with self.lock:
+                if gen!=self.generation or self.closed:return
+                needs_snapshot=self.state['status']=='running' or (self.state['status']=='paused' and not (self.state.get('debug') or {}).get('ready'))
+                if new_debug_prompt and needs_snapshot and not snapshot_pending and not pending_rtc_prompt and debug_marker not in raw and debug_inspect_marker not in raw:
                     navigating=self.debug_frame_target is not None
-                debug_stops=len(stops)
-                if navigating:
-                    try:self._write_command(proc, self.call('__mf_debug_snapshot__', str(folder)) + '\n')
+                    debug={'file':'','line':0,'ready':False,'serial':debug_serial}
+                    if not navigating:self.state.update(status='paused',debug=debug,waiting_input=False)
+                    cleanup=self._run_to_cursor_hit_cleanup_locked(debug['file'],debug['line']) if not navigating else ''
+                    snapshot_pending=True
+                    try:self._write_command(proc, f"{cleanup} {self.call('__mf_debug_snapshot__',str(folder))}\n")
                     except (BrokenPipeError,OSError):pass
-                else:
-                    match=stops[-1]
-                    debug={'file':match.group(2),'line':int(match.group(1)),'ready':False,'serial':debug_serial}
-                    with self.lock:
-                        stopping=self.state['status']=='stopping'
-                        if gen==self.generation and not stopping:self.state.update(status='paused',debug=debug,waiting_input=False)
-                        cleanup=self._take_run_to_cursor_cleanup_locked() if stopping else self._run_to_cursor_hit_cleanup_locked(debug['file'],debug['line'])
-                    command=f"{cleanup} {self.call('dbquit')}\n" if stopping else f"{cleanup} {self.call('__mf_debug_snapshot__',str(folder))}\n"
-                    try:self._write_command(proc, command)
-                    except (BrokenPipeError,OSError):pass
-            if debug_marker in raw:
+            if debug_marker in raw and new_debug_prompt:
+                snapshot_pending=False
                 raw=raw.replace(debug_marker,'');debug_serial+=1
                 try:debug_meta=json.loads((folder/'debug.json').read_text())
                 except (OSError,ValueError):debug_meta={'variables':[]}
@@ -388,11 +426,20 @@ class Kernel:
                             self.debug_frame_target=None
                         current=next((frame for frame in self.state['debug']['stack'] if frame.get('current')),None)
                         if current:self.state['debug'].update(file=current['file'],line=current['line'],frame=current['index'])
+                        # Dynamic/native prompts may omit the textual stop.
+                        # Use the actual snapshot location for temporary-breakpoint
+                        # cleanup too, before exposing the pause as ready.
+                        cleanup=self._run_to_cursor_hit_cleanup_locked(self.state['debug']['file'],self.state['debug']['line'])
+                        if cleanup:
+                            snapshot_pending=True
+                            try:self._write_command(proc, f"{cleanup} {self.call('__mf_debug_snapshot__',str(folder))}\n")
+                            except (BrokenPipeError,OSError):pass
+                            continue
                         self.state['debug'].pop('detail',None)
                         self.state['debug'].update(ready=True,serial=debug_serial)
                         self.state['status']='paused'
                         sync_file_fallback()
-            if debug_inspect_marker in raw:
+            if debug_inspect_marker in raw and new_debug_prompt:
                 raw=raw.replace(debug_inspect_marker,'');debug_serial+=1
                 try:debug_detail=json.loads((folder/'debug-inspect.json').read_text())
                 except (OSError,ValueError):debug_detail={'error':tr('Could not retrieve the variable view.')}
@@ -473,8 +520,7 @@ class Kernel:
         import re
         text=re.sub(r'\x1b\[[0-9;]*[A-Za-z]','',text)
         text=re.sub(r'^octave:\d+> ?','',text,flags=re.M)
-        text=re.sub(r'__MF_(?:DONE|ACK|INPUT|CLC|DEBUG(?:_INSPECT)?|RTC_CLEAN|RTC_READY)_[a-f0-9]{32}__','',text)
-        text=text.replace('debug> ','')
+        text=re.sub(r'__MF_(?:DONE|ACK|INPUT|CLC|DEBUG(?:_INSPECT)?|RTC_CLEAN|RTC_READY|PROMPT)_[a-f0-9]{32}__','',text)
         text=re.sub(r'(?:^|\n)stopped in .*? at line \d+ \[[^\]\r\n]+\]\s*\n\d+:.*?(?=\n|$)','',text)
         text=re.sub(r'(?:^|\n)stopped in .*? at line \d+ \[[^\]\r\n]+\]\s*(?=\n|$)','',text)
         text=re.sub(r'__MF_[A-Za-z0-9_]*$','',text)
@@ -795,6 +841,8 @@ class Kernel:
         for pipe in (proc.stdin,proc.stdout):
             try:pipe.close()
             except (OSError,AttributeError):pass
+        if proc is self.proc and getattr(self,'_debug_prompt_file',None):
+            self._debug_prompt_file.unlink(missing_ok=True)
 
     def close(self):
         with self.lock:

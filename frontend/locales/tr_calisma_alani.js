@@ -1,5 +1,6 @@
 // Turkish translations owned by one feature lane; merged in i18n.js.
 export default {
+  "Paused — no source location": "Duraklatıldı — kaynak konumu yok",
   "The variable or session changed; the open edit was canceled. Reopen the variable.": "Değişken veya oturum değişti; açık düzenleme iptal edildi. Değişkeni yeniden açın.",
   "{name}: {size} {class} · {bytes} bytes": "{name}: {size} {class} · {bytes} bayt",
   "Workspace is read-only while debugging is paused.": "Hata ayıklama duraklatılmışken Çalışma Alanı salt okunurdur.",

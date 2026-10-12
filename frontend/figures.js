@@ -1,6 +1,7 @@
 import shared from "./state.js";
 import registry from "./registry.js";
 import { t, onLanguageChange } from "./i18n.js";
+import figureColors from "./figure_color_utils.cjs";
 import figureData from "./figure_data_utils.cjs";
 import shapes from "./figure_shape_utils.cjs";
 import images from "./figure_image_utils.cjs";
@@ -368,6 +369,8 @@ class InteractiveFigure {
     return ticks || this.ticks(range, a[which + "scale"]).map((value) => ({ value, label: null }));
   }
   drawAxis(a, i) {
+    const rgb = (hex) => hex.slice(1).match(/../g).map((v) => parseInt(v, 16) / 255);
+    this.contourColors = figureColors.contourDisplayColors(a, rgb(this.palette.background), rgb(this.palette.text));
     let c = this.ctx, p = this.palette, b = this.box(i), visible = a.visible !== false;
     const interpreters = a.interpreters || {};
     c.save();
@@ -552,7 +555,7 @@ class InteractiveFigure {
     if (s.kind === "patch2d") return { line: null, edge: s.edge_color === "none" || s.line_style === "none" ? null : plotColor(s.edge_color, this.palette), face: s.face_color === "none" ? null : rawColor(s.face_color) };
     // Keep the exported source mode: an explicit RGB equal to Octave's axes
     // colour is not necessarily 'auto'. Only auto tracks the displayed canvas.
-    return { line: s.kind !== "scatter" && s.line_style !== "none" && s.line_color !== "none" ? plotColor(s.line_color, this.palette) : null, edge: s.marker_edge_color === "none" ? null : plotColor(s.marker_edge_color, this.palette), face: s.marker_face_auto ? this.palette.background : s.marker_face_color === "none" ? null : plotColor(s.marker_face_color, this.palette) };
+    return { line: s.kind !== "scatter" && s.line_style !== "none" && s.line_color !== "none" ? (this.contourColors?.has(s) ? rawColor(this.contourColors.get(s)) : plotColor(s.line_color, this.palette)) : null, edge: s.marker_edge_color === "none" ? null : plotColor(s.marker_edge_color, this.palette), face: s.marker_face_auto ? this.palette.background : s.marker_face_color === "none" ? null : plotColor(s.marker_face_color, this.palette) };
   }
   drawSeries(s, a, i, j) {
     const c = this.ctx, style = this.seriesStyle(s), points = [];
@@ -772,6 +775,7 @@ class InteractiveFigure {
     const value = (v) => Array.isArray(v) ? `[${plotFormat(Number(v[0]))}, ${plotFormat(Number(v[1]))}]` : plotFormat(Number(v));
     let label = shapes.plainText(nearest.series.display_name || this.data.axes[nearest.axis].legend?.labels?.[nearest.seriesIndex] || ""), name = label ? label + ": " : "";
     this.tip.textContent = nearest.pixel ? `${t("Row")} = ${nearest.pixel.row + 1}, ${t("Column")} = ${nearest.pixel.column + 1}, ${t("Value")} = ${Array.isArray(nearest.pixel.value) ? "[" + nearest.pixel.value.map(plotFormat).join(", ") + "]" : plotFormat(nearest.pixel.value)}` : `${name}x = ${value(nearest.vx)}, y = ${value(nearest.vy)}`;
+    if (nearest.series.role === "contour") this.tip.textContent += `, ${t("Level")} = ${plotFormat(nearest.series.level)}`;
     this.tip.hidden = false;
     this.positionTip(this.pinnedHit || nearest);
   }

@@ -12,6 +12,8 @@ export function figureReasonText(code, args = {}) {
     case "invalid_data": return t("Only the PNG view is available: invalid figure data.");
     case "unsupported_object": return t("Only the PNG view is available: unsupported object ({type}).", details);
     case "unsupported_group": return t("Only the PNG view is available: unsupported graphics group ({type}).", details);
+    case "contour_filled": return t("Only the PNG view is available: filled contours.");
+    case "contour_labels": return t("Only the PNG view is available: contour labels.");
     case "unsupported_marker": return t("Only the PNG view is available: unsupported marker ({marker}).", details);
     case "unsupported_color": return t("Only the PNG view is available: unsupported color.");
     case "scatter_colors": return t("Only the PNG view is available: per-point scatter colors.");
@@ -56,7 +58,7 @@ function instructions(mode) {
 }
 
 function tipLabels() {
-  return { series: t("Series"), index: t("Index"), row: t("Row"), column: t("Column"), color: t("Color value") };
+  return { series: t("Series"), index: t("Index"), row: t("Row"), column: t("Column"), color: t("Color value"), level: t("Level"), face: t("Face"), vertex: t("Vertex") };
 }
 
 // container is the positioned viewer host, whose origin is used by pick/zoom.

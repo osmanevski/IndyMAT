@@ -194,7 +194,7 @@ test("screen polyline keeps finite-run gaps and dash continuity", () => {
   const expected = geometry.expandPolyline(points, 2, [0, 3, 5], "--");
   assert.deepEqual(screenPolyline(points, 2, [0, 3, 5], "--", { width: 100, height: 100 }), expected);
 });
-test("reused marker uploads retain per-sample XYZ, sizes and UVs", () => {
+test("batched marker uploads retain per-sample XYZ, sizes and UVs", () => {
   const axes = fixture("scatter3_sizes");
   const scene = geometry.buildScene(axes);
   const gl = glMock();
@@ -207,15 +207,19 @@ test("reused marker uploads retain per-sample XYZ, sizes and UVs", () => {
     gesture();
     uploads.length = 0;
     renderer.render([{ scene, camera, viewport }], palette, 1);
-    const markerUploads = uploads.slice(-scene.points[0].sizes.length * 3);
+    const markerUploads = uploads.slice(-4);
     const points = scene.points[0];
+    const positions = [];
+    const uv = [];
     for (let i = 0; i < points.sizes.length; i++) {
       const pixel = cameraMath.project(camera, viewport, points.positions.subarray(i * 3, i * 3 + 3));
       const expected = geometry.expandMarkers([pixel], Math.sqrt(points.sizes[i]) * 96 / 72);
-      assert.deepEqual(markerUploads[i * 3].values, expected.positions);
-      assert.deepEqual(markerUploads[i * 3 + 1].values, new Float32Array(expected.positions.length));
-      assert.deepEqual(markerUploads[i * 3 + 2].values, expected.uv);
+      positions.push(...expected.positions);
+      uv.push(...expected.uv);
     }
+    assert.deepEqual(markerUploads[0].values, new Float32Array(positions));
+    assert.deepEqual(markerUploads[1].values, new Float32Array(positions.length));
+    assert.deepEqual(markerUploads[2].values, new Float32Array(uv));
   }
   const buffers = [renderer.markerPositions, renderer.markerUV, renderer.zeroRGB, renderer.zeroUV];
   renderer.render([{ scene, camera, viewport }], palette, 1);

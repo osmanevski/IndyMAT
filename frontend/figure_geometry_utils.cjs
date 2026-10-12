@@ -37,7 +37,8 @@
  * These helpers do not clip; R3 clips viewport and axes box in its shader.
  */
 const { dataToNormalised, extents } = require("./figure_camera_utils.cjs");
-const { resolveSurfaceColors, SURFACE_COLOR_INTERPOLATION } = require("./figure_color_utils.cjs");
+const { resolveSurfaceColors, resolveContourColor, patchColor, SURFACE_COLOR_INTERPOLATION } = require("./figure_color_utils.cjs");
+const { patchPoint } = require("./figure_patch3d_utils.cjs");
 // Grid vertex index -> original double xyz; vector and matrix layouts supported.
 function surfacePoint(series, index) {
   const rows = series.shape[0];
@@ -61,6 +62,37 @@ function buildScene(axesRecord) {
     const series = s.id ?? seriesIndex;
     // Filled 2D shapes and free text belong to the 2D painter, never to a 3D scene.
     if (s.kind === "patch2d" || s.kind === "text") continue;
+    if (s.kind === "patch3d") {
+      scene.counts.vertices += s.rendered_points;
+      const count = s.triangle_count;
+      if (s.face_color.mode !== "none") {
+        const positions = new Float32Array(count * 9), colors = new Float32Array(count * 9);
+        const vertexIndices = new Uint32Array(count * 3);
+        for (let i = 0; i < count; i++) for (let k = 0; k < 3; k++) {
+          const vertex = s.triangle_indices.values[i + k * count];
+          positions.set(dataToNormalised(axesRecord, patchPoint(s, vertex)), i * 9 + k * 3);
+          colors.set(patchColor(s.face_color, s.triangle_faces[i], axesRecord), i * 9 + k * 3);
+          vertexIndices[i * 3 + k] = vertex;
+        }
+        scene.meshes.push({ positions, colors, indices: Uint32Array.from({ length: count * 3 }, (_, i) => i),
+          cellOfTriangle: new Uint32Array(s.triangle_faces), series, colorInterpolation: "constant", source: { series: s, vertexIndices } });
+        scene.counts.meshVertices += count * 3; scene.counts.triangles += count;
+      }
+      if (s.edge_color.mode !== "none" && s.line_style !== "none" && s.line_width > 0) {
+        const count = s.edge_indices.shape[0];
+        const positions = new Float32Array(count * 6), colors = new Float32Array(count * 6);
+        const vertexIndices = new Uint32Array(count * 2), faceIndices = new Uint32Array(count * 2);
+        for (let i = 0; i < count; i++) for (let end = 0; end < 2; end++) {
+          const vertex = s.edge_indices.values[i + end * count], face = s.edge_indices.values[i + count * 2];
+          positions.set(dataToNormalised(axesRecord, patchPoint(s, vertex)), i * 6 + end * 3);
+          colors.set(patchColor(s.edge_color, face, axesRecord), i * 6 + end * 3);
+          vertexIndices[i * 2 + end] = vertex; faceIndices[i * 2 + end] = face;
+        }
+        scene.edges.push({ positions, colors, series, width: s.line_width, style: s.line_style, faced: s.face_color.mode !== "none",
+          source: { series: s, vertexIndices, faceIndices } }); scene.counts.edges += count;
+      }
+      continue;
+    }
     if (s.kind === "surface") {
       const rows = s.shape[0];
       const { faceColors, vertexColors, edgeColors } = resolveSurfaceColors(s, axesRecord);
@@ -141,7 +173,7 @@ function buildScene(axesRecord) {
     if (s.kind !== "scatter" && s.line_style !== "none" && s.line_color !== "none" && (s.line_width ?? 0.5) > 0) {
       const expanded = s.kind === "stem" || s.kind === "stairs" ? legacyLine(s, axesRecord, source.sampleIndices, breaks) :
         { positions, breaks: new Uint32Array(breaks), sourceIndices: sources, source };
-      scene.lines.push({ ...expanded, color: s.line_color,
+      scene.lines.push({ ...expanded, color: s.role === "contour" ? resolveContourColor(s, axesRecord) : s.line_color,
         width: s.line_width ?? 0.5, style: s.line_style, series });
       scene.counts.lineSamples += sampleIndices.length;
     }

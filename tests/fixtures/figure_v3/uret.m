@@ -45,7 +45,8 @@ function uret(output_dir = fileparts(mfilename('fullpath')))
       case 'invalid_data'
         h=plot3(1:3,4:6,7:9);set(h,'ydata',[1 2]);
       case 'unsupported_object'
-        patch('vertices',[0 0 0;1 0 0;0 1 0],'faces',[1 2 3],'facecolor',[1 0 0]);view(3);
+        % Stage 4 admits the former planar 3D patch. A 3D image remains out.
+        image(uint8(ones(2)));view(3);
       case 'unsupported_group'
         ax=axes();h=hggroup('parent',ax);line('parent',h,'xdata',[1 2],'ydata',[2 3]);
       case 'unsupported_marker'

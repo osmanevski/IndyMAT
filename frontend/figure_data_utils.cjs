@@ -1,4 +1,5 @@
 "use strict";
+const { triangulatePatch, patchPoint, MAX_FACE_VERTICES } = require("./figure_patch3d_utils.cjs");
 
 // The only admission gate for interactive artifacts. No DOM, engine or globals.
 const LIMITS = Object.freeze({ samples: 2000, surface_vertices: 40000,
@@ -9,7 +10,7 @@ const REASON_CODES = Object.freeze(["no_axes", "budget_exceeded", "invalid_data"
   "unsupported_object", "unsupported_group", "unsupported_marker", "unsupported_color",
   "scatter_colors", "transparency", "lighting", "interpolated_color",
   "unsupported_surface", "log_3d", "perspective", "manual_camera", "unsupported_units",
-  "unsupported_colorbar", "json_budget", "patch_colors", "unsupported_patch", "unsupported_text"]);
+  "unsupported_colorbar", "json_budget", "patch_colors", "unsupported_patch", "unsupported_text", "contour_filled", "contour_labels"]);
 // Added with the 2D shapes/text records; older artifacts do not carry them.
 const OPTIONAL_LIMITS = Object.freeze({ text_lines: 256, text_chars: 65536, image_pixels: 262144 });
 const STYLES = ["-", "--", ":", "-.", "none"];
@@ -214,6 +215,54 @@ function patch2d(s, path) {
     numbers(b.values, rows, path + ".bar.values", true);
   }
 }
+function patch3d(s, path) {
+  requireThat(s.role === "patch" && s.index_base === 0 && s.triangulation === "first-valid-ear-v1" && s.polygon_vertex_limit === MAX_FACE_VERTICES, path + ".contract");
+  descriptor(s.vertices, path + ".vertices", LIMITS.patch_vertices * 3, false);
+  requireThat(s.vertices.shape.length === 2 && s.vertices.shape[1] === 3 && s.vertices.shape[0] > 0, path + ".vertices.shape");
+  const n = s.vertices.shape[0]; budget(n, "patch_vertices", path);
+  descriptor(s.faces, path + ".faces", LIMITS.patch_triangles * 3);
+  requireThat(s.faces.shape.length === 2 && s.faces.shape[0] > 0 && s.faces.shape[1] >= 3, path + ".faces.shape");
+  requireThat(s.faces.shape[1] <= MAX_FACE_VERTICES + 1, path + ".faces.shape", "budget_exceeded", { budget: "polygon_vertices", actual: s.faces.shape[1], limit: MAX_FACE_VERTICES });
+  const [nf, width] = s.faces.shape, faces = [];
+  for (let r = 0; r < nf; r++) {
+    const face = []; let ended = false;
+    for (let c = 0; c < width; c++) {
+      const index = s.faces.values[r + c * nf];
+      if (index === null) ended = true;
+      else { requireThat(!ended && integer(index) && index < n, path + ".faces", "invalid_index"); face.push(index); }
+    }
+    faces.push(face);
+  }
+  const geometry = triangulatePatch(Array.from({ length: n }, (_, i) => patchPoint(s, i)), faces);
+  requireThat(!geometry.code, path + ".faces", geometry.code, geometry.args);
+  requireThat(geometry.triangles.length > 0, path + ".faces");
+  const exact = (value, rows, columns, field) => {
+    descriptor(value, path + "." + field, LIMITS.patch_triangles * 6, false);
+    requireThat(equal(value.shape, [rows.length, columns]) && equal(value.values, Array.from({ length: columns }, (_, c) => rows.map((row) => row[c])).flat()), path + "." + field, "invalid_index");
+  };
+  exact(s.triangle_indices, geometry.triangles, 3, "triangle_indices");
+  exact(s.edge_indices, geometry.edges, 3, "edge_indices");
+  requireThat(Array.isArray(s.triangle_faces) && equal(s.triangle_faces, geometry.faceOfTriangle), path + ".triangle_faces", "invalid_index");
+  requireThat(s.triangle_count === geometry.triangles.length && s.original_points === n && s.rendered_points === n && s.decimated === false, path + ".counts");
+  requireThat(finite(s.line_width) && s.line_width >= 0, path + ".line_width");
+  for (const field of ["face_color", "edge_color"]) {
+    const c = s[field]; requireThat(record(c), path + "." + field);
+    if (c.mode === "none" || c.mode === "constant") {
+      requireThat(c.association === "constant" && (c.mode === "none" || rgb(c.rgb)), path + "." + field, "unsupported_color");
+      continue;
+    }
+    requireThat(c.mode !== "interp", path + "." + field, "interpolated_color");
+    requireThat(c.mode === "flat" && c.association === "face", path + "." + field, "unsupported_patch");
+    requireThat(["indexed", "truecolor"].includes(c.encoding) && ["scaled", "direct"].includes(c.mapping) && CLASSES.includes(c.cdata_class), path + "." + field);
+    descriptor(c.data, path + "." + field + ".data", LIMITS.patch_triangles * 3, false);
+    const count = c.data.shape[0];
+    requireThat(count === 1 || count === nf && nf !== n, path + "." + field, "patch_colors");
+    requireThat(equal(c.data.shape, c.encoding === "indexed" ? [count, 1] : [count, 1, 3]), path + "." + field);
+    classValues(c.data, c.cdata_class, path + "." + field);
+    if (c.encoding === "truecolor") requireThat(["single", "double"].includes(c.cdata_class) && c.data.values.every((v) => v >= 0 && v <= 1), path + "." + field, "unsupported_color");
+  }
+  for (const field of ["facealpha", "edgealpha", "alphadata"]) if (own(s, field)) requireThat(s[field] === 1, path + "." + field, "transparency");
+}
 function textRecord(s, path) {
   requireThat(typeof s.role === "string" && ["data", "normalized"].includes(s.units), path + ".units", "unsupported_text", { property: "units" });
   numbers(s.position, 2, path + ".position");
@@ -234,9 +283,26 @@ function samples(s, version, path) {
   requireThat(["line", "scatter", "stem", "stairs"].includes(s.kind), path + ".kind", "unsupported_object");
   if (own(s, "span")) requireThat(version === 3 && s.kind === "line" && ["horizontal", "vertical"].includes(s.span) && s.x.length === 2, path + ".span");
   if (own(s, "role")) requireThat(version === 3 && typeof s.role === "string", path + ".role");
+  if (s.role === "contour") {
+    requireThat(version === 3 && s.kind === "line" && finite(s.level) && typeof s.contour_closed === "boolean" && !s.decimated && s.marker === "none", path + ".contour");
+    if (own(s, "contour_group")) requireThat(Number.isSafeInteger(s.contour_group) && s.contour_group >= 0, path + ".contour_group");
+    const c = s.contour_color;
+    requireThat(record(c), path + ".contour_color");
+    if (c.mode === "flat") {
+      requireThat(c.association === "level" && c.encoding === "indexed" && ["scaled", "direct"].includes(c.mapping) && CLASSES.includes(c.cdata_class), path + ".contour_color");
+      descriptor(c.data, path + ".contour_color.data", 1, false);
+      requireThat(equal(c.data.shape, [1, 1]) && c.data.values[0] === s.level, path + ".contour_color.data");
+      classValues(c.data, c.cdata_class, path + ".contour_color.data");
+    } else requireThat(c.association === "constant" && (c.mode === "none" || c.mode === "constant" && rgb(c.rgb)), path + ".contour_color");
+  } else requireThat(!own(s, "level") && !own(s, "contour_closed"), path + ".contour");
   numbers(s.x, undefined, path + ".x", true);
   budget(s.x.length, "samples", path);
   numbers(s.y, s.x.length, path + ".y", true);
+  if (s.role === "contour" && s.contour_closed) {
+    requireThat(s.x.length >= 3 && s.x.every(finite) && s.y.every(finite) &&
+      s.x[0] === s.x.at(-1) && s.y[0] === s.y.at(-1) &&
+      (!own(s, "z") || s.z.every(finite) && s.z[0] === s.z.at(-1)), path + ".contour_closed");
+  }
   if (own(s, "z")) {
     requireThat(version === 3 && ["line", "scatter"].includes(s.kind), path + ".z");
     numbers(s.z, s.x.length, path + ".z", true);
@@ -384,10 +450,15 @@ function validate(payload) {
           requireThat(Array.isArray(s.shape) && s.shape.length === 2 && s.shape.every((n) => integer(n) && n > 0), "image.shape");
           estimatedPixels += s.shape[0] * s.shape[1];
           budget(estimatedPixels, "image_pixels", "image.shape");
-        } else if (s.kind === "patch2d") {
+        } else if (s.kind === "patch2d" || s.kind === "patch3d") {
           requireThat(record(s.vertices) && Array.isArray(s.vertices.shape) && integer(s.vertices.shape[0]), "patch2d.vertices");
           budget(s.vertices.shape[0], "patch_vertices", "patch2d.vertices");
           estimatedVertices += s.vertices.shape[0];
+          if (s.kind === "patch3d") {
+            requireThat(record(s.faces) && Array.isArray(s.faces.shape) && s.faces.shape.length === 2 && s.faces.shape.every(integer), "patch3d.faces");
+            const count = s.faces.shape[0] * Math.max(0, s.faces.shape[1] - 2);
+            budget(count, "patch_triangles", "patch3d.faces"); estimatedTriangles += count;
+          }
         } else if (s.kind !== "text") {
           requireThat(Array.isArray(s.x), "series.x");
           budget(s.x.length, "samples", "series.x");
@@ -458,6 +529,9 @@ function validate(payload) {
           surface(s, p);
           triangles += s.triangle_count;
           vertices += s.rendered_points;
+        } else if (s.kind === "patch3d") {
+          requireThat(payload.version === 3 && dimension === 3, p + ".kind", "unsupported_object");
+          patch3d(s, p); vertices += s.rendered_points; triangles += s.triangle_count;
         } else if (s.kind === "image") {
           requireThat(payload.version === 3 && dimension === 2 && a.xscale === "linear" && a.yscale === "linear", p + ".kind", "unsupported_object", { type: "image" });
           requireThat(payload.limits.image_pixels === OPTIONAL_LIMITS.image_pixels, "limits.image_pixels");

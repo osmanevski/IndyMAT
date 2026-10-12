@@ -23,7 +23,8 @@
  */
 const { project, unprojectRay, dataToNormalised, viewportSize } = require("./figure_camera_utils.cjs");
 const { surfacePoint, samplePoint } = require("./figure_geometry_utils.cjs");
-const { rawColorValue } = require("./figure_color_utils.cjs");
+const { rawColorValue, rawPatchColor } = require("./figure_color_utils.cjs");
+const { patchPoint } = require("./figure_patch3d_utils.cjs");
 const sub = (a, b) => a.map((v, i) => v - b[i]);
 const dot = (a, b) => a.reduce((sum, v, i) => sum + v * b[i], 0);
 const cross = (a, b) => [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]];
@@ -74,6 +75,21 @@ function frontSurface(scene, camera, viewport, x, y) {
 // Snap intersection to original cell vertex; return data units and raw CData.
 function surfaceTip(scene, hit) {
   const s = hit.mesh.source.series;
+  if (s.kind === "patch3d") {
+    const rows = s.faces.shape[0], candidates = [];
+    for (let c = 0; c < s.faces.shape[1]; c++) {
+      const index = s.faces.values[hit.origin + c * rows]; if (index !== null) candidates.push(index);
+    }
+    let index = candidates[0], nearest = Infinity;
+    for (const candidate of candidates.sort((a, b) => a - b)) {
+      const point = dataToNormalised(scene.axes, patchPoint(s, candidate));
+      const distance = dot(sub(point, hit.point), sub(point, hit.point));
+      if (distance < nearest) { index = candidate; nearest = distance; }
+    }
+    const [x, y, z] = patchPoint(s, index);
+    return { kind: "patch3d", series: hit.mesh.series, face: hit.origin, vertex: index,
+      data: { x, y, z }, colorValue: rawPatchColor(s, hit.origin), depth: hit.depth };
+  }
   const rows = s.shape[0];
   let index = hit.origin;
   let nearest = Infinity;
@@ -97,7 +113,7 @@ function pick(scene, camera, viewport, xPixel, yPixel, options = {}) {
   let best = surface ? surfaceTip(scene, surface) : null;
   let bestDistance = Infinity;
   const epsilon = options.depthEpsilon ?? 1e-7;
-  for (const [kind, objects] of [["line", scene.lines], ["point", scene.points]]) {
+  for (const [kind, objects] of [["line", scene.lines], ["point", scene.points], ["edge", scene.edges.filter((edge) => edge.source.series.kind === "patch3d")]]) {
     for (const object of objects) {
       for (let i = 0; i < object.positions.length / 3; i++) {
         if (kind === "line") {
@@ -119,9 +135,16 @@ function pick(scene, camera, viewport, xPixel, yPixel, options = {}) {
         if (occluder && projected.depth > occluder.depth + epsilon) continue;
         if (best && (projected.depth > best.depth + epsilon || Math.abs(projected.depth - best.depth) <= epsilon && distance >= bestDistance)) continue;
         const s = object.source.series;
+        if (kind === "edge") {
+          const index = object.source.vertexIndices[i], face = object.source.faceIndices[i];
+          const [x, y, z] = patchPoint(s, index);
+          best = { kind: "patch3d", series: object.series, face, vertex: index, data: { x, y, z }, colorValue: rawPatchColor(s, face), depth: projected.depth };
+          bestDistance = distance; continue;
+        }
         const sampleIndex = object.source.sampleIndices[i];
         const [x, y, z] = samplePoint(s, sampleIndex);
         best = { kind, series: object.series, index: object.sourceIndices[i] === 0xffffffff ? null : object.sourceIndices[i], data: { x, y, z }, depth: projected.depth };
+        if (s.role === "contour") best.level = s.level;
         if (s.kind === "scatter" && s.color_data) best.colorValue = s.color_data.encoding === "indexed" ? s.color_data.data.values[0] : s.color_data.data.values.slice();
         bestDistance = distance;
       }
