@@ -9,7 +9,9 @@ function original = __mf_original_function__ (name)
   warning_state = warning ('query', 'Octave:language-extension');
   unwind_protect
     warning ('off', 'Octave:language-extension');
-    candidates = which (name, '-all');
+    [last_message, last_identifier] = lastwarn ();
+    evalc ("candidates = which (name, '-all');");
+    lastwarn (last_message, last_identifier);
   unwind_protect_cleanup
     warning (warning_state.state, 'Octave:language-extension');
   end_unwind_protect

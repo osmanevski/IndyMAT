@@ -108,6 +108,29 @@ surfScene.axes[0].series = [surface];
 surfScene.vertex_count = 6;
 surfScene.triangle_count = 4;
 check("flat surface", () => assert.equal(validate(surfScene).ok, true, JSON.stringify(validate(surfScene))));
+for (const width of [undefined, -1, "0.5", null, Infinity]) check("invalid surface width " + width, () => {
+  const v = copy(surfScene);
+  if (width === undefined) delete v.axes[0].series[0].line_width;
+  else v.axes[0].series[0].line_width = width;
+  assert.equal(validate(v).ok, false);
+});
+check("zero surface width", () => {
+  const v = copy(surfScene);
+  v.axes[0].series[0].line_width = 0;
+  assert.equal(validate(v).ok, true);
+});
+bad("object Z label", (v) => { v.axes[0].zlabel = {}; });
+bad("non-boolean Z grid", (v) => { v.axes[0].grid.z = "on"; });
+bad("missing 3D Z label", (v) => { delete v.axes[0].zlabel; });
+bad("missing 3D Z grid", (v) => { delete v.axes[0].grid.z; });
+for (const key of ["ztickmode", "zticklabelmode"]) {
+  bad("invalid " + key, (v) => { v.axes[0][key] = "invalid"; });
+  for (const mode of ["auto", "manual", undefined]) check(key + " " + mode, () => {
+    const v = copy(scene);
+    if (mode !== undefined) v.axes[0][key] = mode;
+    assert.equal(validate(v).ok, true);
+  });
+}
 for (const [name, mutate, code] of [
   ["wrong Z shape", (s) => { s.z.shape = [3, 2]; }],
   ["wrong X layout", (s) => { s.coordinate_layout.x = "matrix"; }],

@@ -185,6 +185,46 @@ class Node extends Target {
     assert.equal(swatches[0][5], `rgb(${gradient[0].rgb.map((v) => Math.round(v * 255)).join(",")})`);
     assert.equal(ctxNode.calls.filter(([method]) => method === "fillText").length, axes.colorbars[0].ticks.length + 1);
     passed("colorbar discrete swatches remain unchanged and ticks/label are drawn");
+    for (const orientation of ["vertical", "horizontal"]) {
+      for (const direction of ["normal", "reverse"]) {
+        const extreme = structuredClone(axes);
+        const bar = extreme.colorbars[0];
+        Object.assign(bar, { orientation, direction, limits: [-1e308, 1e308], ticks: [-1e308, 0, 1e308], tick_labels: ["low", "mid", "high"] });
+        const node = new Node("canvas");
+        drawColorbars(node.context, extreme, 400, 300, palette);
+        const ticks = node.calls.filter(([method, text]) => method === "fillText" && ["low", "mid", "high"].includes(text));
+        assert.equal(ticks.length, 3);
+        assert(ticks.every(([, , x, y]) => Number.isFinite(x) && Number.isFinite(y)));
+        const positions = ticks.map((call) => call[orientation === "vertical" ? 3 : 2]);
+        assert.equal(new Set(positions).size, 3, "extreme-limit ticks collapsed");
+        assert(Math.abs(positions[1] - (positions[0] / 2 + positions[2] / 2)) < 1e-10);
+        assert.equal(positions[0] < positions[2], (orientation === "horizontal") === (direction === "normal"));
+      }
+    }
+    passed("extreme finite colorbar limits keep endpoint/midpoint ticks finite in both directions");
+    for (const name of ["plot3_gap", "scatter3_sizes", "surf_vector"]) {
+      const hidden = fixture(name);
+      Object.assign(hidden.axes[0], { visible: false, title: "Retained title", xlabel: "Retained X", ylabel: "Retained Y", zlabel: "Retained Z" });
+      viewer = new Figure3D(root, hidden, { identity, save: () => {}, failed: () => assert.fail("unexpected fallback") });
+      viewer.renderer.flush();
+      assert(!viewer.overlay.calls.some(([method]) => ["moveTo", "lineTo", "stroke"].includes(method)), "hidden axes drew ticks");
+      for (const label of ["Retained title", "Retained X", "Retained Y", "Retained Z"]) {
+        assert(viewer.overlay.calls.some(([method, text]) => method === "fillText" && text === label));
+      }
+      assert(viewer.scenes[0].counts.vertices > 0, "axis off removed data");
+      const box = viewer.frames()[0].viewport;
+      assert.equal(viewer.axisAt(box.x + box.width / 2, box.y + box.height / 2), -1, "hidden axes selected as gesture target");
+      const hiddenState = viewer.states();
+      viewer.pan(10, 20);
+      viewer.zoom(2);
+      assert.deepEqual(viewer.states(), hiddenState, "hidden axes changed through pan/zoom");
+      hidden.axes[0].legend = { visible: true, labels: ["Retained legend"], location: "northeast" };
+      viewer.overlay.calls.length = 0;
+      viewer.render();
+      assert(viewer.overlay.calls.some(([method, text]) => method === "fillText" && text === "Retained legend"));
+      viewer.dispose();
+    }
+    passed("hidden 3D axes omit ticks while preserving data, visible labels and legends");
     const mixed = fixture("colorbar");
     const two = fixture("line2d").axes[0];
     two.dimension = 2;

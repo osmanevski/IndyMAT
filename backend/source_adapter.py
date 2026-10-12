@@ -7,7 +7,7 @@ is an ephemeral capability: callers must reverify after path/package changes.
 """
 from __future__ import annotations
 
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, replace
 import hashlib
 import bisect
 from pathlib import Path
@@ -17,7 +17,7 @@ import time
 
 from backend.source_lexer import Diagnostic, MAX_BYTES, lex_source
 
-ADAPTER_VERSION = 'editor-literals-1b.3'
+ADAPTER_VERSION = 'editor-literals-1b.5'
 CONSTRUCTOR_SHA256 = '878d99fe5dcda09e7caa38dd6cd6d791d9e3efc401f446a359ac3dee1f730e92'
 MAX_MAP_PIECES = 100_000
 TIME_LIMIT = 1.0
@@ -173,10 +173,12 @@ class SourceMap:
             raise ValueError('Source map requires explicit utf16 or utf8 units.')
         start_key = 'generated_start_' + units
         end_key = 'generated_end_' + units
-        for piece in self.pieces:
-            start, end = getattr(piece, start_key), getattr(piece, end_key)
-            if start <= offset < end:
-                                return SourceSpan(piece.original_start_utf16, piece.original_end_utf16), piece.kind != 'exact'
+        index = bisect.bisect_right(self.pieces, offset,
+                                    key=lambda piece: getattr(piece, start_key)) - 1
+        if index >= 0:
+            piece = self.pieces[index]
+            if offset < getattr(piece, end_key):
+                return SourceSpan(piece.original_start_utf16, piece.original_end_utf16), piece.kind != 'exact'
         raise ValueError('Generated offset is outside the source map.')
 
 
@@ -190,6 +192,7 @@ class Adaptation:
     status: str  # unchanged / adapted / fallback
     span: SourceSpan
     package_fingerprint: str = ''
+    callee_names: tuple[str, ...] = ()
 
     def metadata(self):
         return asdict(self)
@@ -265,7 +268,11 @@ def _literal_plan(tokens, deadline):
     A known name assigned anywhere in the snapshot is also ambiguous indexing.
     """
     trivia = {'space', 'newline', 'comment', 'block', 'continuation'}
-    ts = [t for t in tokens if t.kind not in trivia]
+    # Planning consumes structural values only. Literal payload punctuation
+    # (e.g. "," or "=") must never become a separator, assignment or keyword.
+    # Rendering/maps still use the untouched lexer tokens and their payloads.
+    ts = [replace(t, value='') if t.kind in {'double', 'char'} else t
+          for t in tokens if t.kind not in trivia]
     pairs, reverse_pairs, parents, stack = {}, {}, {}, []
     assigned = set()
 
@@ -364,7 +371,9 @@ def _literal_plan(tokens, deadline):
                           and ts[arguments[0][0]].kind == 'double')
         call_results[opening] = (bool(format_literal) if callee == 'sprintf'
                                  else callee in string_results and has_literal(opening + 1, closing))
-        for a, b in arguments:
+        for argument_index, (a, b) in enumerate(arguments):
+            if has_literal(a, b) and (callee == 'odeset' or callee == 'struct' and (len(arguments) % 2 or argument_index % 2 == 1)):
+                return failure('string-container-value', 'String-valued container arguments require measured storage semantics.', a, b)
             if not has_literal(a, b):
                 continue
             if b == a + 1 and ts[a].kind == 'double':
@@ -424,6 +433,20 @@ def _literal_plan(tokens, deadline):
         b = ends[bisect.bisect_right(ends, i)]
         if i and ts[i - 1].kind == 'identifier':
             bindings.append((ts[i - 1].value, i + 1, b))
+        elif i and ts[i - 1].value == ']':
+            # Every output may carry the RHS's string provenance. Secondary
+            # numeric outputs can be overtainted; uncertain dispatch falls back.
+            opening = reverse_pairs[i - 1]
+            bindings.extend((x.value, i + 1, b) for x in ts[opening:i]
+                            if x.kind == 'identifier')
+        elif i and ts[i - 1].kind == 'close':
+            # Indexed stores taint the container, including chained ()/{}.
+            # Field/property stores still take the separate fail-closed path.
+            a = i - 1
+            while a in reverse_pairs:
+                a = reverse_pairs[a] - 1
+            if a >= 0 and ts[a].kind == 'identifier':
+                bindings.append((ts[a].value, i + 1, b))
         a = i - 1
         boundary = ends[bisect.bisect_left(ends, i) - 1] if bisect.bisect_left(ends, i) else 0
         while a >= boundary and ts[a].kind != 'separator' and parents[a] == parents[i]:
@@ -493,6 +516,8 @@ def _literal_plan(tokens, deadline):
             # Literal cells retain their element types by rule (b); don't
             # mistake a cell container for a direct string expression.
             if a < b and ts[a].value == '{' and pairs.get(a) == b - 1:
+                if (unresolved or callee in {'struct', 'odeset'}) and object_in(a, b, tainted):
+                    return failure('string-container-value', 'String-valued container arguments require measured storage semantics.', a, b)
                 continue
             if object_in(a, b, tainted):
                 return failure('string-forwarding', f'{callee or "Unresolved callee"}: a string-valued operand/binding is not a direct flag literal; object dispatch is unverified.', opening, closing + 1)
@@ -663,4 +688,9 @@ def adapt_source(document: str, span=None, profile: AdapterProfile | None = None
         diagnostics.append(located(Diagnostic('unicode-limit', 'Supplementary Unicode operations may differ from MATLAB UTF-16 semantics.', literals[0].start, literals[-1].end)))
     if time.monotonic() > deadline:
         return unchanged('fallback', (located(Diagnostic('time-limit', 'Adapter time budget exhausted.', start, end)),))
-    return Adaptation(''.join(output), tuple(replacements), SourceMap(tuple(pieces)), tuple(diagnostics), ADAPTER_VERSION, 'adapted', selected, profile.package.fingerprint)
+    significant = [t for t in unit_scan.tokens if t.kind not in {'space', 'newline', 'comment', 'continuation'}]
+    # Conservative superset of calls whose literal/object dispatch we accepted.
+    callees = tuple(sorted({t.value for i, t in enumerate(significant[:-1])
+                            if t.kind == 'identifier' and (t.value in STRING_AWARE or t.value in CHAR_CALLEES)
+                            and significant[i + 1].value == '('}))
+    return Adaptation(''.join(output), tuple(replacements), SourceMap(tuple(pieces)), tuple(diagnostics), ADAPTER_VERSION, 'adapted', selected, profile.package.fingerprint, callees)

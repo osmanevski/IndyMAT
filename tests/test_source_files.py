@@ -122,6 +122,22 @@ class SavedSourceTests(unittest.TestCase):
         self.assertEqual(result.status, 'fallback')
         self.assertEqual(result.generated_text, self.path.read_text())
 
+    def test_keyboard_pause_keeps_whole_saved_script_native(self):
+        for call in ['keyboard;', 'keyboard()', 'keyboard("prompt");',
+                     "eval('keyboard');", 'eval("keyboard");',
+                     "evalin('base','keyboard');", "feval('keyboard');",
+                     "builtin('keyboard');", "h=str2func('keyboard'); h();",
+                     "eval('eval(''keyboard'')');"]:
+            with self.subTest(call=call):
+                source=self.source('r="x";\n'+call+'\nafter_pause=1;')
+                result=adapt_file_source(source, PROFILE)
+                self.assertEqual(result.status, 'fallback')
+                self.assertEqual(result.diagnostics[0].code, 'file-debug')
+                self.assertEqual(result.generated_text, source.document)
+                self.assertEqual(result.replacements, ())
+        source=self.source('r="keyboard"; % keyboard()\n')
+        self.assertEqual(adapt_file_source(source, PROFILE).status, 'adapted')
+
     def test_exact_entry_only_mapping_and_native_line_only(self):
         source=self.source('% 😀\nr="ş"; missing;\n')
         adapted=adapt_file_source(source, PROFILE)

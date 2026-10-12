@@ -84,6 +84,25 @@ def file_fallback(source, code, message):
                    span=SourceSpan(0, len(source.document.encode('utf-16-le')) // 2),
                    diagnostics=(Diagnostic(code, message, 0, 0),))
 
+def _literal_keyboard_call(tokens):
+    # Deliberately bounded literal inspection, not evaluation/data-flow analysis.
+    # False positives inside dynamic text are preferable to changing file identity.
+    significant = [t for t in tokens if t.kind not in {'space', 'newline', 'comment', 'continuation'}]
+    stack = []
+    for i, token in enumerate(significant):
+        if token.kind == 'open':
+            dynamic = (token.value == '(' and i > 0 and significant[i-1].kind == 'identifier'
+                       and significant[i-1].value in {'eval', 'evalin', 'feval', 'str2func', 'builtin'})
+            stack.append(dynamic or bool(stack and stack[-1]))
+        elif token.kind == 'close':
+            if stack:
+                stack.pop()
+        elif token.kind in {'char', 'double'} and stack and stack[-1]:
+            if re.search(r'(?<![A-Za-z_0-9])keyboard(?![A-Za-z_0-9])', token.value):
+                return True
+    return False
+
+
 def adapt_file_source(source, profile, *, debugging=False):
     if not isinstance(source, SourceFile) or source._capability is not _CAPABILITY:
         raise ValueError('Invalid server file source.')
@@ -101,6 +120,10 @@ def adapt_file_source(source, profile, *, debugging=False):
     # Any declaration changes loading scope, including script-local functions.
     if any(d.code == 'unsupported-statement' and source.document[d.start:d.end] in ('function', 'classdef') for d in scan.diagnostics) or any(t.kind == 'identifier' and t.value in ('function', 'classdef') for t in scan.tokens):
         return file_fallback(source, 'file-declaration', 'Function, class and local-function files run unchanged.')
+    if any(t.kind == 'identifier' and t.value == 'keyboard' for t in scan.tokens) or _literal_keyboard_call(scan.tokens):
+        # A pause entered by the script itself needs the original physical
+        # source identity, just like a breakpoint present before submission.
+        return file_fallback(source, 'file-debug', 'File adaptation is unavailable for scripts that can enter a keyboard pause.')
     return adapt_source(source.document, profile=profile)
 
 def map_file_errors(adaptation, context, physical_path, frames, *, native=False):

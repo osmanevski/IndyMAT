@@ -39,7 +39,9 @@ export function drawColorbars(ctx, axes, width, height, palette, figureSize) {
     ctx.fillStyle = rgbText(palette.text);
     const opposite = bar.axis_location === "left" || bar.axis_location === "top";
     for (let i = 0; i < bar.ticks.length; i++) {
-      let fraction = (bar.ticks[i] - bar.limits[0]) / (bar.limits[1] - bar.limits[0]);
+      const span = bar.limits[1] - bar.limits[0];
+      let fraction = Number.isFinite(span) ? (bar.ticks[i] - bar.limits[0]) / span :
+        (bar.ticks[i] / 2 - bar.limits[0] / 2) / (bar.limits[1] / 2 - bar.limits[0] / 2);
       if (fraction < 0 || fraction > 1) continue;
       if (bar.direction === "reverse") fraction = 1 - fraction;
       const label = bar.tick_labels[i] ?? String(bar.ticks[i]);
@@ -100,7 +102,7 @@ export class Figure3D {
     this.scenes = data.axes.map((axes) => geometry.buildScene(axes.dimension === 3 ? axes : undefined));
     this.cameras = data.axes.map((axes) => cameraMath.createCamera(axes));
     this.cameras.forEach((camera, i) => cameraMath.restore(camera, saved?.[i], identity));
-    this.axis = Math.max(0, data.axes.findIndex((axes) => axes.dimension === 3));
+    this.axis = Math.max(0, data.axes.findIndex((axes) => axes.dimension === 3 && axes.visible !== false));
     try {
       this.renderer = new FigureWebGL(this.canvas, this.scenes, failed);
     } catch (error) {
@@ -172,7 +174,7 @@ export class Figure3D {
     const frames = this.frames();
     for (let i = frames.length - 1; i >= 0; i--) {
       const vp = frames[i].viewport;
-      if (this.data.axes[i].dimension === 3 && x >= vp.x && x <= vp.x + vp.width && y >= vp.y && y <= vp.y + vp.height) {
+      if (this.data.axes[i].dimension === 3 && this.data.axes[i].visible !== false && x >= vp.x && x <= vp.x + vp.width && y >= vp.y && y <= vp.y + vp.height) {
         this.axis = i;
         return i;
       }
@@ -190,9 +192,11 @@ export class Figure3D {
     this.requestRender();
   }
   pan(dx, dy) {
+    if (this.data.axes[this.axis].visible === false) return;
     cameraMath.pan(this.cameras[this.axis], dx, dy, this.frames()[this.axis].viewport);
   }
   zoom(factor, anchor) {
+    if (this.data.axes[this.axis].visible === false) return;
     const vp = this.frames()[this.axis].viewport;
     cameraMath.matrices(this.cameras[this.axis], vp.width, vp.height);
     cameraMath.zoom(this.cameras[this.axis], factor, anchor ? [(anchor.x - vp.x) * 2 / vp.width - 1, 1 - (anchor.y - vp.y) * 2 / vp.height] : undefined);
@@ -212,6 +216,8 @@ export class Figure3D {
     const hit = picking.pick(this.scenes[axis], this.cameras[axis], this.frames()[axis].viewport, x, y);
     if (!hit) return null;
     const series = this.data.axes[axis].series[hit.series];
+    // Interp surfaces keep the picker's nearest original cell vertex XYZ and
+    // raw CData, exactly like flat faces; display RGB is never reported as data.
     return { ...hit.data, axis, seriesName: series.display_name || this.data.axes[axis].legend.labels[hit.series] || "", ...(hit.kind === "surface" ? { row: hit.row, column: hit.column } : { index: hit.index }), ...(hit.colorValue === undefined ? {} : { colorValue: hit.colorValue }) };
   }
   requestRender() {
@@ -276,6 +282,12 @@ export class Figure3D {
       let widest = 0;
       let last = null;
       for (const tick of axis.ticks) {
+        // Axes visibility hides rulers; labels have their own visibility and
+        // the serializer retains them independently (as in the 2D painter).
+        if (axes.visible === false) {
+          widest = Math.max(widest, ctx.measureText(tick.label).width);
+          continue;
+        }
         const p = project(tick.position);
         stroke(p, { x: p.x + ox * 4, y: p.y + oy * 4 });
         const width = ctx.measureText(tick.label).width;

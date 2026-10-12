@@ -220,6 +220,9 @@ class Kernel:
             staged['saved-source.bin']=source_file.saved_bytes
             staged['file-source.json']=json.dumps({'path':source_file.path,'sha256':source_file.sha256,
                 'physical_path':str(physical_path),'adapted':adaptation.status == 'adapted'}).encode('utf-8')
+        if adaptation is not None and adaptation.status == 'adapted':
+            staged['native-code.m']=original.encode('utf-8')
+            staged['source-callees.json']=json.dumps(adaptation.callee_names).encode('utf-8')
         if adaptation is not None:
             staged['source.json']=json.dumps(metadata,ensure_ascii=False).encode('utf-8')
         if apply_breakpoints:staged['preapply.txt']=self._breakpoint_commands().encode('utf-8')
@@ -253,14 +256,15 @@ class Kernel:
             self.state['source_adapter']={key:value for key,value in metadata.items()
                 if key in ('status','adapter_version','diagnostics','replacements','package_fingerprint','span','job','epoch','profile','scope')}
         proc,events,gen=self.proc,self.events,self.generation
-        execute=self.call('__mf_execute__',str(folder),mode,argument)+"\n"
+        source_guard = adaptation is not None and adaptation.status == 'adapted'
+        execute=self.call('__mf_execute__',str(folder),mode,argument,*([1] if source_guard else []))+"\n"
         if apply_breakpoints:
             command=self._path_commands()+' '+execute
         else:
             # Even addpath can refresh Octave's function table. Relocation must
             # enter code.m first while the removed old file is still cached, so
             # dbclear can remove its breakpoint before any path refresh.
-            command=f"(@getappdata)(0,'__mf_entry__')({self.quote(folder)},{self.quote(mode)},{self.quote(argument)});\n"
+            command=f"(@getappdata)(0,'__mf_entry__')({self.quote(folder)},{self.quote(mode)},{self.quote(argument)}{',1' if source_guard else ''});\n"
         self._write_command(proc, command)
         threading.Thread(target=self._collect,args=(job,folder,proc,events,gen,float(timeout)),daemon=True).start()
         return job
@@ -269,9 +273,22 @@ class Kernel:
         marker=f'__MF_DONE_{job}__';clear_marker=f'__MF_CLC_{job}__';debug_marker=f'__MF_DEBUG_{job}__';debug_inspect_marker=f'__MF_DEBUG_INSPECT_{job}__';rtc_ready_marker=f'__MF_RTC_READY_{job}__'
         raw=''; clear_count=0; debug_stops=0; debug_prompts=0; debug_serial=0; cleanup_marker=None; deadline=time.monotonic()+timeout if timeout else float('inf'); interrupted=None; reason=None; synced=False; ack=False
         decoder=codecs.getincrementaldecoder('utf-8')(errors='replace')
+        def sync_file_fallback():
+            # Called under the kernel lock. This job-local decision survives
+            # Stop's recovery snapshot and is available during debugger pauses.
+            source_job=getattr(self,'_source_job',None)
+            if not source_job or source_job[0]!=job:
+                return
+            try:fallback=(folder/'file-source-fallback.txt').read_text()
+            except OSError:return
+            if fallback in ('file-debug','file-profile','workspace-shadow','workspace-unknown'):
+                self.state['file_source_fallback']=fallback
+                self.state['source_adapter'].update(status='fallback',replacements=[],diagnostics=[
+                    {'code':fallback,'message':'Engine state requires native source execution.','start':0,'end':0}])
         while True:
             with self.lock:
                 if gen!=self.generation or self.closed: return
+                sync_file_fallback()
                 if self.state['status']=='stopping' and interrupted is None:
                     interrupted=time.monotonic(); reason=tr('Operation stopped.')
             if time.monotonic()>deadline and interrupted is None:
@@ -374,6 +391,7 @@ class Kernel:
                         self.state['debug'].pop('detail',None)
                         self.state['debug'].update(ready=True,serial=debug_serial)
                         self.state['status']='paused'
+                        sync_file_fallback()
             if debug_inspect_marker in raw:
                 raw=raw.replace(debug_inspect_marker,'');debug_serial+=1
                 try:debug_detail=json.loads((folder/'debug-inspect.json').read_text())
@@ -415,15 +433,16 @@ class Kernel:
                 frames=meta.pop('error_frames',None)
                 if isinstance(frames,dict):frames=[frames] if frames else []
                 self.state.update(meta)
+                sync_file_fallback()
                 source_job=getattr(self,'_source_job',None)
                 if source_job and source_job[0]==job:
                     _,adaptation,context,physical_path=source_job
                     if physical_path is not None:
-                        fallback=meta.get('file_source_fallback')
+                        fallback=self.state.get('file_source_fallback')
                         native=adaptation.status != 'adapted' or bool(fallback)
                         if fallback:
                             self.state['source_adapter'].update(status='fallback',replacements=[],diagnostics=[
-                                {'code':fallback,'message':'Engine state requires native file execution.','start':0,'end':0}])
+                                {'code':fallback,'message':'Engine state requires native source execution.','start':0,'end':0}])
                         locations=map_file_errors(adaptation,context,physical_path,frames,native=native)
                         self.state['source_error_locations']=[{**item,'job':job,'epoch':gen} for item in locations]
                     self.state['raw_error']=self.state.get('error')
@@ -432,7 +451,8 @@ class Kernel:
                     # locations. Only evalin's submitted-source messages map.
                     external=any(frame.get('file') and '__mf_' not in frame.get('name','') for frame in frames or [])
                     if physical_path is None and self.state.get('error') and not external:
-                        self.state['error'],locations=map_error(adaptation,context,self.state['error'])
+                        effective = adapt_source(context['document'], context['span']) if self.state.get('file_source_fallback') else adaptation
+                        self.state['error'],locations=map_error(effective,context,self.state['error'])
                         self.state['source_error_locations']=[{**item,'job':job,'epoch':gen} for item in locations]
             except (OSError,ValueError):
                 if not reason: reason=tr('No session response received. Reset the session.')

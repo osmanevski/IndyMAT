@@ -205,7 +205,9 @@ class Node {
       ["unknown version", { version: 99 }, "unknown_version"],
       ["invalid indices", (() => { const data = payload(jobA); data.axes[0].series[0].source_indices[1] = 99999; return data; })(), "invalid_index"],
       ["wrong source job", payload(jobB), "invalid_data"],
-      ["wrong source ordinal", payload(jobA, 8), "invalid_data"]
+      ["wrong source ordinal", payload(jobA, 8), "invalid_data"],
+      ["v2 wrong source job", payload(jobB, 1, "line2d"), "invalid_data"],
+      ["v2 wrong source ordinal", payload(jobA, 8, "line2d"), "invalid_data"]
     ]) {
       await registry.updateFigures(manifest(jobA, [name]));
       const constructors = created.length;
@@ -231,13 +233,21 @@ class Node {
     assert.equal(shared.interactivePlot.options.identity.figure, 3);
     passed("identity uses export file ordinal, never Octave handle or array offset");
     await registry.updateFigures(manifest(jobA, ["v2"]));
-    const legacy = fixture("line2d");
+    const legacy = payload(jobA, 1, "line2d");
     assert.equal(legacy.version, 2);
     latest().resolve(legacy);
     await settle();
     assert(shared.interactivePlot instanceof registry.InteractiveFigure);
     assert.equal(shared.figureData[0].version, 2);
     passed("pure 2D v2 retains the existing Canvas path");
+    await registry.updateFigures(manifest(jobA, ["source-less v2"]));
+    const sourceLess = fixture("line2d");
+    delete sourceLess.source;
+    latest().resolve(sourceLess);
+    await settle();
+    assert(shared.interactivePlot instanceof registry.InteractiveFigure);
+    assert.equal(shared.figureData[0].version, 2);
+    passed("source-less legacy v2 retains the Canvas path");
     await registry.updateFigures(manifest(jobB, ["generation"]));
     const generationRequest = latest();
     shared.uiGeneration++;

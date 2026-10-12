@@ -86,6 +86,14 @@ class SavedEntryKernelTests(unittest.TestCase):
         self.assertTrue(physical.exists())
         self.native("assert(strcmp(char(captured()),'ab'));")
 
+    def test_saved_live_shadow_uses_original_entry_once(self):
+        self.native('sum=1:200; attempts=0;')
+        state=self.run_saved('attempts=attempts+1; r=sum("x"); s="native";')
+        self.assertFalse(state['error'],state)
+        self.assertEqual(state['source_adapter']['status'],'fallback')
+        self.assertEqual(state['source_adapter']['diagnostics'][0]['code'],'workspace-shadow')
+        self.native('assert(r==120); assert(ischar(s)); assert(attempts==1);')
+
     def test_errors_exact_entry_maps_and_once_only(self):
         self.native('attempts=0;')
         result=self.run_saved('attempts=attempts+1;\nr="ş"; missing_saved_entry;')
@@ -155,6 +163,47 @@ class SavedEntryKernelTests(unittest.TestCase):
         self.assertEqual(result['source_adapter']['status'],'fallback')
         self.native('assert(isa(r,"char"));')
 
+    def test_keyboard_pause_has_original_file_and_native_fallback(self):
+        source=self.source('r="x";\nkeyboard;\nafter_pause=1;')
+        self.kernel.submit(mode='file',argument=source.path,source_file=source)
+        paused=self.wait(lambda s:s['status']=='paused' and (s.get('debug') or {}).get('ready'))
+        self.assertEqual(paused['source_adapter']['status'],'fallback')
+        self.assertEqual(paused['source_adapter']['diagnostics'][0]['code'],'file-debug')
+        self.assertEqual(paused['debug']['file'],source.path)
+        self.assertEqual(self.workspace.path(paused['debug']['file']),self.file)
+        self.assertEqual(next(v['class'] for v in paused['variables'] if v['name']=='r'),'char')
+        epoch=self.kernel.generation
+        self.kernel.interrupt();self.kernel.interrupt()
+        stopped=self.wait()
+        self.assertEqual(stopped['source_adapter']['status'],'fallback')
+        self.assertEqual(self.kernel.generation,epoch)
+
+    def assert_literal_dynamic_keyboard(self, call):
+        source=self.source('r="x"; '+call+' after_pause=1;')
+        self.kernel.submit(mode='file',argument=source.path,source_file=source)
+        paused=self.wait(lambda s:s['status']=='paused' and (s.get('debug') or {}).get('ready'))
+        self.assertEqual(paused['source_adapter']['status'],'fallback')
+        self.assertEqual(paused['source_adapter']['diagnostics'][0]['code'],'file-debug')
+        self.assertEqual(next(v['class'] for v in paused['variables'] if v['name']=='r'),'char')
+        epoch=self.kernel.generation
+        self.kernel.interrupt()
+        self.assertEqual(self.wait()['source_adapter']['status'],'fallback')
+        self.assertEqual(self.kernel.generation,epoch)
+
+    def test_literal_eval_keyboard_stays_native(self):
+        self.assert_literal_dynamic_keyboard("eval('keyboard');")
+
+    def test_literal_evalin_keyboard_in_dead_branch_falls_back(self):
+        # Active evalin('base','keyboard') has a separate native debugger limit:
+        # no ready pause is surfaced. Exercise the adapter decision without it.
+        state=self.run_saved('r="x"; if false; evalin(\'base\',\'keyboard\'); end;')
+        self.assertFalse(state['error'],state)
+        self.assertEqual(state['source_adapter']['diagnostics'][0]['code'],'file-debug')
+        self.native('assert(ischar(r));')
+
+    def test_literal_feval_keyboard_stays_native(self):
+        self.assert_literal_dynamic_keyboard("feval('keyboard');")
+
     def test_engine_console_breakpoint_and_profiler_fallback(self):
         (self.work/'watch.m').write_text('function y=watch()\ny=1;\nendfunction')
         # Octave reparses a file written in the current timestamp tick at its
@@ -181,11 +230,29 @@ class SavedEntryKernelTests(unittest.TestCase):
         self.kernel.submit(mode='file',argument=source.path,source_file=source)
         paused=self.wait(lambda s:s['status']=='paused' and (s.get('debug') or {}).get('ready'))
         self.assertTrue(any(frame.get('file')==source.path for frame in paused['debug']['stack']))
+        self.assertEqual(paused['source_adapter']['status'],'fallback')
+        self.assertEqual(paused['source_adapter']['diagnostics'][0]['code'],'file-debug')
         self.kernel.debug('continue')
         state=self.wait()
         self.assertFalse(state['error'],state)
         self.assertEqual(state['source_adapter']['status'],'fallback')
         self.native('assert(isa(r,"char"));assert(after_breakpoint==1);')
+
+    def test_engine_native_fallback_survives_stop_while_paused(self):
+        source=self.source('r="x";\nafter_breakpoint=1;')
+        os.utime(self.file,(time.time()-2,time.time()-2))
+        self.native("addpath("+self.kernel.quote(self.entry_dir)+"); dbstop('entry','2');")
+        self.kernel.submit(mode='file',argument=source.path,source_file=source)
+        paused=self.wait(lambda s:s['status']=='paused' and (s.get('debug') or {}).get('ready'))
+        self.assertEqual(paused['debug']['file'],source.path)
+        self.assertEqual(paused['source_adapter']['status'],'fallback')
+        self.assertEqual(paused['source_adapter']['replacements'],[])
+        epoch=self.kernel.generation
+        self.kernel.interrupt();self.kernel.interrupt()
+        state=self.wait()
+        self.assertEqual(state['source_adapter']['status'],'fallback')
+        self.assertEqual(state['source_adapter']['diagnostics'][0]['code'],'file-debug')
+        self.assertEqual(self.kernel.generation,epoch)
 
     def test_editor_breakpoint_and_stop_on_error_stays_native(self):
         chosen=self.work/'chosen';chosen.mkdir()

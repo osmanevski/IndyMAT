@@ -1,4 +1,4 @@
-function __mf_execute__(folder, mode, argument)
+function __mf_execute__(folder, mode, argument, source_adapted = false)
   % Protocol entry. The kernel calls it as (@__mf_execute__)(...): a function
   % handle literal resolves the function even when a base-workspace variable has
   % the same name, so nothing a user variable can shadow is needed at top level.
@@ -27,12 +27,42 @@ function __mf_execute__(folder, mode, argument)
         end_try_catch
         __mf_breakpoint_eval__(preapply_code);
       endif
+      % This read-only decision is inside the same job, before any user code.
+      % Never use the bounded UI snapshot or create a base-workspace temporary.
+      source_fallback='';
+      native_code=[folder filesep() 'native-code.m'];
+      if source_adapted && any(strcmp(mode,{'code','file'}))
+        try
+          callee_names=jsondecode(fileread([folder filesep() 'source-callees.json']));
+          if !iscell(callee_names) && !isempty(callee_names),error('Invalid callee list');endif
+          live_items=workspace_reader('whos');
+          if !isempty(callee_names) && !isempty(live_items) && any(ismember({live_items.name},callee_names))
+            source_fallback='workspace-shadow';
+          endif
+        catch
+          source_fallback='workspace-unknown';
+        end_try_catch
+        if !isempty(source_fallback)
+          result.file_source_fallback=source_fallback;
+          fallback_fid=fopen([folder filesep() 'file-source-fallback.txt'],'w');
+          if fallback_fid<0,error(__mf_text__('Could not record native source fallback.', 'Native kaynak geri dönüşü kaydedilemedi.'));endif
+          unwind_protect
+            fputs(fallback_fid,source_fallback);
+          unwind_protect_cleanup
+            fclose(fallback_fid);
+          end_unwind_protect
+        endif
+      endif
       if strcmp(mode, 'breakpoint') && !isempty(argument)
         result.breakpoint_relocation = __mf_breakpoint_ops__(argument);
       elseif strcmp(mode, 'breakpoint')
         __mf_breakpoint_eval__(fileread(fullfile(folder, 'code.m')));
       elseif strcmp(mode, 'code')
-        evalin('base', fileread(fullfile(folder, 'code.m')));
+        if isempty(source_fallback)
+          evalin('base', fileread(fullfile(folder, 'code.m')));
+        else
+          evalin('base', fileread(native_code));
+        endif
       elseif strcmp(mode, 'file')
         file_request=[folder filesep() 'file-source.json'];
         adapted_file=false;
@@ -49,7 +79,7 @@ function __mf_execute__(folder, mode, argument)
           if !strcmp(hash('sha256',char(saved_bytes')),file_source.sha256)
             error(__mf_text__('The saved source changed. Reload or save it before running.', 'Kayıtlı kaynak değişti. Çalıştırmadan önce yeniden yükleyin veya kaydedin.'));
           endif
-          adapted_file=file_source.adapted;
+          adapted_file=file_source.adapted && isempty(source_fallback);
           if adapted_file
             % Console dbstop/profile can bypass Python bookkeeping. Any active
             % breakpoint (including stop-on-error) makes this whole unit native.
@@ -63,6 +93,17 @@ function __mf_execute__(folder, mode, argument)
               endif
             endif
           endif
+        endif
+        if isfield(result,'file_source_fallback')
+          % Publish the execution decision before user code can pause/Stop.
+          % A recovery snapshot can replace result.json after an interrupt.
+          fallback_fid=fopen([folder filesep() 'file-source-fallback.txt'],'w');
+          if fallback_fid<0,error(__mf_text__('Could not record native source fallback.', 'Native kaynak geri dönüşü kaydedilemedi.'));endif
+          unwind_protect
+            fputs(fallback_fid,result.file_source_fallback);
+          unwind_protect_cleanup
+            fclose(fallback_fid);
+          end_unwind_protect
         endif
         if adapted_file
           original_dir=fileparts(argument);previous=pwd();

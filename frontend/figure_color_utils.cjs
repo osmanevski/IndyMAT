@@ -1,10 +1,12 @@
 "use strict";
 
 /* Pure colour API; all RGB inputs/outputs are sRGB triples in [0,1], NOT bytes.
- * resolveSurfaceColors(surface, axes) returns {faceColors,edgeColors}:
+ * resolveSurfaceColors(surface, axes) returns {faceColors,vertexColors,edgeColors}:
  * Float32 RGB triples ordered by cell_origins and edge_indices respectively.
- * A 'none' descriptor returns an empty buffer; callers omit that draw pass.
- * Faces use grid origin; edges use FIRST endpoint. Descriptor data is planar
+ * Interp faces instead return vertexColors indexed by original grid vertex.
+ * Only referenced vertices are resolved; unused entries are NaN, never zero
+ * substitutes for missing data. A 'none' descriptor returns an empty buffer.
+ * Flat faces use grid origin; edges use FIRST endpoint. Descriptor data is planar
  * column-major; truecolor uint8/uint16 divides by 255/65535. Indexed scaled
  * uses floor(N*(v-low)/(high-low)); direct uses integer v, floating trunc(v)-1;
  * both clip to the existing map without resampling. These are the FROZEN
@@ -20,6 +22,10 @@
  * rawColorValue(surface,index) (original scalar/RGB class values for tips).
  */
 const clamp = (v, low, high) => Math.max(low, Math.min(high, v));
+// A: map original CData to sRGB at vertices, then let the GPU interpolate RGB.
+// A future scalar/fragment-map policy belongs at this single policy switch,
+// resolveSurfaceColors, and surfaceColorShaderPath in figure_webgl.js.
+const SURFACE_COLOR_INTERPOLATION = "vertex-rgb";
 // Column-major map and clipped zero-based entry -> original unit sRGB triple.
 function mapColor(map, index) {
   const n = map.shape[0];
@@ -33,11 +39,13 @@ function descriptorColor(descriptor, owner, axes) {
   const values = descriptor.data.values;
   if (descriptor.encoding === "truecolor") {
     const n = descriptor.data.shape[0] * descriptor.data.shape[1];
+    if ([owner, owner + n, owner + 2 * n].some((i) => !Number.isFinite(values[i]))) return null;
     const divisor = descriptor.cdata_class === "uint8" ? 255 : descriptor.cdata_class === "uint16" ? 65535 : 1;
     return [values[owner] / divisor, values[owner + n] / divisor, values[owner + 2 * n] / divisor];
   }
   const n = axes.colormap.shape[0];
   const value = values[owner];
+  if (!Number.isFinite(value)) return null;
   const integerClass = /^(u?int)(8|16|32|64)$/.test(descriptor.cdata_class);
   const low = axes.clim[0];
   const high = axes.clim[1];
@@ -51,11 +59,19 @@ function descriptorColor(descriptor, owner, axes) {
 function resolveSurfaceColors(surface, axes) {
   const faces = surface.cell_origins;
   const count = surface.edge_indices.shape[0];
-  const faceColors = new Float32Array(surface.face_color.mode === "none" ? 0 : faces.length * 3);
+  const interp = surface.face_color.mode === "interp";
+  const faceColors = new Float32Array(surface.face_color.mode === "none" || interp ? 0 : faces.length * 3);
+  const vertexColors = new Float32Array(interp ? surface.shape[0] * surface.shape[1] * 3 : 0);
+  if (interp) {
+    vertexColors.fill(NaN);
+    const rows = surface.shape[0];
+    const vertices = new Set(faces.flatMap((i) => [i, i + 1, i + rows, i + rows + 1]));
+    for (const i of vertices) vertexColors.set(descriptorColor(surface.face_color, i, axes), i * 3);
+  }
   const edgeColors = new Float32Array(surface.edge_color.mode === "none" ? 0 : count * 3);
   for (let i = 0; i < faceColors.length / 3; i++) faceColors.set(descriptorColor(surface.face_color, faces[i], axes), i * 3);
   for (let i = 0; i < edgeColors.length / 3; i++) edgeColors.set(descriptorColor(surface.edge_color, surface.edge_indices.values[i], axes), i * 3);
-  return { faceColors, edgeColors };
+  return { faceColors, vertexColors, edgeColors };
 }
 // Two unit-offset stops per colormap entry; reversed physical direction supported.
 function colorbarGradient(record) {
@@ -91,4 +107,4 @@ function rawColorValue(surface, index) {
   const n = surface.shape[0] * surface.shape[1];
   return surface.cdata.shape.length === 3 ? [values[index], values[index + n], values[index + 2 * n]] : values[index];
 }
-module.exports = { resolveSurfaceColors, colorbarGradient, contrast, adjustForContrast, mapColor, descriptorColor, rawColorValue };
+module.exports = { SURFACE_COLOR_INTERPOLATION, resolveSurfaceColors, colorbarGradient, contrast, adjustForContrast, mapColor, descriptorColor, rawColorValue };

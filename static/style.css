@@ -214,8 +214,8 @@ button.primary:hover:not(:disabled){background:var(--accent-hover)}
 .plot-empty{color:var(--muted);text-align:center;line-height:1.8;font-size:12px}
 .plot-empty code,.muted-empty code{color:var(--text);font-size:11.5px}
 .plot-footer{min-height:28px;flex-shrink:0;display:flex;align-items:center;justify-content:space-between;gap:6px;padding:2px 6px 2px 12px;border-top:1px solid var(--line);font-size:11px;color:var(--muted)}
-.plot-footer>span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.plot-footer>div{display:flex}
+.plot-footer>span{flex:1;min-width:0;white-space:normal;overflow-wrap:anywhere}
+.plot-footer>div{display:flex;flex-shrink:0}
 .plot-footer button{height:22px;padding:0 7px;font-size:12px}
 
 /* Local 3D figure tools; panel width determines the compact selector. */

@@ -59,7 +59,8 @@ function uret(output_dir = fileparts(mfilename('fullpath')))
       case 'lighting'
         surf([1 3 5;2 4 6],'facelighting','flat');light();
       case 'interpolated_color'
-        surf([1 3 5;2 4 6],'facecolor','interp');
+        % Vertex faces are supported; interpolated edges still keep the PNG.
+        surf([1 3 5;2 4 6],'facecolor','interp','edgecolor','interp');
       case 'unsupported_surface'
         surf([1 3 5;2 4 6],'facecolor','texturemap');
       case 'log_3d'

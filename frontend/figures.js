@@ -82,7 +82,8 @@ function loadActiveData() {
     // Validate before any geometry, renderer, or legacy normalization reads it.
     const result = figureData.validate(payload);
     if (!result.ok || !result.supported) return { supported: false, reason_code: result.reason_code, reason_args: result.reason_args };
-    if (result.version === 3 && (result.data.source.job !== figure.job || result.data.source.figure !== identityAt(index).figure)) return { supported: false, reason_code: "invalid_data" };
+    const hasSource = Object.prototype.hasOwnProperty.call(result.data, "source");
+    if ((result.version === 3 || hasSource) && (result.data.source?.job !== figure.job || result.data.source?.figure !== identityAt(index).figure)) return { supported: false, reason_code: "invalid_data" };
     return result.data;
   }).catch((error) => ({ supported: false, reason_code: error.details?.reason_code || "invalid_data", reason_args: error.details?.reason_args || {} })).then((data) => {
     if (generation !== shared.uiGeneration || revision !== requestRevision || key !== stateKey(shared.figureIndex)) {

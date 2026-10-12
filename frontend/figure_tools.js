@@ -17,6 +17,7 @@ export function figureReasonText(code, args = {}) {
     case "scatter_colors": return t("Only the PNG view is available: per-point scatter colors.");
     case "transparency": return t("Only the PNG view is available: transparency.");
     case "lighting": return t("Only the PNG view is available: lighting.");
+    // Retained for surface edges and patches; surface vertex faces are admitted.
     case "interpolated_color": return t("Only the PNG view is available: interpolated colors.");
     case "unsupported_surface": return t("Only the PNG view is available: unsupported surface configuration.");
     case "log_3d": return t("Only the PNG view is available: logarithmic 3D axes.");

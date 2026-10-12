@@ -11,6 +11,9 @@
  * origins, NOT ordinal cell numbers. Four vertices per cell, source order
  * [i,i+1,i+rows,i+rows+1]; triangles [0,2,1],[1,2,3], two-sided. Axis reversals
  * can flip winding; R3 must disable culling. No triangulation diagonals in edges.
+ * Fixed diagonal (row+1,column)--(row,column+1) preserves the existing flat
+ * topology, picking and nonplanar geometry. Interp colours belong to each
+ * source vertex; flat colours belong to the cell origin, on both triangles.
  * Mesh colors are RGB per duplicated vertex; edge colors RGB per endpoint.
  * None face/edge colours or none/zero-width edge styles omit that draw pass.
  * Lines compact finite samples, breaks=[runStart,...,FINAL_COUNT] (Uint32);
@@ -34,7 +37,7 @@
  * These helpers do not clip; R3 clips viewport and axes box in its shader.
  */
 const { dataToNormalised, extents } = require("./figure_camera_utils.cjs");
-const { resolveSurfaceColors } = require("./figure_color_utils.cjs");
+const { resolveSurfaceColors, SURFACE_COLOR_INTERPOLATION } = require("./figure_color_utils.cjs");
 // Grid vertex index -> original double xyz; vector and matrix layouts supported.
 function surfacePoint(series, index) {
   const rows = series.shape[0];
@@ -60,7 +63,7 @@ function buildScene(axesRecord) {
     if (s.kind === "patch2d" || s.kind === "text") continue;
     if (s.kind === "surface") {
       const rows = s.shape[0];
-      const { faceColors, edgeColors } = resolveSurfaceColors(s, axesRecord);
+      const { faceColors, vertexColors, edgeColors } = resolveSurfaceColors(s, axesRecord);
       const owners = new Map(s.cell_origins.map((origin, index) => [origin, index]));
       const cells = s.cell_origins.filter((i) => [i, i + 1, i + rows, i + rows + 1].every((j) => valid(surfacePoint(s, j))));
       scene.counts.vertices += rows * s.shape[1];
@@ -76,13 +79,16 @@ function buildScene(axesRecord) {
           const owner = owners.get(i);
           for (let k = 0; k < 4; k++) {
             positions.set(dataToNormalised(axesRecord, surfacePoint(s, corners[k])), cell * 12 + k * 3);
-            colors.set(faceColors.subarray(owner * 3, owner * 3 + 3), cell * 12 + k * 3);
+            const sourceColors = s.face_color.mode === "interp" ? vertexColors : faceColors;
+            const colorIndex = s.face_color.mode === "interp" ? corners[k] : owner;
+            colors.set(sourceColors.subarray(colorIndex * 3, colorIndex * 3 + 3), cell * 12 + k * 3);
             vertexIndices[cell * 4 + k] = corners[k];
           }
           indices.set([cell * 4, cell * 4 + 2, cell * 4 + 1, cell * 4 + 1, cell * 4 + 2, cell * 4 + 3], cell * 6);
           cellOfTriangle.set([i, i], cell * 2);
         }
         scene.meshes.push({ positions, colors, indices, cellOfTriangle, series,
+          colorInterpolation: s.face_color.mode === "interp" ? SURFACE_COLOR_INTERPOLATION : "constant",
           source: { series: s, shape: s.shape, cellOrigins: s.cell_origins, vertexIndices } });
         scene.counts.meshVertices += cells.length * 4;
         scene.counts.cells += cells.length;

@@ -262,7 +262,9 @@ endfunction
                 self.assertEqual(data['axes'], [])
                 self.assertEqual(data['reason_code'], 'budget_exceeded')
                 self.assertEqual(data['reason_args']['budget'], budget)
-        data = self.snapshot("subplot(1,2,1);plot(1:3);subplot(1,2,2);surf([1 3;2 4],'facecolor','interp')")
+        # Keep the existing whole-figure fallback assertions on unsupported
+        # interpolated edges, now that vertex-interpolated faces are admitted.
+        data = self.snapshot("subplot(1,2,1);plot(1:3);subplot(1,2,2);surf([1 3;2 4],'facecolor','interp','edgecolor','interp')")
         self.assertEqual(data['reason_code'], 'interpolated_color')
         self.assertEqual(data['axes'], [])
 

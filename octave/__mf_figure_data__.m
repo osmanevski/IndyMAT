@@ -529,6 +529,8 @@ function [s,code,args]=__mf_surface__(h,limits,has_light,tree)
   if ~__mf_opaque__(h,tree),code='transparency';return;endif
   if has_light&&((~strcmp(get(h,'facecolor'),'none')&&~strcmp(get(h,'facelighting'),'none'))||(~strcmp(get(h,'edgecolor'),'none')&&~strcmp(get(h,'edgelighting'),'none'))),code='lighting';return;endif
   c=get(h,'cdata');
+  % Octave surface.m requires Z and C to have the same first two dimensions.
+  % Do not reinterpret cell-sized CData as vertex data (including with interp).
   if ~__mf_real__(c)||~(isequal(size(c),shape)||isequal(size(c),[shape 3])),code='invalid_data';args=struct('property','cdata');return;endif
   if (isa(c,'uint64')&&any(c(:)>uint64(flintmax()-1)))||...
      (isa(c,'int64')&&any(c(:)>int64(flintmax()-1)|c(:)<-int64(flintmax()-1)))
@@ -562,6 +564,9 @@ function [s,code,args]=__mf_surface__(h,limits,has_light,tree)
   % Nonfinite CData is allowed only when no rendered face/edge reads it.
   color_owners=[];
   if strcmp(face.mode,'flat'),color_owners=[color_owners;origins(:)];endif
+  if strcmp(face.mode,'interp')
+    color_owners=[color_owners;origins(:);origins(:)+1;origins(:)+shape(1);origins(:)+shape(1)+1];
+  endif
   if strcmp(edge.mode,'flat'),color_owners=[color_owners;edges(:,1)];endif
   for channel=1:size(c,3)
     plane=c(:,:,channel);
@@ -582,11 +587,12 @@ function [color,code]=__mf_surface_color__(value,c,mapping,association='cell')
   code='';color=struct('mode','none','association','constant');
   if ischar(value)
     if strcmp(value,'none'),return;
-    elseif strcmp(value,'interp'),code='interpolated_color';return;
-    elseif ~strcmp(value,'flat'),code='unsupported_surface';return;endif
+    elseif strcmp(value,'interp')&&strcmp(association,'vertex'),code='interpolated_color';return;
+    elseif ~any(strcmp(value,{'flat','interp'})),code='unsupported_surface';return;endif
+    if strcmp(value,'interp'),association='vertex';endif
     if ~any(strcmp(mapping,{'scaled','direct'})),code='unsupported_color';return;endif
       encoding='indexed';if ndims(c)==3,encoding='truecolor';endif
-    color=struct('mode','flat','association',association,'encoding',encoding,'mapping',mapping,...
+    color=struct('mode',value,'association',association,'encoding',encoding,'mapping',mapping,...
       'cdata_class',class(c),'data',__mf_descriptor__(c));
   else
     [rgb,ok]=__mf_rgb_or_none__(value);

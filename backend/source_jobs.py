@@ -28,7 +28,8 @@ def validate_source_context(value, code, mode, workspace):
     # The disabled adapter validates byte/UTF-16 bounds and derives the text.
     unit = adapt_source(document, value['span']).generated_text
     cursor = value['cursor']
-    total = len(document.encode('utf-16-le')) // 2
+    encoded_document = document.encode('utf-16-le')
+    total = len(encoded_document) // 2
     if type(cursor) is not int or not 0 <= cursor <= total:
         raise ValueError(tr('Invalid editor source context.'))
     if unit != code:
@@ -41,18 +42,26 @@ def validate_source_context(value, code, mode, workspace):
         scan = lex_source(document)
         if scan.ok:
             headers = [0]
+            header_position = header_units = 0
+            line_start = 0
             for token in scan.tokens:
+                if token.kind == 'newline':
+                    line_start = token.end
                 if token.kind == 'comment' and document[token.start:token.end].startswith('%%'):
-                    start = max(document.rfind('\n', 0, token.start), document.rfind('\r', 0, token.start)) + 1
+                    start = line_start
                     if not document[start:token.start].strip():
-                        headers.append(len(document[:start].encode('utf-16-le')) // 2)
+                        # Header offsets grow monotonically. Encode each
+                        # interval once rather than every full prefix.
+                        header_units += len(document[header_position:start].encode('utf-16-le')) // 2
+                        header_position = start
+                        headers.append(header_units)
             headers = sorted(set(headers))
             start = max(offset for offset in headers if offset <= cursor)
             following = next((offset for offset in headers if offset > start), total)
             end = total if value['origin'] == 'editor-to-end' else following
             # Legacy section runs exclude the separator newline before the
             # next header. The final section retains its terminal newline.
-            raw = document.encode('utf-16-le')[start * 2:end * 2].decode('utf-16-le')
+            raw = encoded_document[start * 2:end * 2].decode('utf-16-le')
             if following < total and value['origin'] != 'editor-to-end':
                 raw = raw.removesuffix('\n')
             derived = [start, start + len(raw.encode('utf-16-le')) // 2]
@@ -73,18 +82,25 @@ def map_error(adaptation, context, message):
     # For undefined names, recover a line only from a unique identifier token
     # at the engine's byte column, never from text inside a literal/comment.
     undefined = re.match(r"^'([A-Za-z_]\w*)' undefined near line (\d+), column (\d+)", message)
-    scan = lex_source(adaptation.generated_text) if undefined and len(lines) > 1 else None
+    scan = lex_source(adaptation.generated_text)
+    # Nested dynamic code has its own parser coordinates, even with an empty
+    # err.stack. Those coordinates cannot identify the outer submitted unit.
+    runtime_mapping = scan.ok and not any(
+        token.kind == 'identifier' and token.value in {'eval', 'evalin', 'str2func'}
+        for token in scan.tokens)
     line_starts = [0]
     for text in lines:
         line_starts.append(line_starts[-1] + len(text))
 
     def replace(match):
         line, column = int(match[1]), int(match[2])
+        if not runtime_mapping:
+            return match[0]
         if len(lines) > 1:
             # Other runtime messages provide no evidence for the parser's
             # starting line. The syntax-caret path below has its own exact
             # line evidence and bypasses this runtime-only resolution.
-            if not undefined or not scan or not scan.ok:
+            if not undefined:
                 return match[0]
             candidates = []
             for token in scan.tokens:
@@ -97,6 +113,14 @@ def map_error(adaptation, context, message):
             if len(candidates) != 1:
                 return match[0]
             line = candidates[0]
+        elif undefined:
+            # A single-line message also needs token evidence: a name inside
+            # a literal/comment is not an error location in submitted code.
+            candidates = [token for token in scan.tokens
+                          if token.kind == 'identifier' and token.value == undefined[1]
+                          and len(lines[0][:token.start].encode('utf-8')) + 1 == column]
+            if line != 1 or len(candidates) != 1:
+                return match[0]
         return locate(line, column, match[0])
 
     def locate(line, column, unchanged):

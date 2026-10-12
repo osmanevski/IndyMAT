@@ -111,6 +111,47 @@ class SourceAdapterJobTests(unittest.TestCase):
         state = self.run_editor('r="x";')
         self.assertEqual(state['source_adapter']['status'], 'fallback')
 
+    def test_live_callee_shadow_falls_back_before_any_user_code(self):
+        self.assertFalse(self.native('sum=1:200; attempts=0; kept=@sin;')['error'])
+        epoch = self.kernel.generation
+        state = self.run_editor('attempts=attempts+1; r=sum("x"); s="native";')
+        self.assertFalse(state['error'], state)
+        self.assertEqual(state['source_adapter']['status'], 'fallback')
+        self.assertEqual(state['source_adapter']['diagnostics'][0]['code'], 'workspace-shadow')
+        self.assertEqual(self.kernel.generation, epoch)
+        self.assertFalse(self.native("assert(r==120); assert(ischar(s)); assert(attempts==1); assert(kept(0)==0); clear sum;")['error'])
+        self.assertEqual(self.run_editor('r=sum([1 2],"all");')['source_adapter']['status'], 'adapted')
+
+    def test_live_shadow_is_not_limited_to_ui_variable_snapshot(self):
+        self.native("for k=1:510; eval(sprintf('aaa%d=1;',k)); end; sort=1:200;")
+        state = self.run_editor('r=sort("x");')
+        self.assertEqual(state['source_adapter']['status'], 'fallback')
+        self.assertEqual(state['source_adapter']['diagnostics'][0]['code'], 'workspace-shadow')
+
+    def test_unreadable_callee_guard_runs_original_once_and_maps_original(self):
+        self.native('attempts=0;')
+        write = Path.write_bytes
+        def corrupt(path, data):
+            return write(path, b'{' if path.name == 'source-callees.json' else data)
+        code = 'attempts=attempts+1; r="x"; missing_guard;'
+        with patch.object(Path, 'write_bytes', corrupt):
+            state = self.run_editor(code)
+        self.assertEqual(state['source_adapter']['diagnostics'][0]['code'], 'workspace-unknown')
+        self.assertIn('missing_guard', state['error'])
+        self.assertEqual(state['source_error_locations'][0]['column'], code.index('missing_guard')+1)
+        self.assertFalse(self.native('assert(attempts==1); assert(ischar(r));')['error'])
+
+    def test_missing_native_snapshot_cannot_bypass_live_guard(self):
+        self.native('sum=1:200; attempts=0;')
+        write = Path.write_bytes
+        def omit(path, data):
+            return len(data) if path.name == 'native-code.m' else write(path, data)
+        with patch.object(Path, 'write_bytes', omit):
+            state = self.run_editor('attempts=attempts+1; r=sum("x");')
+        self.assertEqual(state['source_adapter']['diagnostics'][0]['code'], 'workspace-shadow')
+        self.assertTrue(state['error'])
+        self.assertFalse(self.native('assert(attempts==0);')['error'])
+
     def test_midline_unicode_location_and_failed_job_never_retries(self):
         self.native('attempts=0;')
         prefix = '% 😀\nignored=1; '
@@ -177,6 +218,17 @@ class SourceAdapterJobTests(unittest.TestCase):
         self.assertIn('missing_repeated', state['raw_error'])
         self.assertEqual(state['source_error_locations'], [])
         self.assertEqual(state['error'], state['raw_error'])
+
+    def test_dynamic_source_errors_never_map_inner_columns_to_outer_snapshot(self):
+        for code in ['r="x"; eval("missing_dynamic");',
+                     'r="x"; evalin("base","missing_dynamic");',
+                     'r="x"; h=str2func("@(x) missing_dynamic"); h(1);']:
+            with self.subTest(code=code):
+                state = self.run_editor(code)
+                self.assertEqual(state['source_adapter']['status'], 'adapted')
+                self.assertIn('missing_dynamic', state['raw_error'])
+                self.assertEqual(state['source_error_locations'], [])
+                self.assertEqual(state['error'], state['raw_error'])
 
     def test_later_parse_error_without_location_never_guesses(self):
         code = 'a=1;\nr="x"; z=;'
@@ -283,6 +335,16 @@ class SourceAdapterJobTests(unittest.TestCase):
         self.assertEqual(reply['source_adapter']['job'], reply['job'])
         self.assertEqual(reply['source_adapter']['status'], 'adapted')
         self.assertFalse(self.wait()['error'])
+
+    def test_many_unicode_section_headers_keep_absolute_utf16_bounds(self):
+        document = ''.join(f'%% section {i} 😀\nr="ş";\n' for i in range(400))
+        start = document.index('%% section 237 ')
+        end = document.index('%% section 238 ') - 1
+        span = [len(document[:start].encode('utf-16-le')) // 2,
+                len(document[:end].encode('utf-16-le')) // 2]
+        context = self.context(document, span, 'editor-section', span[0] + 1)
+        accepted = validate_source_context(context, document[start:end], 'code', Workspace(self.work, allowed_root=self.work))
+        self.assertEqual(accepted['span'], span)
 
     def test_private_source_snapshot_cannot_use_normal_file_routes(self):
         state = self.run_editor('r="x";')

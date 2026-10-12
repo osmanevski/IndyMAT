@@ -115,6 +115,19 @@ class SourceAdapterTests(unittest.TestCase):
         self.assertEqual(following.generated_line, 3)
         self.assertEqual(following.generated_column_utf16, 1)
 
+    def test_source_map_lookup_at_every_unicode_piece_boundary(self):
+        result = self.adapted('r="😀a\'b"; tail=1;\r\n')
+        for units in ('utf16', 'utf8'):
+            for piece in result.source_map.pieces:
+                start = getattr(piece, 'generated_start_' + units)
+                end = getattr(piece, 'generated_end_' + units)
+                expected = (SourceSpan(piece.original_start_utf16, piece.original_end_utf16), piece.kind != 'exact')
+                self.assertEqual(result.source_map.locate(start, units=units), expected)
+                self.assertEqual(result.source_map.locate(end - 1, units=units), expected)
+            for offset in (-1, getattr(result.source_map.pieces[-1], 'generated_end_' + units)):
+                with self.assertRaises(ValueError):
+                    result.source_map.locate(offset, units=units)
+
     def test_later_line_offsets_after_literal_expansion_are_exact(self):
         code = 'attempts=0;\nattempts=attempts+1; r="x"; missing_adapter_ui;'
         result = self.adapted(code)
@@ -169,11 +182,29 @@ class SourceAdapterTests(unittest.TestCase):
         self.assertTrue(any(d.code == 'unicode-limit' for d in result.diagnostics))
 
     def test_direct_flags_preserve_matlab_payload_semantics(self):
-        code = 'r=struct("don\'t", "a\\n"); x=interp1(a,b,c,"linear");'
+        code = 'r=struct("don\'t", 1); x=interp1(a,b,c,"linear");'
         result = self.adapted(code)
-        self.assertEqual(result.generated_text, "r=struct('don''t', 'a\\n'); x=interp1(a,b,c,'linear');")
+        self.assertEqual(result.generated_text, "r=struct('don''t', 1); x=interp1(a,b,c,'linear');")
         payload = next(p for p in result.source_map.pieces if p.kind == 'payload' and p.generated_end_utf16 - p.generated_start_utf16 == 2)
         self.assertEqual(payload.original_end_utf16 - payload.original_start_utf16, 1)
+
+    def test_container_string_values_fall_back_whole_unit(self):
+        for code in ['s=struct("value");', 's=struct("field",1,"other");',
+                     's=struct(\'field\',"value");',
+                     's=struct("field",{"value","other"});',
+                     's=struct("field",["value" "other"]);',
+                     's=cell("value");', 's=setfield(s,\'field\',"value");',
+                     's=containers.Map({\'key\'},{"value"});',
+                     's=odeset("OutputFcn","value");',
+                     'v="value"; s=struct(\'field\',{v});',
+                     'v="value"; s=setfield(s,\'field\',{v});',
+                     'v="value"; s=containers.Map({\'key\'},{v});',
+                     'v="value"; s=odeset(\'OutputFcn\',{v});']:
+            with self.subTest(code=code):
+                result = adapt_source(code, None, UNIT_PROFILE)
+                self.assertEqual(result.status, 'fallback')
+                self.assertEqual(result.generated_text, code)
+                self.assertEqual(result.replacements, ())
 
     def test_objects_in_operators_arrays_cells_and_aware_arguments(self):
         result = self.adapted('a="x"; b=["y" "z"]; c={"q"}; r=split("a,b",",");')
@@ -220,6 +251,42 @@ class SourceAdapterTests(unittest.TestCase):
         self.adapted('s="x"; r=disp(char(s));')
         self.adapted('s="x"; r=unknown(double("123"));')
         self.adapted('r=disp(sprintf(\'%s\',"x"));')
+
+    def test_indexed_and_multiple_output_bindings_cannot_bypass_forwarding(self):
+        for code in ['s="x"; a(1)=s; r=unknown(a);',
+                     'a={}; a{1}="x"; r=unknown(a{1});',
+                     'a={}; a{1}{2}="x"; r=unknown(a);',
+                     's="x"; a(b(1))=s; q=a; r=unknown(q);',
+                     '[a,b]=sort(["b","a"]); r=unknown(a);',
+                     '[a,~,c]=unique(["b","a"]); r=unknown(a);']:
+            with self.subTest(code=code):
+                result = adapt_source(code, None, UNIT_PROFILE)
+                self.assertEqual(result.status, 'fallback')
+                self.assertEqual(result.generated_text, code)
+                self.assertEqual(result.replacements, ())
+                self.assertEqual(result.diagnostics[0].code, 'string-forwarding')
+        # Numeric/char converter results do not acquire string provenance.
+        self.adapted('s="12"; a(1)=str2double(s); r=unknown(a);')
+        self.adapted('[a,b]=size("x"); r=unknown(a);')
+
+    def test_literal_payload_punctuation_is_never_planning_syntax(self):
+        payloads = ['=', ']', '[', '(', ')', ',', ';', '.', 'for']
+        for left in payloads:
+            for right in payloads:
+                code = f'r=["{left}" "{right}" "x"];'
+                with self.subTest(code=code):
+                    result = self.adapted(code)
+                    self.assertEqual(len(result.replacements), 3)
+                    self.assertEqual(result.generated_text,
+                                     f"r=[(@string)('{left}') (@string)('{right}') (@string)('x')];")
+            for code in [f'r=[\'{left}\' "=" "x"];',
+                         f'r=["{left}" \'=\' "x"];']:
+                with self.subTest(code=code):
+                    self.adapted(code)
+            self.assertEqual(self.adapted(f'disp("{left}");').generated_text, f"disp('{left}');")
+            self.assertEqual(self.adapted(f'r=sprintf("%s","{left}");').generated_text,
+                             f"r=(@string)(sprintf('%s','{left}'));")
+        self.assertIn("(@string)(',')", self.adapted('r=split("a,b",",");').generated_text)
 
     def test_verified_string_function_arrays_cells_and_forwarding(self):
         for code in ['r=str2double(["1" "2"]);',
@@ -276,6 +343,27 @@ class SourceAdapterTests(unittest.TestCase):
         self.assertIn("(@string)(',')", result.generated_text)
         self.assertEqual(result.generated_text.count('\r\n'), code.count('\r\n'))
 
+    def test_adversarial_whole_unit_fallback_corpus(self):
+        # Each uncertainty must discard every otherwise eligible literal.
+        cases = ['r="x"; disp "text"', 'r="x"; disp \'text\'',
+                 'r="x"; function y=f()\ny="z"; end',
+                 'r="x"; classdef C\nend', 'r="x"; arguments\na\nend',
+                 'r="x"; global s', 'r="x"; persistent s',
+                 'r="x";\n%}\n', 'r="x";\n%{\n#}\n',
+                 'r="x"; z="a\nb";', 'r="x"; z="a""',
+                 'r="x"; z=...\n% only comment\n1;',
+                 'r="x"; z=...', 'r="x"; Türkçe=1;',
+                 'r="x"; z=0xFFu8;', 'r="x"; unknown("y");',
+                 'r="x"; h=@disp; h("y");',
+                 'r="x"; s.("field")=1;', 'r="x"; z=[1;',
+                 'r="x"; z="y" "z";']
+        for code in cases:
+            with self.subTest(code=code):
+                result = adapt_source(code, None, UNIT_PROFILE)
+                self.assertEqual(result.status, 'fallback')
+                self.assertEqual(result.generated_text, code)
+                self.assertEqual(result.replacements, ())
+
 
 @unittest.skipUnless(shutil.which('octave-cli'), 'octave-cli unavailable')
 class SourceAdapterOctaveTests(unittest.TestCase):
@@ -304,6 +392,59 @@ class SourceAdapterOctaveTests(unittest.TestCase):
         self.assertEqual(self.run_code('r="a\\";'), 'string|1x1|{char|1x2|u97,92,;}')
         self.assertEqual(self.run_code('r="a\\\\";'), 'string|1x1|{char|1x3|u97,92,92,;}')
         self.assertEqual(self.run_code('r="a""b\'c";'), 'string|1x1|{char|1x5|u97,34,98,39,99,;}')
+
+    def test_adversarial_transformed_corpus_parses_and_preserves_literal_contract(self):
+        # References express the documented literal contract using explicit
+        # constructors. They are Octave checks, not fresh MATLAB measurements.
+        cases = [
+            ('r="";', "r=string('');"),
+            ('r="a""b\'c\\";', "r=string('a\"b''c\\');"),
+            ('r="% # ...";', "r=string('% # ...');"),
+            ('r="ş😀";', "r=string('ş😀');"),
+            ('r="x"; % "ignored\n', "r=string('x');"),
+            ('%{\n "bad\n %{\n \"bad\n %}\n%}\nr="x";', "r=string('x');"),
+            ('r=["a" ... ignored "\r\n\t"b"];', "r=[string('a') string('b')];"),
+            ('r=["a"; "b"];', "r=[string('a'); string('b')];"),
+            ('r={"a", \'b\'};', "r={string('a'), 'b'};"),
+            ('A=[1 2]; t=A\'; r="x";', "r=string('x');"),
+            ('A=[1 2]; t=A.\'; r="x";', "r=string('x');"),
+            ('s=["a","b"]; r=s(end);', "r=string('b');"),
+            ('h=@() "x"; r=h();', "r=string('x');"),
+            ('if true\n\tr="x";\r\nend', "r=string('x');"),
+            ('switch 1\ncase 1\nr="x";\nend', "r=string('x');"),
+            ('for k=1:2\nr="x";\nend', "r=string('x');"),
+            ('disp hello\nr="x";', "r=string('x');"),
+            ('r=char("don\'t");', "r='don''t';"),
+            ('r=sprintf("%s:%d", "x",2);', "r=string('x:2');"),
+            ('r=char(sprintf("%s", "x"));', "r='x';"),
+            ('r=["]" "=" "." "for"];', "r=[string(']') string('=') string('.') string('for')];"),
+            ('r=[\']\' "="];', "r=[']' string('=')];"),
+            ('r=sprintf("%s",",");', "r=string(',');"),
+            ('disp(","); r="x";', "disp(','); r=string('x');"),
+        ]
+        payloads = ['=', ']', '[', '(', ')', ',', ';', '.', 'for']
+        for left in payloads:
+            for right in payloads:
+                cases.append((f'r=["{left}" "{right}" "x"];',
+                              f"r=[string('{left}') string('{right}') string('x')];"))
+            cases.extend((
+                (f'r=[\'{left}\' "=" "x"];', f"r=['{left}' string('=') string('x')];"),
+                (f'r=["{left}" \'=\' "x"];', f"r=[string('{left}') '=' string('x')];"),
+                (f'disp("{left}"); r="x";', f"disp('{left}'); r=string('x');"),
+                (f'r=sprintf("%s","{left}");', f"r=string('{left}');"),
+            ))
+        generated = []
+        for code, reference in cases:
+            result = adapt_source(code, None, self.profile)
+            self.assertEqual(result.status, 'adapted', (code, result.diagnostics))
+            self.assertEqual(result.generated_text.count('\n'), code.count('\n'))
+            generated.extend(({'code': result.generated_text}, {'code': reference}))
+        values = fark.run(generated, 'octave', 60)
+        for index, (code, _) in enumerate(cases):
+            with self.subTest(code=code):
+                actual, expected = values[index * 2:index * 2 + 2]
+                self.assertFalse(actual.startswith(('HATA', 'CALISMADI')), actual)
+                self.assertEqual(actual, expected)
 
     def test_array_cell_plus_and_empty_scalar_shape(self):
         self.assertEqual(self.run_code('r=["a" "bb"];'), 'string|1x2|{char|1x1|u97,;char|1x2|u98,98,;}')

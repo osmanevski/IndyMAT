@@ -1,7 +1,13 @@
 import cameraMath from "./figure_camera_utils.cjs";
-import geometry from "./figure_geometry_utils.cjs";
 import colors from "./figure_color_utils.cjs";
 
+// Contained policy-dependent shader path. B (scalar -> fragment colormap)
+// would add its varying/lookup here and its static scalar buffer/map texture
+// in upload(); the default A reuses the existing static RGB attribute.
+export function surfaceColorShaderPath(mode) {
+  if (mode !== "vertex-rgb") throw new Error("Unsupported surface color interpolation: " + mode);
+  return "vec3 surfaceColor(vec3 vertexRGB) { return vertexRGB; }";
+}
 // One program handles world triangles and R1's pixel-space triangles. All
 // positions retain a world coordinate for clipping against the axes box.
 const VERTEX = `#version 300 es
@@ -13,7 +19,8 @@ uniform mat4 matrix;
 uniform bool screen;
 uniform vec2 viewport;
 uniform vec3 origin, pixelX, pixelY, depthVector;
-out vec3 world, ink;
+out vec3 world;
+smooth out vec3 ink;
 out vec2 markerUV;
 void main() {
   world = screen ? origin + position.x*pixelX + position.y*pixelY + position.z*depthVector : position;
@@ -23,7 +30,8 @@ void main() {
 }`;
 const FRAGMENT = `#version 300 es
 precision highp float;
-in vec3 world, ink;
+in vec3 world;
+smooth in vec3 ink;
 in vec2 markerUV;
 uniform vec3 low, high, faceInk, edgeInk;
 uniform bool clip;
@@ -32,6 +40,7 @@ uniform int marker;
 uniform bool hasFace, hasEdge;
 uniform float border;
 out vec4 outputColor;
+${surfaceColorShaderPath(colors.SURFACE_COLOR_INTERPOLATION)}
 float shape(vec2 p) {
   if (marker == 2) return max(abs(p.x),abs(p.y));
   if (marker >= 3 && marker <= 6) {
@@ -45,7 +54,7 @@ float shape(vec2 p) {
 }
 void main() {
   if (clip && (any(lessThan(world,low-vec3(slack))) || any(greaterThan(world,high+vec3(slack))))) discard;
-  vec3 rgb = ink;
+  vec3 rgb = surfaceColor(ink);
   if (marker > 0) {
     vec2 p = markerUV;
     if (marker >= 8) {
@@ -70,9 +79,13 @@ let activeRenderer = null;
 // Bound expansion work to the visible viewport, even at maximum local zoom.
 // Dash phase is measured along the original run, including clipped portions.
 export function screenPolyline(projected, width, breaks = [0, projected.length], style = "-", viewport) {
-  const pattern = { "--": [7, 4], ":": [2, 3], "-.": [7, 3, 2, 3] }[style];
   const output = [];
-  if (style === "none" || width <= 0) return new Float32Array();
+  appendScreenPolyline(projected, width, breaks, style, viewport, output);
+  return new Float32Array(output);
+}
+function appendScreenPolyline(projected, width, breaks, style, viewport, output) {
+  const pattern = { "--": [7, 4], ":": [2, 3], "-.": [7, 3, 2, 3] }[style];
+  if (style === "none" || !(width > 0)) return;
   const cycle = pattern?.reduce((sum, value) => sum + value, 0);
   for (let run = 0; run < breaks.length - 1; run++) {
     let phase = 0;
@@ -97,8 +110,20 @@ export function screenPolyline(projected, width, breaks = [0, projected.length],
       }
       const lerp = (t) => ({ x: a.x + dx * t, y: a.y + dy * t, depth: a.depth + (b.depth - a.depth) * t });
       const emit = (start, end) => {
-        const expanded = geometry.expandPolyline([lerp(start), lerp(end)], width);
-        for (const value of expanded) output.push(value);
+        const p = lerp(start);
+        const q = lerp(end);
+        if (![p.x, p.y, p.depth, q.x, q.y, q.depth].every(Number.isFinite)) return;
+        const sx = q.x - p.x;
+        const sy = q.y - p.y;
+        const distance = Math.hypot(sx, sy);
+        if (!distance) return;
+        const nx = -sy / distance * width / 2;
+        const ny = sx / distance * width / 2;
+        // Same corner order and arithmetic as expandPolyline. Convert to
+        // Float32 once at upload, rather than allocating a buffer per dash.
+        output.push(p.x + nx, p.y + ny, p.depth, p.x - nx, p.y - ny, p.depth,
+          q.x + nx, q.y + ny, q.depth, q.x + nx, q.y + ny, q.depth,
+          p.x - nx, p.y - ny, p.depth, q.x - nx, q.y - ny, q.depth);
       };
       if (low < high) {
         if (!pattern) emit(low, high);
@@ -119,7 +144,6 @@ export function screenPolyline(projected, width, breaks = [0, projected.length],
       if (pattern) phase = (phase + length) % cycle;
     }
   }
-  return new Float32Array(output);
 }
 
 export class FigureWebGL {
@@ -165,6 +189,11 @@ export class FigureWebGL {
       this.uniforms = Object.fromEntries(["matrix", "screen", "viewport", "origin", "pixelX", "pixelY", "depthVector", "low", "high", "marker", "faceInk", "edgeInk", "hasFace", "hasEdge", "border", "clip", "slack"].map((name) => [name, this.gl.getUniformLocation(this.program, name)]));
       this.meshes = scenes.map((scene) => scene.meshes.map((mesh) => this.upload(mesh)));
       this.dynamic = this.upload({ positions: new Float32Array(), colors: new Float32Array() });
+      this.zeroUV = new Float32Array();
+      this.zeroRGB = new Float32Array();
+      this.solidRGB = new Float32Array();
+      this.markerPositions = new Float32Array(18);
+      this.markerUV = new Float32Array([-1, -1, 1, -1, -1, 1, -1, 1, 1, -1, 1, 1]);
     } catch {
       this.dispose();
       throw Object.assign(new Error("shader_failure"), { reason_code: "shader_failure" });
@@ -210,7 +239,9 @@ export class FigureWebGL {
   pixels(positions, rgb, uv) {
     if (!positions.length) return;
     const gl = this.gl;
-    const values = [positions, rgb, uv || new Float32Array(positions.length / 3 * 2)];
+    const uvLength = positions.length / 3 * 2;
+    if (!uv && this.zeroUV.length < uvLength) this.zeroUV = new Float32Array(uvLength);
+    const values = [positions, rgb, uv || this.zeroUV.subarray(0, uvLength)];
     gl.bindVertexArray(this.dynamic.vao);
     values.forEach((value, index) => {
       gl.bindBuffer(gl.ARRAY_BUFFER, this.dynamic.attributes[index]);
@@ -219,7 +250,8 @@ export class FigureWebGL {
     gl.drawArrays(gl.TRIANGLES, 0, positions.length / 3);
   }
   solid(positions, rgb) {
-    const values = new Float32Array(positions.length);
+    if (this.solidRGB.length < positions.length) this.solidRGB = new Float32Array(positions.length);
+    const values = this.solidRGB.subarray(0, positions.length);
     for (let i = 0; i < values.length; i += 3) values.set(rgb, i);
     this.pixels(positions, values);
   }
@@ -260,13 +292,28 @@ export class FigureWebGL {
       gl.uniform3fv(u.pixelX, pixelX);
       gl.uniform3fv(u.pixelY, rayY.origin.map((v, i) => v - ray.origin[i]));
       gl.uniform3fv(u.depthVector, ray.direction.map((v) => v * (camera.far - camera.near)));
-      const project = (positions) => Array.from({ length: positions.length / 3 }, (_, i) => cameraMath.project(camera, local, positions.subarray(i * 3, i * 3 + 3)));
+      const projectedBuffers = new Map();
+      const project = (positions, vertexIndices) => {
+        if (projectedBuffers.has(positions)) return projectedBuffers.get(positions);
+        // Grid edges repeat each source vertex up to four times. Their
+        // normalised Float32 coordinates are identical, so project once.
+        const vertices = vertexIndices ? new Map() : null;
+        const projected = Array.from({ length: positions.length / 3 }, (_, i) => {
+          const index = vertexIndices?.[i];
+          if (vertices?.has(index)) return vertices.get(index);
+          const pixel = cameraMath.project(camera, local, positions.subarray(i * 3, i * 3 + 3));
+          vertices?.set(index, pixel);
+          return pixel;
+        });
+        projectedBuffers.set(positions, projected);
+        return projected;
+      };
       const adjust = (rgb) => colors.adjustForContrast(rgb, palette.background, palette.text);
       // A pixel-wide stroke lying on a limit plane leaves the box by half its
       // width; allow exactly that much so boundary data is not cut in half.
       const unit = Math.hypot(...pixelX);
       const slack = (pixels) => gl.uniform1f(u.slack, 0.0001 + unit * pixels / 2);
-      if (scene.axes) {
+      if (scene.axes && scene.axes.visible !== false) {
         // Back walls: grid and outline are decoration in the theme's own
         // grid/axis tokens (like the 2D view). All data is clipped to the box,
         // so the walls are behind everything: they are drawn first, unclipped
@@ -318,20 +365,18 @@ export class FigureWebGL {
       gl.disable(gl.POLYGON_OFFSET_FILL);
       gl.uniform1i(u.screen, 1);
       for (const edge of scene.edges) {
-        const projected = project(edge.positions);
+        const projected = project(edge.positions, edge.source.vertexIndices);
         const positions = [];
         const rgb = [];
         const width = edge.width * 96 / 72;
         for (let i = 0; i < projected.length; i += 2) {
-          const expanded = screenPolyline(projected.slice(i, i + 2), width, undefined, edge.style, local);
+          const start = positions.length;
+          appendScreenPolyline(projected, width, [i, i + 2], edge.style, local, positions);
           // An edge drawn on its own opaque faces is read against them, not the
           // plot background: keep the serialised colour (mesh edges on white).
           const raw = edge.colors.subarray(i * 3, i * 3 + 3);
           const ink = edge.faced ? raw : adjust(raw);
-          for (let j = 0; j < expanded.length; j += 3) {
-            positions.push(expanded[j], expanded[j + 1], expanded[j + 2]);
-            rgb.push(...ink);
-          }
+          for (let j = start; j < positions.length; j += 3) rgb.push(...ink);
         }
         slack(width);
         this.pixels(new Float32Array(positions), new Float32Array(rgb));
@@ -354,14 +399,22 @@ export class FigureWebGL {
           const centre = points.positions.subarray(i * 3, i * 3 + 3);
           // Float32 centres against float64 limits: a marker exactly on a limit stays.
           if (centre.some((v, k) => v < scene.bounds.min[k] - 0.00001 || v > scene.bounds.max[k] + 0.00001)) continue;
-          const expanded = geometry.expandMarkers([p], sizes[i]);
+          const size = sizes[i];
+          if (!(size > 0) || ![p.x, p.y, p.depth, size].every(Number.isFinite)) continue;
           gl.uniform1f(u.border, Math.min(1, 2 * 96 / 72 / Math.max(1, sizes[i])));
           // Clip marker centres, not their pixel offsets, to retain edge glyphs.
           gl.uniform3fv(u.origin, centre);
           gl.uniform3fv(u.pixelX, [0, 0, 0]);
           gl.uniform3fv(u.pixelY, [0, 0, 0]);
           gl.uniform3fv(u.depthVector, [0, 0, 0]);
-          this.solidMarker(expanded);
+          // Each marker still has its own draw/uniforms. Reuse the same six
+          // vertices and UVs; bufferData copies them before the next marker.
+          for (let vertex = 0; vertex < 6; vertex++) {
+            this.markerPositions[vertex * 3] = p.x + this.markerUV[vertex * 2] * size / 2;
+            this.markerPositions[vertex * 3 + 1] = p.y + this.markerUV[vertex * 2 + 1] * size / 2;
+            this.markerPositions[vertex * 3 + 2] = p.depth;
+          }
+          this.solidMarker({ positions: this.markerPositions, uv: this.markerUV });
         }
       }
       gl.uniform1i(u.marker, 0);
@@ -370,7 +423,8 @@ export class FigureWebGL {
     gl.bindVertexArray(null);
   }
   solidMarker(expanded) {
-    this.pixels(expanded.positions, new Float32Array(expanded.positions.length), expanded.uv);
+    if (this.zeroRGB.length < expanded.positions.length) this.zeroRGB = new Float32Array(expanded.positions.length);
+    this.pixels(expanded.positions, this.zeroRGB.subarray(0, expanded.positions.length), expanded.uv);
   }
   // Read immediately after a fresh draw, without preserveDrawingBuffer.
   readPixels(x, y, dpr) {
@@ -398,6 +452,11 @@ export class FigureWebGL {
     this.shaders = [];
     this.meshes = [];
     this.dynamic = null;
+    this.zeroUV = null;
+    this.zeroRGB = null;
+    this.solidRGB = null;
+    this.markerPositions = null;
+    this.markerUV = null;
     this.program = null;
     this.gl = null;
     if (activeRenderer === this) activeRenderer = null;

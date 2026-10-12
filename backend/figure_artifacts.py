@@ -14,8 +14,11 @@ class FigureJSONTooLarge(ValueError):
 def read_figure_artifact(jobs, job, filename):
     # The route validates the job/filename enums before reaching this reader.
     root = Path(jobs).resolve()
-    artifact = (root / job / filename).resolve()
-    if not artifact.is_relative_to(root):
+    # Keep the requested job anchor lexical: resolving it would allow one job
+    # directory to alias another through a symlink.
+    job_root = root / job
+    artifact = (job_root / filename).resolve()
+    if not artifact.is_relative_to(root) or not artifact.is_relative_to(job_root):
         raise PermissionError(tr('Invalid path.'))
     if not filename.endswith('.json'):
         return artifact.read_bytes()

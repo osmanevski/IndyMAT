@@ -11,7 +11,7 @@ ROOT = Path(__file__).resolve().parents[1]
 class NativeRunBaseTests(unittest.TestCase):
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory()
-        self.work = Path(self.temp.name)/'work'; self.work.mkdir()
+        self.work = Path(self.temp.name).resolve()/'work'; self.work.mkdir()
         self.entries = self.work/'entries'; self.entries.mkdir()
         self.script = self.entries/'native_entry.m'
         self.kernel = Kernel(ROOT, Path(self.temp.name)/'runtime', self.work, executable='octave-cli')

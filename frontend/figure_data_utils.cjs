@@ -96,6 +96,11 @@ function classValues(d, name, path) {
   if (own(bounds, name)) requireThat(d.values.every((v) => v === null || Number.isSafeInteger(v) && v >= bounds[name][0] && v <= bounds[name][1]), path);
 }
 function surfaceColor(c, shape, path, association = "cell") {
+  // Surface face schema extension: {mode:"interp",association:"vertex",
+  // encoding:"indexed"|"truecolor",mapping:"scaled"|"direct",
+  // cdata_class:CLASSES,data:[rows,cols] or [rows,cols,3] descriptor}.
+  // Data/class/mapping must equal the raw parent surface fields; every colour
+  // read by a retained cell is finite. Edges and cell-sized interp are excluded.
   requireThat(record(c), path);
   if (c.mode === "none") {
     requireThat(c.association === "constant", path);
@@ -105,7 +110,9 @@ function surfaceColor(c, shape, path, association = "cell") {
     requireThat(c.association === "constant" && rgb(c.rgb), path);
     return;
   }
-  requireThat(c.mode === "flat" && c.association === association, path, "unsupported_color");
+  // Interpolation is a face-only mode and always reads full source vertices.
+  requireThat(c.mode === "interp" ? association === "cell" && c.association === "vertex" :
+    c.mode === "flat" && c.association === association, path, "unsupported_color");
   requireThat(["indexed", "truecolor"].includes(c.encoding) && ["scaled", "direct"].includes(c.mapping) && CLASSES.includes(c.cdata_class), path);
   descriptor(c.data, path + ".data", LIMITS.surface_vertices * 3);
   classValues(c.data, c.cdata_class, path + ".data");
@@ -116,6 +123,7 @@ function surfaceColor(c, shape, path, association = "cell") {
   }
 }
 function surface(s, path) {
+  requireThat(finite(s.line_width) && s.line_width >= 0, path + ".line_width");
   requireThat(Array.isArray(s.shape) && s.shape.length === 2 && s.shape.every((n) => integer(n) && n >= 2), path + ".shape");
   const [rows, cols] = s.shape;
   budget(rows * cols, "surface_vertices", path);
@@ -166,9 +174,10 @@ function surface(s, path) {
   requireThat(equal(s.cdata.shape, s.shape) || equal(s.cdata.shape, [...s.shape, 3]), path + ".cdata.shape");
   for (const field of ["face_color", "edge_color"]) {
     const color = s[field];
-    if (record(color) && color.mode === "flat") {
+    if (record(color) && ["flat", "interp"].includes(color.mode)) {
       requireThat(color.cdata_class === s.cdata_class && color.mapping === s.cdata_mapping && record(color.data) && Array.isArray(color.data.shape) && Array.isArray(color.data.values) && equal(color.data.shape, s.cdata.shape) && equal(color.data.values, s.cdata.values), path + "." + field + ".data");
-      const owners = field === "face_color" ? expectedCells : edges.map((e) => e[0]);
+      const owners = field === "face_color" ? color.mode === "interp" ?
+        expectedCells.flatMap((i) => [i, i + 1, i + rows, i + rows + 1]) : expectedCells : edges.map((e) => e[0]);
       for (const i of owners) for (let channel = 0; channel < (color.encoding === "truecolor" ? 3 : 1); channel++) requireThat(s.cdata.values[i + channel * rows * cols] !== null, path + "." + field + ".data");
     }
   }
@@ -406,12 +415,14 @@ function validate(payload) {
         if (dimension === 3) requireThat(a[key + "scale"] === "linear", path + "." + key, "log_3d");
       }
       requireThat(record(a.grid) && typeof a.grid.x === "boolean" && typeof a.grid.y === "boolean", path + ".grid");
+      if (dimension === 3 || own(a.grid, "z")) requireThat(typeof a.grid.z === "boolean", path + ".grid.z");
       requireThat(record(a.legend) && typeof a.legend.visible === "boolean", path + ".legend");
       labels(a.legend.labels, path + ".legend.labels");
       for (const key of ["title", "xlabel", "ylabel"]) text(a[key], path + "." + key);
+      if (dimension === 3 || own(a, "zlabel")) text(a.zlabel, path + ".zlabel");
       if (own(a, "visible")) requireThat(typeof a.visible === "boolean", path + ".visible");
       if (own(a, "interpreters")) requireThat(record(a.interpreters) && ["title", "xlabel", "ylabel", "ticks"].every((key) => typeof a.interpreters[key] === "string"), path + ".interpreters");
-      for (const key of ["xtickmode", "ytickmode", "xticklabelmode", "yticklabelmode"]) if (own(a, key)) requireThat(["auto", "manual"].includes(a[key]), path + "." + key);
+      for (const key of ["xtickmode", "ytickmode", "ztickmode", "xticklabelmode", "yticklabelmode", "zticklabelmode"]) if (own(a, key)) requireThat(["auto", "manual"].includes(a[key]), path + "." + key);
       if (payload.version === 3) {
         requireThat(a.id === i, path + ".id", "invalid_index");
         range(a.clim, path + ".clim");
