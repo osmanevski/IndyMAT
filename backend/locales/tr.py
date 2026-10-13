@@ -178,6 +178,7 @@ TRANSLATIONS = {
     'Finish the Octave operation before relocating breakpoints.': 'Kesme noktalarını taşımadan önce Octave işlemini bitirin.',
     'No breakpoint job result received.': 'Kesme noktası işinin sonucu alınamadı.',
     'Enter a single-line Octave expression.': 'Tek satırlık bir Octave ifadesi girin.',
+    'Debug expressions cannot contain NUL (U+0000).': 'Hata ayıklama ifadeleri NUL (U+0000) içeremez.',
     'Could not retrieve the variable view.': 'Değişken görünümü alınamadı.',
     'Could not start Octave: {error}': 'Octave başlatılamadı: {error}',
     'The breakpoint target is no longer a valid .m file.': 'Kesme noktası hedefi artık geçerli bir .m dosyası değil.',

@@ -839,8 +839,10 @@ function renderFigures() {
   let supported = supportedData(data);
   let showInteractive = !!shared.figures.length && supported && shared.plotMode === "interactive";
   const is3D = showInteractive && data.version === 3 && data.axes.some((axes) => axes.dimension === 3);
-  const fallback = (code) => {
-    shared.figureData[index] = { supported: false, reason_code: code };
+  const fallbackData = data;
+  const fallback = (code, args = {}) => {
+    if (shared.figureData[index] !== fallbackData) return;
+    shared.figureData[index] = { supported: false, reason_code: code, reason_args: args };
     renderFigures();
   };
   if (shared.figures.length) {
@@ -849,7 +851,7 @@ function renderFigures() {
         const key = stateKey(index);
         shared.interactivePlot = new Figure3D(area, data, { identity: identityAt(index), saved: cameraStates.get(key), save: (state) => cameraStates.set(key, state), failed: fallback, paint2D });
       } catch (error) {
-        data = shared.figureData[index] = { supported: false, reason_code: error.reason_code || "shader_failure" };
+        data = shared.figureData[index] = { supported: false, reason_code: error.reason_code || "shader_failure", reason_args: error.reason_args || {} };
         supported = false;
         showInteractive = false;
       }

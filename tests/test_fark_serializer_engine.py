@@ -24,9 +24,12 @@ s=uy_ozet(ones(1,10001)); assert(~isempty(strfind(s,'<partial:budget>')));
 s=uy_ozet(num2cell(ones(1,10001))); assert(~isempty(strfind(s,'<partial:budget>')));
 x=1; for k=1:10, x={x}; end
 assert(~isempty(strfind(uy_ozet(x),'<partial:depth>')));
-s=uy_ozet(struct('a',{1,2})); assert(~isempty(strfind(s,'<partial:structure-array>')));
+s=uy_ozet(struct('a',{1,2})); assert(isempty(strfind(s,'<partial:')));
+assert(~strcmp(s,uy_ozet(struct('a',{1,3}))));
+s=uy_ozet(repmat(struct('a',1),1,10001)); assert(~isempty(strfind(s,'<partial:budget>')));
 s=uy_ozet(@sin); assert(~isempty(strfind(s,'<partial:unsupported-object>')));
-s=uy_ozet(table([1;2])); assert(~isempty(strfind(s,'<partial:unsupported-object>')));
+s=uy_ozet(table([1;2])); assert(isempty(strfind(s,'<partial:')));
+assert(~strcmp(s,uy_ozet(table([1;3]))));
 % No uint64/int64 -> double conversion, especially adjacent large integers.
 u=intmax('uint64'); v=u-uint64(1);
 assert(strcmp(uy_ozet(u),'uint64|1x1|18446744073709551615,'));

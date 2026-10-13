@@ -19,6 +19,42 @@ function viewport(position, width, height, figureSize, reserve = 0) {
   return viewports.fitAxes(position, viewports.fitFigureViewport(figureSize, width, height), reserve);
 }
 
+function legendItems(axes) {
+  const seen = new Set();
+  const items = [];
+  for (let i = 0; i < axes.series.length; i++) {
+    const series = axes.series[i];
+    const contour = series.role === "contour" || series.role === "contourf";
+    const key = contour && series.contour_group !== undefined ? `contour:${series.contour_group}` : `series:${series.id ?? i}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    const logicalIndex = seen.size - 1;
+    const explicit = Array.isArray(axes.legend.labels) && logicalIndex < axes.legend.labels.length;
+    const label = explicit ? axes.legend.labels[logicalIndex] : series.display_name;
+    if (label) items.push({ series, label });
+  }
+  return items;
+}
+
+function patchLegendColors(series, axes) {
+  const firstFace = series.triangle_faces?.[0] ?? 0;
+  const faceRows = series.faces?.shape?.[0] ?? 1;
+  const faceWidth = series.faces?.shape?.[1] ?? 0;
+  let firstVertex = series.triangle_indices?.values?.[0] ?? 0;
+  for (let column = 0; column < faceWidth; column++) {
+    const vertex = series.faces.values[firstFace + column * faceRows];
+    if (vertex !== null && vertex !== undefined) { firstVertex = vertex; break; }
+  }
+  const faceOwner = series.face_color.mode === "interp" ? firstVertex : firstFace;
+  const face = colorMath.patchColor(series.face_color, faceOwner, axes);
+  const edgeCount = series.edge_indices?.shape?.[0] ?? 0;
+  const edgeVertex = series.edge_indices?.values?.[0] ?? 0;
+  const edgeFace = series.edge_indices?.values?.[edgeCount * 2] ?? firstFace;
+  const edgeOwner = series.edge_color.mode === "interp" ? edgeVertex : edgeFace;
+  const edge = colorMath.patchColor(series.edge_color, edgeOwner, axes);
+  return { face, edge };
+}
+
 // Shared with the v3 top-view 2D path; swatches encode values, never contrast.
 export function drawColorbars(ctx, axes, width, height, palette, figureSize) {
   ctx.save();
@@ -99,6 +135,17 @@ export class Figure3D {
       else this.reset();
     });
     this.ctx = this.overlay.getContext("2d");
+    // Never expose a partially peeled frame before overflow/time checks finish.
+    this.transparencyPending = () => {
+      this.canvas.style.visibility = "hidden";
+      this.overlay.style.visibility = "hidden";
+    };
+    this.transparencyReady = () => {
+      this.canvas.style.visibility = "visible";
+      this.overlay.style.visibility = "visible";
+    };
+    this.canvas.addEventListener("figuretransparencypending", this.transparencyPending);
+    this.canvas.addEventListener("figuretransparencyready", this.transparencyReady);
     this.scenes = data.axes.map((axes) => geometry.buildScene(axes.dimension === 3 ? axes : undefined));
     this.cameras = data.axes.map((axes) => cameraMath.createCamera(axes));
     this.cameras.forEach((camera, i) => cameraMath.restore(camera, saved?.[i], identity));
@@ -131,9 +178,11 @@ export class Figure3D {
     this.wrap.figureTest = {
       sourceSize: () => [...(this.data.source?.figure_size || [])],
       camera: () => this.states(),
+      transparency: () => ({ ...this.renderer.transparencyDiagnostics }),
+      transparencyTimingSamples: samples => this.renderer.testTransparencyTiming(samples),
       viewport: () => viewports.fitFigureViewport(this.data.source?.figure_size, this.width, this.height),
       pixels: (points) => {
-        this.render();
+        if (!this.renderer.transparent) this.render();
         return points.map(({ x, y }) => this.renderer.readPixels(x, y, this.dpr));
       },
       project: (axis, point) => cameraMath.project(this.cameras[axis], this.frames()[axis].viewport, cameraMath.dataToNormalised(this.data.axes[axis], point)),
@@ -211,6 +260,7 @@ export class Figure3D {
     return cameraMath.project(this.cameras[axis], this.frames()[axis].viewport, cameraMath.dataToNormalised(this.data.axes[axis], [hit.x, hit.y, hit.z]));
   }
   pick(x, y) {
+    if (this.renderer.transparent && this.renderer.pending) return null;
     // axis off hides rulers, not data. Keep gesture selection unchanged.
     const axis = this.axisAt(x, y, true);
     if (axis < 0) return null;
@@ -238,6 +288,7 @@ export class Figure3D {
     const palette = theme();
     const frames = this.frames();
     this.renderer.render(frames, palette, this.dpr);
+    if (this.disposed) return; // A synchronous renderer failure can replace this viewer with PNG.
     this.tools?.reprojectPins();
     const ctx = this.ctx;
     ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
@@ -325,7 +376,7 @@ export class Figure3D {
     if (!axes.legend.visible) return;
     const ctx = this.ctx;
     ctx.font = "10px -apple-system, sans-serif";
-    const items = axes.series.map((series, i) => ({ series, label: series.display_name || axes.legend.labels[i] })).filter((item) => item.label);
+    const items = legendItems(axes);
     if (!items.length) return;
     const width = Math.min(vp.width, Math.max(...items.map((item) => ctx.measureText(item.label).width)) + 36);
     const height = items.length * 16 + 8;
@@ -340,7 +391,7 @@ export class Figure3D {
     const contourColors = colorMath.contourDisplayColors(axes, palette.background, palette.text);
     items.forEach(({ series, label }, i) => {
       const yy = y + 13 + i * 16;
-      const raw = series.kind === "surface" ? colorMath.descriptorColor(series.face_color, series.cell_origins[0] || 0, axes) : series.line_color === "none" ? series.marker_edge_color : series.line_color;
+      const raw = series.kind === "surface" ? colorMath.descriptorColor(series.face_color, series.cell_origins[0] || 0, axes) : series.kind === "patch3d" ? null : series.line_color === "none" ? series.marker_edge_color : series.line_color;
       if (series.kind === "surface") {
         ctx.fillStyle = rgbText(raw || palette.background);
         ctx.fillRect(x + 6, yy - 9, 17, 9);
@@ -348,6 +399,26 @@ export class Figure3D {
         if (edge) {
           ctx.strokeStyle = rgbText(colorMath.adjustForContrast(edge, palette.background, palette.text));
           ctx.strokeRect(x + 6, yy - 9, 17, 9);
+        }
+      } else if (series.kind === "patch3d") {
+        const { face, edge } = patchLegendColors(series, axes);
+        if (face) {
+          ctx.fillStyle = rgbText(face);
+          ctx.fillRect(x + 6, yy - 9, 17, 9);
+        }
+        if (edge && series.line_style !== "none" && series.line_width > 0) {
+          ctx.strokeStyle = rgbText(face ? edge : colorMath.adjustForContrast(edge, palette.background, palette.text));
+          ctx.lineWidth = Math.max(1, (series.line_width ?? 0.5) * 96 / 72);
+          ctx.setLineDash({ "--": [7, 4], ":": [2, 3], "-.": [7, 3, 2, 3] }[series.line_style] || []);
+          if (face) ctx.strokeRect(x + 6, yy - 9, 17, 9);
+          else {
+            ctx.beginPath();
+            ctx.moveTo(x + 6, yy - 3);
+            ctx.lineTo(x + 23, yy - 3);
+            ctx.stroke();
+          }
+          ctx.lineWidth = 1;
+          ctx.setLineDash([]);
         }
       } else {
         if (series.line_color !== "none" && series.line_style !== "none") {
@@ -410,6 +481,8 @@ export class Figure3D {
     }
   }
   destroy() {
+    this.canvas.removeEventListener("figuretransparencypending", this.transparencyPending);
+    this.canvas.removeEventListener("figuretransparencyready", this.transparencyReady);
     this.dispose();
   }
   dispose() {

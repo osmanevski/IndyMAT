@@ -3,6 +3,7 @@
 // CPU-only benchmark. A cached NOOP WebGL2 proxy captures command counts;
 // timings do not represent browser rendering or GPU execution.
 const fs = require("node:fs");
+const assert = require("node:assert/strict");
 const path = require("node:path");
 const { execFileSync } = require("node:child_process");
 const Module = require("node:module");
@@ -11,6 +12,9 @@ const { validate } = require("../frontend/figure_data_utils.cjs");
 const geometry = require("../frontend/figure_geometry_utils.cjs");
 const camera = require("../frontend/figure_camera_utils.cjs");
 const { unbatchedSource } = require("./figure_marker_reference.cjs");
+const { contours, interpolatedPatch } = require("./figure_dalga26_support.cjs");
+const { native, nativeFigure } = require("./figure_contour_round3_support.cjs");
+const nativeRecords = require("./fixtures/contourf_round3_native.json");
 
 const quick = process.argv.includes("--quick");
 const refArg = process.argv.find((arg) => arg.startsWith("--renderer-ref="));
@@ -93,6 +97,15 @@ function surface(size) {
   payload.vertex_count = size * size;
   payload.triangle_count = series.triangle_count;
   setCameraAndTicks(payload.axes[0], [-1, 1], [1, 1, 2]);
+  return payload;
+}
+
+function interpolatedSurface(size) {
+  const payload = surface(size);
+  const series = payload.axes[0].series[0];
+  const color = { ...structuredClone(series.face_color), mode: "interp", association: "vertex" };
+  series.face_color = structuredClone(color);
+  series.edge_color = structuredClone(color);
   return payload;
 }
 
@@ -251,13 +264,88 @@ for (const [label, count, kind] of [
 ]) {
   results.push(measureScene(`${label} ${count}`, axesFor([lineSeries(count, kind)])));
 }
+results.push(measureScene("contourf 32 synthetic nested faces", contours(32)));
+results.push(measureScene("patch3d interpolated RGB", interpolatedPatch()));
+for (const size of (quick ? [50, 200] : [50, 200, 500])) {
+  results.push(measureScene(`surf interpolated RGB ${size}x${size}`, interpolatedSurface(size)));
+}
 
 const output = {
   benchmark: "figure3d-local-noop-gl",
   rendererRef: rendererRef || "working tree",
   runtime: process.version,
   iterations: { warmups, samples },
-  note: "NOOP WebGL2 command sink; CPU JS timings only; no browser/GPU claim. Renderer uses the depth buffer; no sorting.",
-  results
+  note: "NOOP WebGL2 command sink; CPU JS timings only; no browser/GPU claim. Opaque rendering uses the depth buffer; transparency uses bounded depth peeling.",
+  results,
+  transparencySubmission: transparencySubmissionBench(),
+  nativeContourRedraw: nativeContourRedrawBench()
 };
 console.log(JSON.stringify(output, null, 2));
+
+function transparencySubmissionBench() {
+  if (!rendererSource.includes("figure_peeling.cjs")) return { available: false, reason: "renderer ref predates peeling" };
+  const { mock, canvas, timers } = require("./figure_peeling_harness.cjs");
+  const timer = timers();
+  const payload = surface(50), axes = payload.axes[0];
+  axes.visible = false;
+  axes.series[0].edge_color = { mode: "none", association: "constant" };
+  const template = geometry.buildScene(axes);
+  const palette = { background: [0, 0, 0], text: [1, 1, 1], axis: [.3, .3, .3], grid: [.2, .2, .2] };
+  function measure(Renderer, layers, transparent) {
+    const scene = { ...template, edges: [], hasTransparency: transparent,
+      meshes: Array.from({ length: layers }, (_, series) => {
+        const source = template.meshes[0], positions = source.positions.slice();
+        for (let i = 2; i < positions.length; i += 3) positions[i] += series * .01;
+        return { ...source, series, positions,
+          ...(transparent ? { alphas: new Float32Array(positions.length / 3).fill(.5) } : {}) };
+      }) };
+    const sink = mock(), failures = [], node = canvas(sink);
+    const instance = new Renderer(node, [scene], (code, args) => failures.push({ code, args }));
+    const frames = [{ scene, camera: camera.createCamera(axes), viewport: { x: 0, y: 0, width: 800, height: 600 } }];
+    const submit = () => { instance.render(frames, palette, 1); };
+    // Timer tasks use a mock query-availability response. The submission
+    // median excludes the task that presents the completed offscreen image.
+    const times = [];
+    for (let i = 0; i < warmups + samples; i++) {
+      sink.calls.length = 0;
+      const started = performance.now(); submit();
+      const elapsed = performance.now() - started;
+      if (i >= warmups) times.push(elapsed);
+      timer.tick(); assert.deepEqual(failures, []);
+    }
+    times.sort((a, b) => a - b);
+    sink.calls.length = 0; submit(); timer.tick();
+    const counts = {};
+    for (const method of ["drawArrays", "drawElements", "createQuery", "createFramebuffer", "createTexture"]) {
+      counts[method] = sink.calls.filter(call => call.method === method).length;
+    }
+    const result = { geometricSurfaces: layers, triangles: layers * template.meshes[0].indices.length / 3,
+      cpuSubmissionMedianMs: +times[Math.floor(times.length / 2)].toFixed(3), oneFrameCommandCounts: counts };
+    instance.dispose(); assert.equal(sink.live.size, 0); assert.equal(timer.tasks.size, 0);
+    return result;
+  }
+  try {
+    const baseline = loadRenderer(execFileSync("git", ["show", "HEAD:frontend/figure_webgl.js"], { encoding: "utf8" })).FigureWebGL;
+    const before = measure(baseline, 1, false), after = measure(FigureWebGL, 1, false);
+    assert.deepEqual(after.oneFrameCommandCounts, before.oneFrameCommandCounts, "opaque path gained commands");
+    return { available: true, note: "Mocked GL CPU submission only. Query availability/result are synthetic; no GPU completion, pixels or runtime 250 ms qualification measured.",
+      opaqueReference: "HEAD renderer, same opaque geometry and mock", opaqueCommandInvariant: true, opaqueBefore: before, opaqueAfter: after,
+      workloads: [2, 4, 8].map(layers => measure(FigureWebGL, layers, true)) };
+  } finally { timer.restore(); }
+}
+
+function nativeContourRedrawBench() {
+  const baseline=loadRenderer(execFileSync("git",["show","HEAD:frontend/figure_webgl.js"],{encoding:"utf8"})).FigureWebGL;
+  const results=nativeRecords.cases.map(c=>{
+    const payload=nativeFigure(c.record.patches_in_draw_order.map(native));
+    const measured=measureScene(c.name,payload);
+    assert(measured.accepted,c.name+": "+JSON.stringify(measured));
+    const scene=geometry.buildScene(payload.axes[0]);
+    return {...measured, rawGeometryProvenance:nativeRecords.provenance,
+      noAreaChildren:payload.axes[0].series.filter(s=>s.no_area).length,
+      backgroundHoleChildren:payload.axes[0].series.filter(s=>s.background_hole).length,
+      redrawComparison:{before:drawBench(scene,baseline),after:drawBench(scene,FigureWebGL)}};
+  });
+  return {baseline:"HEAD renderer",candidate:rendererRef||"working tree",
+    note:"Four recorded Octave child geometries; both renderers receive the same current validated/built scene. Canonicalization only removes exact repeated adjacent/closing boundary coordinates; source vertices remain unchanged. Schema/camera/scaled color mapping/stroke metadata are synthetic harness settings, not measured native properties. HEAD omits no-area children; command/time differences for them do not establish equivalent output. NOOP GL CPU submission only; no GPU or browser acceptance.",results};
+}

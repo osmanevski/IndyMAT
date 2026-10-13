@@ -87,17 +87,29 @@ def file_fallback(source, code, message):
 def _literal_keyboard_call(tokens):
     # Deliberately bounded literal inspection, not evaluation/data-flow analysis.
     # False positives inside dynamic text are preferable to changing file identity.
-    significant = [t for t in tokens if t.kind not in {'space', 'newline', 'comment', 'continuation'}]
+    significant = [t for t in tokens if t.kind not in {'space', 'newline', 'comment', 'block', 'continuation'}]
+    dynamic_names = {'eval', 'evalin', 'feval', 'str2func', 'builtin'}
+    # Closing index -> opening index for exactly (@name), with optional nested
+    # parentheses. Track groups once, without rescanning or resolving handles.
+    handle_groups = {}
     stack = []
     for i, token in enumerate(significant):
         if token.kind == 'open':
             dynamic = (token.value == '(' and i > 0 and significant[i-1].kind == 'identifier'
-                       and significant[i-1].value in {'eval', 'evalin', 'feval', 'str2func', 'builtin'})
-            stack.append(dynamic or bool(stack and stack[-1]))
+                       and significant[i-1].value in dynamic_names)
+            dynamic = dynamic or (token.value == '(' and i-1 in handle_groups)
+            stack.append((i, dynamic or bool(stack and stack[-1][1])))
         elif token.kind == 'close':
             if stack:
-                stack.pop()
-        elif token.kind in {'char', 'double'} and stack and stack[-1]:
+                opening, _ = stack.pop()
+                if token.value == ')' and significant[opening].value == '(':
+                    literal = (i == opening + 3 and significant[opening+1].value == '@'
+                               and significant[opening+2].kind == 'identifier'
+                               and significant[opening+2].value in dynamic_names)
+                    nested = handle_groups.get(i-1) == opening+1
+                    if literal or nested:
+                        handle_groups[i] = opening
+        elif token.kind in {'char', 'double'} and stack and stack[-1][1]:
             if re.search(r'(?<![A-Za-z_0-9])keyboard(?![A-Za-z_0-9])', token.value):
                 return True
     return False

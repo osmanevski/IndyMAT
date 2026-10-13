@@ -46,7 +46,8 @@ function interp_descriptor_harness()
       assert(strcmp(d.mapping,mapping{1}));assert(strcmp(d.cdata_class,type{1}));
       assert(isequal(d.data.shape,{2,2}));assert(isequal(d.data.values,{0,1,2,3}));
       [edge,code]=__mf_surface_color__('interp',c,mapping{1},'vertex');
-      assert(strcmp(code,'interpolated_color'));
+      assert(isempty(code)&&strcmp(edge.mode,'interp')&&strcmp(edge.association,'vertex'));
+      assert(isequal(edge,d));
       [flat,code]=__mf_surface_color__('flat',c,mapping{1});
       assert(isempty(code)&&strcmp(flat.mode,'flat')&&strcmp(flat.association,'cell'));
     endfor

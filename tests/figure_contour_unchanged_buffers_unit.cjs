@@ -5,6 +5,7 @@ const Module=require("node:module"),esbuild=require("esbuild"),{createHash}=requ
 const geometry=require("../frontend/figure_geometry_utils.cjs"),camera=require("../frontend/figure_camera_utils.cjs");
 function snapshots(source) {
  const filename=path.resolve("frontend/figure_webgl.js"),m=new Module(filename,module);
+ m.filename=filename;
  m.paths=Module._nodeModulePaths(path.dirname(filename));
  m._compile(esbuild.transformSync(source,{format:"cjs"}).code,filename);
  const result={};

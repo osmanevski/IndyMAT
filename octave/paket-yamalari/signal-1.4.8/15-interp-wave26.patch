@@ -1,0 +1,31 @@
+--- a/interp.m
++++ b/interp.m
+@@ -45,0 +46,20 @@
++  ## IndyMAT: measured n=4 minimum, including rate one and explicit
++  ## n=4/Wc=0.5 forms. Other filter settings and the native numerical
++  ## algorithm remain unchanged; no interpolation-value parity is claimed.
++  if (nargin >= 2 && nargout <= 1)
++    supported_x = (isa (x, 'double') || isa (x, 'single')) && ...
++                  isreal (x) && isvector (x) && ! isempty (x);
++    supported_q = (isa (q, 'double') || isa (q, 'single')) && ...
++                  isreal (q) && isscalar (q) && isfinite (q) && ...
++                  q >= 1 && q == fix (q);
++    supported_filter = (isa (n, 'double') || isa (n, 'single')) && ...
++                       isreal (n) && isscalar (n) && n == 4 && ...
++                       (isa (Wc, 'double') || isa (Wc, 'single')) && ...
++                       isreal (Wc) && isscalar (Wc) && Wc == 0.5;
++    if (supported_x && supported_q && supported_filter && numel (x) < 9)
++      error ('signal:interp:InvalidDimensions', ...
++             ['Length of data sequence must be at least 9.' ...
++              char(10) ' You either need more data or a shorter filter (L).']);
++    endif
++  endif
++
+@@ -56,0 +77,7 @@
++
++  ## MATLAB measurement row 10: default rate-two real single vectors
++  ## preserve single output. Values still use the native algorithm above.
++  if (nargin == 2 && nargout <= 1 && supported_x && supported_q && ...
++      isa (x, 'single') && q == 2 && numel (x) >= 9)
++    y = single (y);
++  endif

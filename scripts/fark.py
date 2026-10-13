@@ -14,7 +14,7 @@ other, so a wrong belief about MATLAB cannot enter the list.
   Add --output /tmp/measurement.json to keep adapted measurements outside the repository.
 Short-lived helper processes only; the user's session is never touched.
 
-Serializer/reference/measurement schema 2: bounded summaries with omitted
+Serializer schema 4, reference/measurement schema 2: bounded summaries with omitted
 content are partial evidence. Totals partition into successful matches,
 both-error matches, observed remaining differences, partial and unmeasured.
 Old probe caches require a fresh full run; --octave-only rejects them.
@@ -30,7 +30,7 @@ from backend.source_adapter import ADAPTER_VERSION, AdapterProfile, adapt_source
 from backend.kernel import cli_executable
 
 BASE=root/'uyumluluk'
-SERIALIZER_SCHEMA = 2
+SERIALIZER_SCHEMA = 4
 REFERENCE_SCHEMA = 2
 MEASUREMENT_SCHEMA = 2
 PARTIAL_KIND = 'kısmi ölçüm'
@@ -59,7 +59,7 @@ def runner(probes,folder):
         name=f'uy_yoklama_{index:04d}';names.append(name)
         (folder/f'{name}.m').write_text(f"function r = {name}()\n  r = [];\n  {probe['code']}\nend\n",encoding='utf-8')
     lines=["function uy_yoklama_surucu()","  adlar = {" + ' '.join(f"'{name}'" for name in names) + "};","  for k = 1:numel(adlar)",
-           "    try","      r = feval(adlar{k});","      cikti = uy_ozet(r);","    catch hata","      cikti = ['HATA|' hata.identifier '|' strrep(hata.message, sprintf('\\n'), ' ')];","    end",
+           "    try","      r = feval(adlar{k});","      try","        cikti = uy_ozet(r);","      catch ozet_hata","        cikti = ['SERIALIZER_ERROR|' ozet_hata.identifier '|' strrep(ozet_hata.message, sprintf('\\n'), ' ')];","      end","    catch hata","      cikti = ['HATA|' hata.identifier '|' strrep(hata.message, sprintf('\\n'), ' ')];","    end",
            "    fprintf('@@Y\\t%d\\t%s\\n', k, cikti);","  end","  fprintf('@@BITTI\\n');","end"]
     (folder/'uy_yoklama_surucu.m').write_text('\n'.join(lines)+'\n',encoding='utf-8')
 
@@ -93,7 +93,7 @@ def close(matlab,octave,tolerance=1e-9):
     Finite floating-point payloads alone receive numerical tolerance.
     """
     # Character codes, integer/logical payloads and dimensions are exact.
-    protect=lambda text:re.sub(r'(?:u?int(?:8|16|32|64))\|[0-9x]+\|(?:-?\d+,)*|logical\|[0-9x]+\|[01]*|u(?:\d+,)*|i-?\d+,|\|(?:\d+x)*\d+\|',
+    protect=lambda text:re.sub(r'(?:u?int(?:8|16|32|64))\|[0-9x]+\|(?:-?\d+,)*|logical\|[0-9x]+\|(?:<sparse>)?[01]*|u(?:\d+,)*|i-?\d+,|\|(?:\d+x)*\d+\|',
         lambda match:re.sub(r'\d',lambda d:chr(97+int(d.group())),match.group()),text)
     left,right=protect(matlab),protect(octave)
     if NUMBER.sub('#',left)!=NUMBER.sub('#',right):return False
@@ -114,17 +114,20 @@ def coverage(summary):
     Schema 2 has explicit <partial:reason> markers. Legacy opaque/truncated
     summaries remain partial evidence, never complete value equality.
     """
+    if summary.startswith('SERIALIZER_ERROR|'):return {'status': 'missing', 'complete': False, 'reasons': ['serializer-error']}
     if summary == 'CALISMADI':return {'status': 'missing', 'complete': False, 'reasons': ['not-run']}
     if summary.startswith('HATA|'):return {'status': 'error', 'complete': True, 'reasons': []}
     reasons = re.findall(r'<partial:([^>]+)>', summary)
     if '<nesne>' in summary:reasons.append('legacy-object')
     if '...' in summary:reasons.append('legacy-truncation')
-    if re.search(r'(?:^|[={;])struct\|(?!1x1\|)[0-9x]+\|', summary):
+    if re.search(r'(?:^|[={;])struct\|(?!1x1\|)[0-9x]+\|(?!fields=)', summary):
         reasons.append('structure-array')
     return {'status': 'partial' if reasons else 'complete', 'complete': not reasons,
             'reasons': sorted(set(reasons))}
 
 def kind(matlab,octave):
+    if matlab.startswith('SERIALIZER_ERROR|') or octave.startswith('SERIALIZER_ERROR|'):
+        return 'ölçülemedi'
     m_error,o_error=matlab.startswith('HATA|'),octave.startswith('HATA|')
     if m_error and o_error:return 'ikisi de hata'
     if matlab=='CALISMADI' or octave=='CALISMADI':return 'ölçülemedi'

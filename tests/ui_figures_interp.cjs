@@ -1,5 +1,5 @@
 "use strict";
-const { assert, expect, openFigures, run, require3D, settle } = require("./figure_ui_support.cjs");
+const { assert, expect, openFigures, run, require3D, settle, pixel } = require("./figure_ui_support.cjs");
 
 // The existing pixels hook renders and immediately calls readPixels in the
 // same browser task. No preserveDrawingBuffer or screenshot decoding needed.
@@ -77,7 +77,17 @@ const unitSurface = (name, cdata, colormap) =>
     await run(page, "close all;figure('name','D24 peaks shading interp');surf(peaks(20));shading interp;colormap(turbo(256));colorbar;");
     await require3D(page, "D24 peaks shading interp");
 
-    await run(page, "close all;figure('name','D24 alpha fallback');surf(ones(2),'facealpha',0.5);");
+    await page.evaluate(() => document.body.style.setProperty("--plot-bg", "#ffffff"));
+    await run(page, "close all;figure('name','D24 scalar alpha');axes('position',[0 0 1 1]);surf([0 1],[0 1],ones(2),'facealpha',.5,'facecolor',[.2 .6 .8],'edgecolor','none');view(2);axis([0 1 0 1 0 2]);axis off;");
+    await require3D(page, "D24 scalar alpha");
+    await page.waitForFunction(() => {
+      const state = document.querySelector(".figure-3d")?.figureTest?.transparency();
+      return state && !state.pending && state.frames > 0;
+    }, undefined, { timeout: 6000 });
+    // 50% RGB [51,153,204] over white, rounded to the framebuffer's bytes.
+    await pixel(page, [.5, .5, 1], [153, 204, 230], 8);
+
+    await run(page, "close all;figure('name','D24 alpha fallback');surf(ones(2),'facealpha','interp','alphadata',[0 .25;.5 1],'alphadatamapping','none');");
     await expect(page.locator("#figure-caption")).toContainText("D24 alpha fallback");
     await expect(page.locator("#figure-caption")).toContainText("Yalnızca PNG görünümü kullanılabilir:");
     await expect(page.locator("#figure-caption")).toContainText("saydamlık");
@@ -87,7 +97,7 @@ const unitSurface = (name, cdata, colormap) =>
     await expect(page.locator("#figure-tools")).toBeHidden();
     await expect(page.locator("#plot-interactive")).toBeDisabled();
     assert.deepEqual(errors, []);
-    console.log("UI FIGURES INTERP PASS: measured gray diagonal and Octave RGB-space pixels, interactive peaks shading interp and transparent-surface PNG fallback.");
+    console.log("UI FIGURES INTERP PASS: measured gray diagonal and Octave RGB-space pixels, interactive peaks shading interp with scalar-alpha blending and data-valued-alpha PNG fallback.");
   } finally {
     await browser.close();
   }

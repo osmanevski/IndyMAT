@@ -237,16 +237,21 @@ endfunction
         folder.mkdir(exist_ok=True)
         self.run_code(f"addpath({Kernel.quote(ROOT / 'tests/fixtures/figure_v3')}); uret({Kernel.quote(folder)});")
         files = list(folder.glob('*.json'))
-        self.assertEqual(len(files), 38)
+        self.assertEqual(len(files), 39)
         for file in files:
             data = json.loads(file.read_text())
             if file.stem in ['line2d', 'plot3_gap', 'scatter3_sizes', 'surf_vector', 'surf_matrix_nan', 'mesh_default', 'surf_integer_clim', 'colorbar', 'reversed_view',
                              'bar_grouped', 'barh_stacked', 'hist_flat', 'area_stacked', 'patch_missing_vertex',
-                             'text_boxes', 'group_lines', 'figure_title']:
+                             'text_boxes', 'group_lines', 'figure_title', 'surf_scalar_alpha']:
                 self.assertTrue(data['supported'], file.name)
             else:
                 self.assertFalse(data['supported'], file.name)
                 self.assertEqual(data['reason_code'], file.stem)
+            if file.stem == 'surf_scalar_alpha':
+                self.assertEqual(data['axes'][0]['series'][0]['face_alpha'],
+                                 {'mode': 'constant', 'association': 'constant', 'value': .5})
+            elif file.stem == 'transparency':
+                self.assertEqual(data['reason_args']['detail'], 'unmeasured_data_mapping')
         if shutil.which('node'):
             command = "const fs=require('fs'),p=require('path'),{validate}=require(process.argv[1]); for(const f of fs.readdirSync(process.argv[2])) {const r=validate(JSON.parse(fs.readFileSync(p.join(process.argv[2],f),'utf8')));if(!r.ok)throw Error(f+JSON.stringify(r));}"
             result = subprocess.run(['node', '-e', command, str(ROOT / 'frontend/figure_data_utils.cjs'), str(folder)], text=True, capture_output=True, timeout=30)
@@ -262,10 +267,17 @@ endfunction
                 self.assertEqual(data['axes'], [])
                 self.assertEqual(data['reason_code'], 'budget_exceeded')
                 self.assertEqual(data['reason_args']['budget'], budget)
-        # Keep the existing whole-figure fallback assertions on unsupported
-        # interpolated edges, now that vertex-interpolated faces are admitted.
-        data = self.snapshot("subplot(1,2,1);plot(1:3);subplot(1,2,2);surf([1 3;2 4],'facecolor','interp','edgecolor','interp')")
-        self.assertEqual(data['reason_code'], 'interpolated_color')
+        # Scalar alpha preserves both otherwise supported axes.
+        data = self.snapshot("subplot(1,2,1);plot(1:3);subplot(1,2,2);surf([1 3;2 4],'facecolor','interp','edgecolor','interp','facealpha',.5)")
+        self.assertTrue(data['supported'], data)
+        self.assertEqual(len(data['axes']), 2)
+        surface = next(s for a in data['axes'] for s in a['series'] if s['kind'] == 'surface')
+        self.assertEqual(surface['face_alpha'], {'mode': 'constant', 'association': 'constant', 'value': .5})
+        # One data-valued-alpha surface rejects the entire figure, including
+        # the otherwise supported axes and interpolated face/edge colours.
+        data = self.snapshot("subplot(1,2,1);plot(1:3);subplot(1,2,2);surf([1 3;2 4],'facecolor','interp','edgecolor','interp','facealpha','interp','alphadata',[0 .25;.5 1],'alphadatamapping','none')")
+        self.assertEqual(data['reason_code'], 'transparency')
+        self.assertEqual(data['reason_args']['detail'], 'unmeasured_data_mapping')
         self.assertEqual(data['axes'], [])
 
 

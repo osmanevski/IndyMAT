@@ -8,7 +8,7 @@ const { assert, expect, openFigures, run, require3D } = require("./figure_ui_sup
     await run(page, "close all;figure('name','R3 GL prerequisite');plot3(1:3,1:3,1:3);");
     await require3D(page, "R3 GL prerequisite");
     for (const [name, code, reason] of [
-      ["R3 alpha", "surf(ones(2),'facealpha',0.5);", "saydamlık"],
+      ["R3 alpha", "surf(ones(2),'facealpha','interp','alphadata',[0 .25;.5 1],'alphadatamapping','none');", "saydamlık"],
       ["R3 budget", "surf(ones(201,200));", "40200 > 40000"]
     ]) {
       await run(page, `close all;figure('name','${name}');${code}`);
@@ -27,7 +27,7 @@ const { assert, expect, openFigures, run, require3D } = require("./figure_ui_sup
       assert.deepEqual([...bytes.subarray(0, 8)], [137, 80, 78, 71, 13, 10, 26, 10]);
     }
     assert.deepEqual(errors, []);
-    console.log("UI FIGURES FALLBACK PASS: real transparent and over-40000 surfaces, Turkish reasons, hidden tools and intact PNG downloads.");
+    console.log("UI FIGURES FALLBACK PASS: data-valued-alpha and over-40000 surfaces, Turkish reasons, hidden tools and intact PNG downloads.");
   } finally {
     await browser.close();
   }

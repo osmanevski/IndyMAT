@@ -1,0 +1,28 @@
+--- a/sos2tf.m
++++ b/sos2tf.m
+@@ -73,6 +73,25 @@
+     A = conv(A, sos(i,4:6));
+   endfor
+ 
++  # IndyMAT: MATLAB R2025b measured finite real double N=2/3 subset.
++  # Trim exactly one trailing zero independently; keep leading delays and
++  # every other zero, including an all-zero numerator. Other forms retain
++  # the native package algorithm below.
++  measured = isa (sos, 'double') && isreal (sos) && ismatrix (sos) ...
++             && any (N == [2 3]) && all (isfinite (sos(:))) ...
++             && isa (g, 'double') && isreal (g) && isvector (g) ...
++             && ! isempty (g) && all (isfinite (g(:)));
++  if (measured)
++    if (B(end) == 0)
++      B = B(1:end-1);
++    endif
++    if (A(end) == 0)
++      A = A(1:end-1);
++    endif
++    B = B .* prod (g);
++    return;
++  endif
++
+   nA = length (A);
+   nB = length (B);
+   if nA ~= nB

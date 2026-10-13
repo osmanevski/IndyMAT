@@ -5,7 +5,12 @@ let mounted = null;
 
 export function figureReasonText(code, args = {}) {
   // Validator errors need not carry the producer's optional detail fields.
-  const details = { budget: "?", actual: "?", limit: 8388608, type: "?", marker: "?", property: "?", ...args };
+  const details = { budget: "?", actual: "?", limit: 8388608, type: "?", marker: "?", property: "?", actual_ms: "?", limit_ms: 250, ...args };
+  for (const key of ["actual_ms", "limit_ms"]) if (Number.isFinite(details[key])) details[key] = Math.round(details[key]);
+  if (code === "interpolated_color" && args.detail === "polygon_tessellation") return t("Only the PNG view is available: interpolated patch faces with more than three corners.");
+  if (code === "contour_filled" && args.detail === "background_hole") return t("Only the PNG view is available: filled contour background holes.");
+  if (code === "contour_filled" && (args.property === "vertices" || args.property === "faces")) return t("Only the PNG view is available: unsupported filled contour geometry.");
+  if (code === "contour_labels" && args.property === "3d_text_depth") return t("Only the PNG view is available: contour labels requiring 3D depth rendering.");
   switch (code) {
     case "no_axes": return t("Only the PNG view is available: no data axes.");
     case "budget_exceeded": return t("Only the PNG view is available: {budget} exceeds the limit ({actual} > {limit}).", details);
@@ -17,9 +22,12 @@ export function figureReasonText(code, args = {}) {
     case "unsupported_marker": return t("Only the PNG view is available: unsupported marker ({marker}).", details);
     case "unsupported_color": return t("Only the PNG view is available: unsupported color.");
     case "scatter_colors": return t("Only the PNG view is available: per-point scatter colors.");
+    case "transparency_layers": return t("Only the PNG view is available: transparency exceeds {limit} layers ({actual}).", details);
+    case "transparency_time": return t("Only the PNG view is available: transparency took {actual_ms} ms (limit {limit_ms} ms).", details);
+    case "transparency_unavailable": return t("Only the PNG view is available: transparency framebuffer is unavailable.");
     case "transparency": return t("Only the PNG view is available: transparency.");
     case "lighting": return t("Only the PNG view is available: lighting.");
-    // Retained for surface edges and patches; surface vertex faces are admitted.
+    // Retained for unsupported 2D patch interpolation and older artifacts.
     case "interpolated_color": return t("Only the PNG view is available: interpolated colors.");
     case "unsupported_surface": return t("Only the PNG view is available: unsupported surface configuration.");
     case "log_3d": return t("Only the PNG view is available: logarithmic 3D axes.");

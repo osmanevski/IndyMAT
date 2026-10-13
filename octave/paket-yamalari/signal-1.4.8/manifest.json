@@ -15,7 +15,10 @@
     "11-cheb2ord-wave16.patch",
     "12-residuez-wave16.patch",
     "13-findpeaks-wave16.patch",
-    "14-pwelch-wave16.patch"
+    "14-pwelch-wave16.patch",
+    "15-interp-wave26.patch",
+    "16-sos2tf-wave26.patch",
+    "17-interp-wave26.patch"
   ],
   "files": [
     {
@@ -77,6 +80,16 @@
       "path": "residuez.m",
       "pristine_sha256": "6d7df03a3034d43f5c6603870afe802a1d12caf79f022cd1af5a0c35cf080cfc",
       "patched_sha256": "79ed65f955c813fa45abbec2a7c8d816efd28d2f5eac4e74c3a665c0c69fb160"
+    },
+    {
+      "path": "interp.m",
+      "pristine_sha256": "7cdcd0e04831379fd5a892f4a989f8200e23db0ef3836ca11785b2ce8864f0e3",
+      "patched_sha256": "a01590f83d57a1b2aef47187d81e85048c9f955c5051ff566c9c8f90ee121a58"
+    },
+    {
+      "path": "sos2tf.m",
+      "pristine_sha256": "0750143990ffedda427cd04452047e556a5c5dc40908fce341f0ecfedac1506c",
+      "patched_sha256": "e8bba719004f522ba51deaa0c992f7f47485a01460bb4b485354100fe7c4d383"
     }
   ]
 }

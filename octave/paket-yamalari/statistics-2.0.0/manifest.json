@@ -3,7 +3,9 @@
   "package": "statistics-2.0.0",
   "patches": [
     "01-poisspdf.patch",
-    "02-grpstats.patch"
+    "02-grpstats.patch",
+    "03-norminv-fourth-input.patch",
+    "04-norminv-confidence-wave26.patch"
   ],
   "files": [
     {
@@ -15,6 +17,11 @@
       "path": "Descriptive_Statistics/grpstats.m",
       "pristine_sha256": "00309b7cb44eef9fad5615f50cff93d79606625f6a39d1d293fed246ac99cdcd",
       "patched_sha256": "238b067e6a3bb681c13a4d18dad4d713b968ae2abab5e0dc8b42631b2c4ef109"
+    },
+    {
+      "path": "Distribution_Functions/norminv.m",
+      "pristine_sha256": "347a9a30538dd2da55176982d5829fd7b7fc953565f24872cd654f65f9bd5cde",
+      "patched_sha256": "592f77cc2e7696016d3d93ebf53e3331335630ff3be145d2538cd79173c33c69"
     }
   ]
 }

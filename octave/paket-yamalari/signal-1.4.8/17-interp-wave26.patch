@@ -1,0 +1,58 @@
+--- a/interp.m
++++ b/interp.m
+@@ -43,9 +43,9 @@
+   if nargin < 1 || nargin > 4,
+     print_usage;
+   endif
+-  ## IndyMAT: measured n=4 minimum, including rate one and explicit
+-  ## n=4/Wc=0.5 forms. Other filter settings and the native numerical
+-  ## algorithm remain unchanged; no interpolation-value parity is claimed.
++  ## IndyMAT: measured n=1..4 q=2/Wc=0.5 minimum; n=4 also
++  ## retains the prior arbitrary-integer q subset and measured Wc=1/q=2.
++  ## Other filter forms and q>1 numerical values remain native.
+   if (nargin >= 2 && nargout <= 1)
+     supported_x = (isa (x, 'double') || isa (x, 'single')) && ...
+                   isreal (x) && isvector (x) && ! isempty (x);
+@@ -53,13 +53,21 @@
+                   isreal (q) && isscalar (q) && isfinite (q) && ...
+                   q >= 1 && q == fix (q);
+     supported_filter = (isa (n, 'double') || isa (n, 'single')) && ...
+-                       isreal (n) && isscalar (n) && n == 4 && ...
++                       isreal (n) && isscalar (n) && any (n == [1 2 3 4]) && ...
+                        (isa (Wc, 'double') || isa (Wc, 'single')) && ...
+-                       isreal (Wc) && isscalar (Wc) && Wc == 0.5;
+-    if (supported_x && supported_q && supported_filter && numel (x) < 9)
++                       isreal (Wc) && isscalar (Wc) && ...
++                       ((Wc == 0.5 && (n == 4 || q == 2)) || ...
++                        (Wc == 1 && n == 4 && q == 2));
++    if (supported_x && supported_q && supported_filter && numel (x) < 2*n+1)
+       error ('signal:interp:InvalidDimensions', ...
+-             ['Length of data sequence must be at least 9.' ...
++             [sprintf('Length of data sequence must be at least %d.', 2*n+1) ...
+               char(10) ' You either need more data or a shorter filter (L).']);
++    endif
++    ## MATLAB next rows 8/9: default q=1 is identity after validation.
++    if (supported_x && supported_q && nargin == 2 && ...
++        n == 4 && Wc == 0.5 && q == 1 && all (isfinite (x(:))))
++      y = x;
++      return;
+     endif
+   endif
+ 
+@@ -75,10 +83,12 @@
+   y=q*fftfilt(b, y);
+   y(1:q*n+1) = [];  # adjust for zero filter delay
+ 
+-  ## MATLAB measurement row 10: default rate-two real single vectors
+-  ## preserve single output. Values still use the native algorithm above.
+-  if (nargin == 2 && nargout <= 1 && supported_x && supported_q && ...
+-      isa (x, 'single') && q == 2 && numel (x) >= 9)
++  ## MATLAB next rows 10..13 preserve single for n=4/q=2,3 and n=1/q=2
++  ## at Wc=0.5, including columns and explicit n. Values remain native.
++  if (nargin >= 2 && nargout <= 1 && supported_x && supported_q && ...
++      isa (x, 'single') && Wc == 0.5 && ...
++      ((n == 4 && any (q == [2 3])) || (n == 1 && q == 2)) && ...
++      numel (x) >= 2*n+1)
+     y = single (y);
+   endif
+ 

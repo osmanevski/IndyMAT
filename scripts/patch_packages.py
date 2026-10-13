@@ -2,7 +2,10 @@
 
 Only the selected project's .packages/<name>-<version> tree is written. All
 inputs are validated before any writes; replacements are atomic and a failed
-commit is rolled back. Run while that private package copy is not being edited.
+commit is rolled back. Schema 2 creates entries name path/source/sha256; a
+separate registry-bound ownership ledger prevents adopting preexisting files.
+Upgrades must retain owned creation paths; dropping them is refused. Run while
+that private package copy is not being edited.
 """
 from __future__ import annotations
 
@@ -33,7 +36,7 @@ def relative(value):
     if not isinstance(value, str) or not value:
         raise PatchError('Empty or invalid relative path')
     path = PurePosixPath(value)
-    if path.is_absolute() or '..' in path.parts or str(path) != value or '\\' in value:
+    if path.is_absolute() or '..' in path.parts or str(path) != value or '\\' in value or not path.parts:
         raise PatchError(f'Unsafe relative path: {value}')
     return path
 
@@ -104,27 +107,41 @@ def unified(data, patch):
     return oldname, ''.join(out).encode('utf-8')
 
 
-def load_manifest(folder):
-    manifest = json.loads((folder / 'manifest.json').read_text(encoding='utf-8'))
-    if manifest.get('schema') != 1 or manifest.get('package') != folder.name:
+def validate_manifest(manifest, package):
+    if manifest.get('schema') not in (1, 2) or manifest.get('package') != package:
         raise PatchError('Unsupported or mismatched manifest')
-    if not re.fullmatch(r'[a-z][a-z0-9_-]*-\d+\.\d+\.\d+', folder.name):
+    if not re.fullmatch(r'[a-z][a-z0-9_-]*-\d+\.\d+\.\d+', package):
         raise PatchError('Invalid package/version')
     files = manifest.get('files', [])
-    if not files or len({f['path'] for f in files}) != len(files):
+    creates = manifest.get('creates', [])
+    if manifest['schema'] == 1 and creates:
+        raise PatchError('File creation requires manifest schema 2')
+    targets = [f['path'] for f in files + creates]
+    if not targets or len(set(targets)) != len(targets):
         raise PatchError('Empty or duplicate target list')
-    for item in files:
-        relative(item['path'])
-        if relative(item['path']).parts[0] == STATE:
+    for name in targets:
+        parts = relative(name).parts
+        if parts[0] == STATE:
             raise PatchError('Patch targets may not name the registry')
-        for key in ('pristine_sha256', 'patched_sha256'):
-            if not re.fullmatch(r'[a-f0-9]{64}', item[key]):
+        if any(name.startswith(other + '/') for other in targets if other != name):
+            raise PatchError('Overlapping target paths')
+    for item in files + creates:
+        keys = ('pristine_sha256', 'patched_sha256') if item in files else ('sha256',)
+        for key in keys:
+            if not isinstance(item[key], str) or not re.fullmatch(r'[a-f0-9]{64}', item[key]):
                 raise PatchError('Invalid SHA-256 in manifest')
-    if not manifest.get('patches'):
+    for item in creates:
+        relative(item['source'])
+    if files and not manifest.get('patches'):
         raise PatchError('No patches in manifest')
-    for name in manifest['patches']:
+    for name in manifest.get('patches', []):
         relative(name)
     return manifest
+
+
+def load_manifest(folder):
+    return validate_manifest(json.loads((folder / 'manifest.json').read_text(encoding='utf-8')),
+                             folder.name)
 
 
 def atomic(path, data, mode):
@@ -167,7 +184,11 @@ def transaction(package, changes, expected):
                 created.append(parent)
             inside(package, name)
             mode = originals[name][1] if originals[name] else 0o600
-            atomic(path, data, mode)
+            if data is None:
+                if path.exists():
+                    path.unlink()
+            else:
+                atomic(path, data, mode)
     except BaseException:
         for name, previous in reversed(list(originals.items())):
             path = inside(package, name)
@@ -200,9 +221,8 @@ def patch_package(project, folder, *, check=False, revert=False):
         # A registry written by an earlier patch set of the same package is an upgrade, never a mismatch.
         try:
             previous = json.loads(registry.read_text(encoding='utf-8'))
-            if previous.get('schema') != 1 or previous.get('package') != manifest['package']:
-                raise ValueError
-            old_patched = {f['path']: f['patched_sha256'] for f in previous['files']}
+            validate_manifest(previous, manifest['package'])
+            old_patched = {f['path']: f['patched_sha256'] for f in previous.get('files', [])}
         except (ValueError, KeyError, TypeError, AttributeError):
             raise PatchError(f'Registry does not match this patch set: {registry}')
 
@@ -211,7 +231,7 @@ def patch_package(project, folder, *, check=False, revert=False):
     states = {}
     pristine = {}
     changes = {}
-    for item in manifest['files']:
+    for item in manifest.get('files', []):
         name = item['path']
         target = inside(package, name)
         if not target.exists():
@@ -243,17 +263,80 @@ def patch_package(project, folder, *, check=False, revert=False):
         elif not revert and states[name] == 'pristine':
             changes[backup_name] = data
 
+    # Ownership is separate from the manifest: identical preexisting files are
+    # never adopted, so reverting a patch cannot delete a user's existing file.
+    ownership_name = STATE + '/created.json'
+    ownership_path = inside(package, ownership_name)
+    ownership_bytes = ownership_path.read_bytes() if ownership_path.exists() else None
+    expected[ownership_name] = ownership_bytes
+    owned = {}
+    if ownership_bytes is not None:
+        try:
+            ledger = json.loads(ownership_bytes)
+            if ledger.get('schema') != 1 or ledger.get('package') != manifest['package']:
+                raise ValueError
+            owned = ledger['creates']
+            if not isinstance(owned, dict):
+                raise ValueError
+            for name, sha in owned.items():
+                if relative(name).parts[0] == STATE or not re.fullmatch(r'[a-f0-9]{64}', sha):
+                    raise ValueError
+        except (ValueError, TypeError, KeyError, AttributeError):
+            raise PatchError(f'Invalid creation ownership ledger: {ownership_path}; nothing changed')
+    recorded = previous if previous is not None else (manifest if registry.exists() else None)
+    registered_creates = {item['path']: item['sha256']
+                          for item in recorded.get('creates', [])} if recorded else {}
+    if any(registered_creates.get(name) != sha for name, sha in owned.items()):
+        raise PatchError('Creation ownership does not match registered manifest; nothing changed')
+    creates = {item['path']: item for item in manifest.get('creates', [])}
+    if set(owned) - set(creates):
+        raise PatchError('Owned creation absent from manifest; nothing changed')
+    next_owned = dict(owned)
+    for name, item in creates.items():
+        source = inside(folder, item['source']).read_bytes()
+        if digest(source) != item['sha256']:
+            raise PatchError(f'Created source hash does not match manifest: {name}; nothing changed')
+        target = inside(package, name)
+        data = target.read_bytes() if target.exists() else None
+        expected[name] = data
+        sha = digest(data) if data is not None else None
+        if data is None:
+            states[name] = 'missing'
+        elif sha == item['sha256']:
+            states[name] = 'created' if name in owned else 'present'
+        elif name in owned and sha == owned[name]:
+            states[name] = 'outdated'
+        else:
+            states[name] = 'modified'
+            if not check:
+                raise PatchError(f'Refusing modified creation target: {target}; nothing changed')
+        if check:
+            continue
+        if revert:
+            if name in owned:
+                if data is not None:
+                    changes[name] = None
+                next_owned.pop(name)
+        elif data is None or states[name] == 'outdated':
+            changes[name] = source
+            next_owned[name] = item['sha256']
+        elif name in owned:
+            next_owned[name] = item['sha256']
+    if next_owned != owned:
+        changes[ownership_name] = (json.dumps({'schema': 1, 'package': manifest['package'],
+                                             'creates': next_owned}, indent=2) + '\n').encode('utf-8')
+
     # Reconstruct and verify all patched bytes from the exact saved baseline.
     patched = dict(pristine)
-    for name in manifest['patches']:
+    for name in manifest.get('patches', []):
         patch = inside(folder, name).read_text(encoding='utf-8')
         target_name = patch.splitlines()[0][6:]
-        if target_name not in states:
+        if target_name not in {item['path'] for item in manifest.get('files', [])}:
             raise PatchError(f'Unregistered patch target: {target_name}')
         if target_name in patched:
             target_name, result = unified(patched[target_name], patch)
             patched[target_name] = result
-    for item in manifest['files']:
+    for item in manifest.get('files', []):
         name = item['path']
         if name in patched and digest(patched[name]) != item['patched_sha256']:
             raise PatchError(f'Patched hash does not match manifest: {name}; nothing changed')
@@ -268,6 +351,10 @@ def patch_package(project, folder, *, check=False, revert=False):
         action = 'check' if check else ('reverted' if revert and state in ('patched', 'outdated') else
                  'upgraded' if not revert and state == 'outdated' else
                  'applied' if not revert and state == 'pristine' else 'skipped')
+        if name in creates and not check:
+            action = ('reverted' if revert and name in owned and expected[name] is not None else
+                      'applied' if not revert and state == 'missing' else
+                      'upgraded' if not revert and state == 'outdated' else 'skipped')
         print(f"{manifest['package']}/{name}: {state} ({action})")
     return states
 
@@ -281,7 +368,9 @@ def main(argv=None):
     mode.add_argument('--revert', action='store_true', help='restore verified saved pristine files')
     args = parser.parse_args(argv)
     try:
-        patch_package(args.project, PATCH_ROOT / args.package, check=args.check, revert=args.revert)
+        states = patch_package(args.project, PATCH_ROOT / args.package, check=args.check, revert=args.revert)
+        if args.check and 'modified' in states.values():
+            return 1
     except (PatchError, OSError, ValueError, KeyError, IndexError) as exc:
         print(f'Package patch refused: {exc}', file=sys.stderr)
         return 1

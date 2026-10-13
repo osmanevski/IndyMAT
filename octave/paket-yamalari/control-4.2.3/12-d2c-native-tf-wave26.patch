@@ -1,0 +1,11 @@
+--- a/@tf/__d2c__.m
++++ b/@tf/__d2c__.m
+@@ -52,7 +52,7 @@
+     w_d = exp (w_c * tsam);
+     k_c = real (k_d * prod (w_d - z_d_orig) / prod (w_d - p_d) * prod (w_c - p_c) / prod (w_c - z_c));
+ 
+-    tmp = zpk (z_c, p_c, k_c);
++    tmp = tf (real (k_c * poly (z_c)), real (poly (p_c)));
+     sys.num = tmp.num;
+     sys.den = tmp.den;
+ 

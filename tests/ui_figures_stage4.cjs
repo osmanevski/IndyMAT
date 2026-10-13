@@ -87,9 +87,9 @@ const descriptorRows = (descriptor) => Array.from({ length: descriptor.shape[0] 
       assert(allSeries(data).some((s) => s.kind === "surface"));
       assert(allSeries(data).some((s) => s.role === "contour"));
     }
-    await fallback(page, "contourf fallback", grid + "contourf(x,y,z,[-.5 0 .5]);", "contour_filled");
-    await fallback(page, "clabel fallback", grid + "[c,h]=contour(x,y,z,[-.5 0 .5]);clabel(c,h);", "contour_labels");
-    await fallback(page, "clabel matrix fallback", grid + "c=contour(x,y,x.^2+y.^2,[1 2 3]);clabel(c);", "contour_labels");
+    await fallback(page, "contourf labels fallback", grid + "[c,h]=contourf(x,y,z,[-.5 0 .5]);clabel(c,h);", "contour_labels");
+    await supported(page, "clabel rotated", grid + "[c,h]=contour(x,y,z,[-.5 0 .5]);clabel(c,h);", false);
+    await supported(page, "clabel matrix", grid + "c=contour(x,y,x.^2+y.^2,[1 2 3]);clabel(c);", false);
 
     data = await supported(page, "patch RGB convex", vertices + "axes('position',[0 0 1 1]);patch('vertices',v,'faces',[1 2 3 4],'facecolor',[.2 .6 .8],'edgecolor','none');view(2);axis([0 1 0 1 0 2]);axis off;");
     const patch = allSeries(data).find((s) => s.kind === "patch3d");
@@ -115,9 +115,10 @@ const descriptorRows = (descriptor) => Array.from({ length: descriptor.shape[0] 
       await supported(page, `patch ${name} face flat`, vertices + `patch('vertices',[v;v+[2 0 0]],'faces',[1 2 3 4;5 6 7 8],'facevertexcdata',${colors},'facecolor','flat','edgecolor','none','cdatamapping','direct');colormap([1 0 0;0 0 1]);view(3);`);
     }
     await supported(page, "patch 64 vertices", "q=(0:63)'*2*pi/64;patch('vertices',[cos(q),sin(q),ones(64,1)],'faces',1:64,'facecolor',[.2 .6 .8],'edgecolor','none');view(3);");
+    await supported(page, "patch scalar alpha", vertices + "patch('vertices',v,'faces',[1 2 3 4],'facecolor',[.2 .6 .8],'facealpha',.5);view(3);");
     const failures = [
-      ["interp", "patch('vertices',v,'faces',[1 2 3 4],'facevertexcdata',[0;1;2;3],'facecolor','interp');", "interpolated_color"],
-      ["alpha", "patch('vertices',v,'faces',[1 2 3 4],'facecolor',[.2 .6 .8],'facealpha',.5);", "transparency"],
+      ["interp invalid rows", "patch('vertices',v,'faces',[1 2 3 4],'facevertexcdata',[0;1],'facecolor','interp');", "patch_colors"],
+      ["alpha data", "patch('vertices',v,'faces',[1 2 3 4],'facecolor',[.2 .6 .8],'facealpha','interp','facevertexalphadata',[0;.25;.5;1]);", "transparency"],
       ["lighting", "patch('vertices',v,'faces',[1 2 3 4],'facecolor',[.2 .6 .8],'facelighting','flat');light;", "lighting"],
       ["nonplanar", "v(4,3)=1.2;patch('vertices',v,'faces',[1 2 3 4],'facecolor',[.2 .6 .8]);", "unsupported_patch"],
       ["bowtie", "patch('vertices',v,'faces',[1 3 2 4],'facecolor',[.2 .6 .8]);", "unsupported_patch"],

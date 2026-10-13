@@ -1,0 +1,20 @@
+--- a/Distribution_Functions/norminv.m
++++ b/Distribution_Functions/norminv.m
+@@ -47,7 +47,16 @@
+ ## @seealso{normcdf, normpdf, normrnd, normfit, normlike, normstat, probit}
+ ## @end deftypefn
+ 
+-function x = norminv (p, mu, sigma)
++## IndyMAT measured subset: with one output, a fourth character option or
++## real floating matrix is ignored, including upper/lower/other text. It does
++## not select an upper tail. Confidence interval outputs remain outside this
++## patch's scope; the one-output signature retains their native rejection.
++function x = norminv (p, mu, sigma, unused)
++
++  if (nargin == 4 && ! (ischar (unused) ...
++      || (isfloat (unused) && isreal (unused) && ismatrix (unused))))
++    error ("norminv: fourth-input type is outside the measured subset.");
++  endif
+ 
+   ## Check for valid number of input arguments
+   if (nargin < 1)

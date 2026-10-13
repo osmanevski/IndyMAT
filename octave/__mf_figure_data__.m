@@ -43,6 +43,19 @@ function data = __mf_figure_data__(fig, source = struct('job','','figure',0))
     [leaves{k},code,args,flattened]=__mf_leaves__(ax,tree);
     if flattened,data.version=3;endif
     if ~isempty(code),data=__mf_fail__(data,code,args);return;endif
+    % Give an explicit label-depth boundary before contour geometry/budgets.
+    % A malformed first patch must not hide why a labelled 3D scene is PNG.
+    if ~isempty(leaves{k})&&any(ismember({leaves{k}.role},{'contour','contourf','contour_label'}))
+      contour_3d=~isequal(get(ax,'view')(:).',[0 90]);has_text=false;
+      for leaf=leaves{k}
+        leaf_type=__mf_prop__(leaf.h,'type','');
+        has_text=has_text||strcmp(leaf_type,'text');
+        contour_3d=contour_3d||strcmp(leaf.role,'contourf')||strcmp(leaf_type,'surface')||~isempty(__mf_prop__(leaf.h,'zdata',[]));
+      endfor
+      if contour_3d&&has_text
+        data=__mf_fail__(data,'contour_labels',struct('property','3d_text_depth'));return;
+      endif
+    endif
     for leaf=leaves{k}
       h=leaf.h;type=__mf_prop__(h,'type','');
       count+=1;z=__mf_prop__(h,'zdata',[]);
@@ -58,9 +71,11 @@ function data = __mf_figure_data__(fig, source = struct('job','','figure',0))
       elseif strcmp(type,'patch')
         % Shape checks only: nothing is converted before the budgets pass.
         data.version=3;n=rows(__mf_prop__(h,'vertices',[]));f=size(__mf_prop__(h,'faces',[]));
-        if n>limits.patch_vertices,data=__mf_fail__(data,'budget_exceeded',__mf_budget__('patch_vertices',n,limits.patch_vertices));return;endif
+        if strcmp(leaf.role,'contourf'),vl=limits.vertices;vb='vertices';else,vl=limits.patch_vertices;vb='patch_vertices';endif
+        if n>vl,data=__mf_fail__(data,'budget_exceeded',__mf_budget__(vb,n,vl));return;endif
         fan=f(1)*max(0,f(2)-2);
-        if fan>limits.patch_triangles,data=__mf_fail__(data,'budget_exceeded',__mf_budget__('patch_triangles',fan,limits.patch_triangles));return;endif
+        if strcmp(leaf.role,'contourf'),tl=limits.triangles;tb='triangles';else,tl=limits.patch_triangles;tb='patch_triangles';endif
+        if fan>tl,data=__mf_fail__(data,'budget_exceeded',__mf_budget__(tb,fan,tl));return;endif
         vertices+=n;triangles+=fan;
       elseif strcmp(type,'image')
         data.version=3;c=__mf_prop__(h,'cdata',[]);sz=size(c);n=sz(1)*sz(2);pixels+=n;
@@ -195,7 +210,7 @@ function [a,code,args]=__mf_axes__(ax,id,limits,tree,leaves)
   % Inspect flattened children too (a group itself may have no zdata).
   for leaf=leaves
     h=leaf.h;
-    if strcmp(__mf_prop__(h,'type',''),'surface')||~isempty(__mf_prop__(h,'zdata',[])),a.dimension=3;endif
+    if strcmp(__mf_prop__(h,'type',''),'surface')||~isempty(__mf_prop__(h,'zdata',[]))||strcmp(leaf.role,'contourf'),a.dimension=3;endif
   endfor
   a.view=__mf_array__(view_value);
   a.camera=struct('projection',get(ax,'projection'),'position',{__mf_array__(get(ax,'cameraposition'))},...
@@ -225,13 +240,18 @@ function [a,code,args]=__mf_axes__(ax,id,limits,tree,leaves)
     if strcmp(__mf_prop__(h,'type',''),'light')&&strcmp(__mf_prop__(h,'visible','on'),'on'),lights(end+1)=h;endif
   endfor
   contour_groups=[];
+  has_contours=~isempty(leaves)&&any(ismember({leaves.role},{'contour','contourf','contour_label'}));
   fixed_aspect=strcmp(a.data_aspect_ratio_mode,'manual')||strcmp(a.plot_box_aspect_ratio_mode,'manual');
   for leaf=leaves
     type=__mf_prop__(leaf.h,'type','');
     if strcmp(type,'image')
       if a.dimension~=2||any(strcmp({a.xscale,a.yscale},'log')),code='unsupported_object';args=struct('type','image');return;endif
     endif
-    if any(strcmp(type,{'patch','text'}))&&~strcmp(leaf.role,'contour')
+    if a.dimension==3&&strcmp(type,'text')&&has_contours
+      % Canvas text cannot reproduce depth occlusion against 3D faces.
+      code='contour_labels';args=struct('property','3d_text_depth');return;
+    endif
+    if any(strcmp(type,{'patch','text'}))&&~any(strcmp(leaf.role,{'contour','contourf','contour_label'}))
       % Filled shapes and free text exist only in the 2D viewer.
       if a.dimension==3&&strcmp(type,'text'),code='unsupported_object';args=struct('type',type);return;endif
       if strcmp(type,'patch')&&a.dimension==2
@@ -243,7 +263,7 @@ function [a,code,args]=__mf_axes__(ax,id,limits,tree,leaves)
     endif
     [s,code,args]=__mf_series__(leaf,ax,limits,~isempty(lights),tree,a.dimension);
     if ~isempty(code),return;endif
-    if strcmp(leaf.role,'contour')
+    if any(strcmp(leaf.role,{'contour','contourf','contour_label'}))
       group_index=find(contour_groups==leaf.group,1);
       if isempty(group_index),contour_groups(end+1)=leaf.group;group_index=numel(contour_groups);endif
       s.contour_group=group_index-1;
@@ -266,12 +286,10 @@ function [leaves,code,args,flattened]=__mf_leaves__(ax,tree)
       try creator=getappdata(h,'__creator__');catch end_try_catch
       if ~ischar(creator),creator='';endif
       if strcmp(creator,'__contour__')&&__mf_has__(h,'contourmatrix')&&__mf_has__(h,'fill')
-        if ~strcmp(get(h,'fill'),'off'),code='contour_filled';return;endif
-        if ~strcmp(__mf_prop__(h,'showtext','off'),'off'),code='contour_labels';return;endif
-        kind='contour';allowed={'patch','line'};
-        for c=__mf_children__(h,tree)
-          if strcmp(__mf_prop__(c,'visible','on'),'on')&&strcmp(__mf_prop__(c,'type',''),'text'),code='contour_labels';return;endif
-        endfor
+        fill=get(h,'fill');
+        if ~ischar(fill)||~any(strcmp(fill,{'off','on'})),code='invalid_data';args=struct('property','contour.fill');return;endif
+        kind='contour';allowed={'patch','line','text'};
+        if strcmp(fill,'on'),kind='contourf';allowed={'patch','text'};endif
       elseif __mf_has__(h,'bargroup'),kind='bar';allowed={'patch','line'};
       elseif __mf_has__(h,'areagroup'),kind='area';allowed={'patch'};
       elseif strcmp(creator,'__errplot__'),kind='errorbar';allowed={'line'};
@@ -284,6 +302,18 @@ function [leaves,code,args,flattened]=__mf_leaves__(ax,tree)
     alpha=1;if isprop(h,'alpha'),alpha=get(h,'alpha');endif
     if ~isnumeric(alpha)||~isscalar(alpha)||alpha~=1,code='transparency';return;endif
     children=__mf_children__(h,tree);found=struct('h',{},'role',{},'group',{});
+    if any(strcmp(kind,{'contour','contourf'}))
+      % Native contourf holes are overpainted patches. Their source stacking
+      % order must survive, including labels, rather than sorting by type.
+      for c=fliplr(children)
+        ctype=__mf_prop__(c,'type','');
+        if strcmp(__mf_prop__(c,'visible','on'),'off'),continue;endif
+        if ~any(strcmp(ctype,allowed)),code='unsupported_group';args=struct('type',kind,'creator',creator);return;endif
+        role=kind;if strcmp(ctype,'text'),role='contour_label';endif
+        found(end+1)=struct('h',c,'role',role,'group',h);
+      endfor
+      leaves=[leaves,found];continue;
+    endif
     for wanted=allowed
       for c=children
         ctype=__mf_prop__(c,'type','');
@@ -295,15 +325,8 @@ function [leaves,code,args,flattened]=__mf_leaves__(ax,tree)
     endfor
     leaves=[leaves,found];
   endfor
-  % clabel(C) puts text directly in the axes, without a contour-group flag.
-  % Its provenance is not safely distinguishable from other free text. Keep
-  % any visible free text alongside contours on PNG; labels/titles were
-  % already excluded from the drawable children above.
-  if ~isempty(leaves)&&any(strcmp({leaves.role},'contour'))
-    for leaf=leaves
-      if strcmp(__mf_prop__(leaf.h,'type',''),'text'),code='contour_labels';return;endif
-    endfor
-  endif
+  % Direct clabel(C) text has no reliable provenance. It uses the ordinary
+  % text path in 2D; __mf_axes__ explicitly rejects text beside 3D contours.
 endfunction
 
 function ok=__mf_has__(h,name)
@@ -322,6 +345,7 @@ endfunction
 function [s,code,args]=__mf_series__(leaf,ax,limits,has_light,tree,dimension)
   h=leaf.h;s=[];code='';args=struct();type=__mf_prop__(h,'type','');kind=type;
   if strcmp(leaf.role,'contour'),[s,code,args]=__mf_contour_record__(leaf,ax,limits,has_light,tree);return;endif
+  if strcmp(leaf.role,'contourf'),[s,code,args]=__mf_patch3d__(leaf,limits,has_light,tree);return;endif
   if strcmp(type,'surface'),[s,code,args]=__mf_surface__(h,limits,has_light,tree);return;endif
   if strcmp(type,'patch')
     if dimension==3,[s,code,args]=__mf_patch3d__(leaf,limits,has_light,tree);
@@ -468,24 +492,53 @@ endfunction
 
 function [s,code,args]=__mf_patch3d__(leaf,limits,has_light,tree)
   h=leaf.h;s=[];code='';args=struct();v=get(h,'vertices');f=get(h,'faces');
-  if ~__mf_real__(v)||ndims(v)~=2||isempty(v)||columns(v)~=3,code='invalid_data';args=struct('property','vertices');return;endif
-  [tris,owners,edges,code,args]=__mf_patch3d_geometry__(v,f);
+  is_contourf=strcmp(leaf.role,'contourf');
+  if is_contourf
+    level=get(h,'facevertexcdata');
+    source_faces=f;
+    [v,f,no_area,code,args]=__mf_figure_contour_ring__(v,f,level,get(h,'zdata'));
+    tris=zeros(0,3);owners=[];edges=zeros(0,3);
+  else
+    if ~__mf_real__(v)||ndims(v)~=2||isempty(v)||columns(v)~=3,code='invalid_data';args=struct('property','vertices');return;endif
+    [tris,owners,edges,code,args]=__mf_patch3d_geometry__(v,f);
+  endif
   if ~isempty(code),return;endif
-  if isempty(tris),code='invalid_data';args=struct('property','faces');return;endif
-  if ~__mf_opaque__(h,tree),code='transparency';return;endif
+  if ~is_contourf&&isempty(tris),code='invalid_data';args=struct('property','faces');return;endif
+  [alphas,code,args]=__mf_scalar_alphas__(h);if ~isempty(code),return;endif
   if ~strcmp(__mf_prop__(h,'marker','none'),'none'),code='unsupported_patch';args=struct('property','marker');return;endif
+  if is_contourf&&any(strcmp({get(h,'facecolor'),get(h,'edgecolor')},'interp'))
+    code='contour_filled';args=struct('property','color','detail','interpolation');return;
+  endif
   [face,code]=__mf_patch3d_color__(get(h,'facecolor'),h,rows(f),rows(v));if ~isempty(code),args=struct('property','facecolor');return;endif
+  if strcmp(face.mode,'interp')&&~__mf_figure_patch_interp_faces__(f)
+    code='interpolated_color';args=struct('property','facecolor','detail','polygon_tessellation');return;
+  endif
   [edge,code]=__mf_patch3d_color__(get(h,'edgecolor'),h,rows(f),rows(v));if ~isempty(code),args=struct('property','edgecolor');return;endif
+  if is_contourf&&strcmp(face.mode,'none')
+    code='contour_filled';args=struct('property','color','detail','missing_fill');return;
+  endif
   if has_light&&((~strcmp(face.mode,'none')&&~strcmp(get(h,'facelighting'),'none'))||...
       (~strcmp(edge.mode,'none')&&~strcmp(get(h,'edgelighting'),'none')))
     code='lighting';return;
   endif
-  s=struct('kind','patch3d','role','patch','vertices',__mf_descriptor__(v),'faces',__mf_descriptor__(f-1),...
+  role='patch';if is_contourf,role='contourf';endif
+  s=struct('kind','patch3d','role',role,'vertices',__mf_descriptor__(v),'faces',__mf_descriptor__(f-1),...
     'index_base',0,'triangulation','first-valid-ear-v1','polygon_vertex_limit',64,...
     'triangle_indices',__mf_descriptor__(tris-1),'triangle_faces',{__mf_array__(owners-1)},...
     'edge_indices',__mf_descriptor__(edges-1),'triangle_count',rows(tris),...
     'face_color',face,'edge_color',edge,'line_style',get(h,'linestyle'),'line_width',double(get(h,'linewidth')),...
     'display_name',__mf_prop__(h,'displayname',''),'decimated',false,'original_points',rows(v),'rendered_points',rows(v));
+  if is_contourf
+    s.level=double(level);s.display_name=__mf_prop__(leaf.group,'displayname','');
+    s=rmfield(s,{'triangle_indices','triangle_faces','edge_indices','polygon_vertex_limit'});
+    s.triangulation='native-ring-v1';s.no_area=no_area;s.background_hole=isnan(level);
+    if isnan(level)&&~strcmp(face.mode,'constant')
+      code='contour_filled';args=struct('property','contour.level','detail','background_hole_color');s=[];return;
+    endif
+    s.triangle_count=max(0,numel(f)-2);if no_area,s.triangle_count=0;endif
+    s.source_faces=__mf_descriptor__(source_faces-1);
+  endif
+  for name=fieldnames(alphas).',s.(name{1})=alphas.(name{1});endfor
 endfunction
 
 function [c,code]=__mf_patch3d_color__(value,h,nfaces,nvertices)
@@ -495,7 +548,9 @@ function [c,code]=__mf_patch3d_color__(value,h,nfaces,nvertices)
     c=struct('mode','constant','association','constant','rgb',rgb);return;
   endif
   if strcmp(value,'none'),return;endif
-  if strcmp(value,'interp'),code='interpolated_color';return;endif
+  if strcmp(value,'interp')
+    [c,code]=__mf_figure_patch_interp_color__(get(h,'facevertexcdata'),get(h,'cdatamapping'),nvertices);return;
+  endif
   if ~strcmp(value,'flat'),code='unsupported_patch';return;endif
   raw=get(h,'facevertexcdata');
   if ~__mf_real__(raw)||isempty(raw)||~any(columns(raw)==[1 3])||any(~isfinite(raw(:)))
@@ -596,6 +651,14 @@ function [s,code,args]=__mf_text_record__(leaf,limits)
   interpreter=get(h,'interpreter');
   if ~any(strcmp(interpreter,{'tex','none'})),code='unsupported_text';args=struct('property','interpreter');return;endif
   position=get(h,'position');rotation=get(h,'rotation');
+  if strcmp(leaf.role,'contour_label')
+    if ~strcmp(units,'data'),code='unsupported_text';args=struct('property','units');return;endif
+    % The existing 2D text renderer reads XY. Never flatten nonzero native Z.
+    if ~__mf_vector__(position)||~any(numel(position)==[2 3])||...
+        any(~isfinite(position(:)))||(numel(position)==3&&position(3)~=0)
+      code='contour_labels';args=struct('property','3d_text_depth');return;
+    endif
+  endif
   if ~__mf_real__(position)||numel(position)<2||any(~isfinite(position(1:2))),code='invalid_data';args=struct('property','text.position');return;endif
   if ~__mf_real__(rotation)||~isscalar(rotation)||~isfinite(rotation),code='invalid_data';args=struct('property','text.rotation');return;endif
   [lines,ok]=__mf_text_lines__(get(h,'string'));
@@ -657,7 +720,7 @@ function [s,code,args]=__mf_surface__(h,limits,has_light,tree)
   elseif isequal(size(x),shape),xl='matrix';else code='invalid_data';args=struct('property','xdata');return;endif
   if isvector(y)&&numel(y)==shape(1),yl='vector';
   elseif isequal(size(y),shape),yl='matrix';else code='invalid_data';args=struct('property','ydata');return;endif
-  if ~__mf_opaque__(h,tree),code='transparency';return;endif
+  [alphas,code,args]=__mf_scalar_alphas__(h);if ~isempty(code),return;endif
   if has_light&&((~strcmp(get(h,'facecolor'),'none')&&~strcmp(get(h,'facelighting'),'none'))||(~strcmp(get(h,'edgecolor'),'none')&&~strcmp(get(h,'edgelighting'),'none'))),code='lighting';return;endif
   c=get(h,'cdata');
   % Octave surface.m requires Z and C to have the same first two dimensions.
@@ -693,16 +756,9 @@ function [s,code,args]=__mf_surface__(h,limits,has_light,tree)
     [rr,cc]=find(valid(:,1:end-1)&valid(:,2:end));i=(rr(:)-1)+(cc(:)-1)*shape(1);edges=[edges; i,i+shape(1)];
   endif
   % Nonfinite CData is allowed only when no rendered face/edge reads it.
-  color_owners=[];
-  if strcmp(face.mode,'flat'),color_owners=[color_owners;origins(:)];endif
-  if strcmp(face.mode,'interp')
-    color_owners=[color_owners;origins(:);origins(:)+1;origins(:)+shape(1);origins(:)+shape(1)+1];
+  if ~__mf_figure_surface_colors_finite__(c,origins,edges,shape(1),face.mode,edge.mode)
+    code='unsupported_color';return;
   endif
-  if strcmp(edge.mode,'flat'),color_owners=[color_owners;edges(:,1)];endif
-  for channel=1:size(c,3)
-    plane=c(:,:,channel);
-    if any(~isfinite(plane(color_owners+1))),code='unsupported_color';return;endif
-  endfor
   s=struct('cdata_class',class(c),'cdata_mapping',get(h,'cdatamapping'),'cdata',__mf_descriptor__(c),...
     'kind','surface','shape',{__mf_array__(shape)},'coordinate_layout',struct('x',xl,'y',yl),...
     'x',__mf_descriptor__(x),'y',__mf_descriptor__(y),'z',__mf_descriptor__(z),...
@@ -712,13 +768,13 @@ function [s,code,args]=__mf_surface__(h,limits,has_light,tree)
     'display_name',get(h,'displayname'),'decimated',false,'original_points',n,...
     'rendered_points',n,'cell_origins',{__mf_array__(origins)},...
     'edge_indices',__mf_descriptor__(edges),'index_base',0,'triangle_count',2*numel(origins));
+  for name=fieldnames(alphas).',s.(name{1})=alphas.(name{1});endfor
 endfunction
 
 function [color,code]=__mf_surface_color__(value,c,mapping,association='cell')
   code='';color=struct('mode','none','association','constant');
   if ischar(value)
     if strcmp(value,'none'),return;
-    elseif strcmp(value,'interp')&&strcmp(association,'vertex'),code='interpolated_color';return;
     elseif ~any(strcmp(value,{'flat','interp'})),code='unsupported_surface';return;endif
     if strcmp(value,'interp'),association='vertex';endif
     if ~any(strcmp(mapping,{'scaled','direct'})),code='unsupported_color';return;endif
@@ -889,4 +945,14 @@ endfunction
 function text = __mf_text__(english, turkish)
   text = english;
   if strcmp(getenv('INDYMAT_LANGUAGE'), 'tr'), text = turkish; endif
+endfunction
+
+function [alphas,code,args]=__mf_scalar_alphas__(h)
+  alphas=struct();code='';args=struct();
+  for item={'face','edge'}
+    property=[item{1} 'alpha'];
+    [value,code,args]=__mf_figure_alpha__(get(h,property),[],'none',[0 1],[],'constant',1);
+    if ~isempty(code),args.property=property;return;endif
+    if value.value~=1,alphas.([item{1} '_alpha'])=value;endif
+  endfor
 endfunction

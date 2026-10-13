@@ -67,7 +67,19 @@ class Kernel:
         self.start()
 
     @staticmethod
-    def quote(s): return "'" + str(s).replace("'", "''") + "'"
+    def quote(s):
+        # Readline must only see printable protocol syntax. Reconstruct control
+        # bytes inside Octave rather than letting editing keys alter a payload.
+        text=str(s)
+        if any(ord(c)<32 or ord(c)==127 for c in text):
+            parts=[];start=0
+            for i,c in enumerate(text):
+                if ord(c)<32 or ord(c)==127:
+                    if i>start:parts.append("'"+text[start:i].replace("'", "''")+"'")
+                    parts.append(f'(@char)({ord(c)})');start=i+1
+            if start<len(text):parts.append("'"+text[start:].replace("'", "''")+"'")
+            return '['+','.join(parts)+']'
+        return "'" + text.replace("'", "''") + "'"
 
     # Protocol lines never name anything a user variable can shadow. A function
     # handle literal, (@name)(...), resolves the function even when a variable of
@@ -106,7 +118,7 @@ class Kernel:
                 arm=self.call('setenv','INDYMAT_DEBUG_TICKET',self._debug_ticket)
                 # Builtin arming preserves pending return; cleanup executes
                 # the original command even when a return skips the body.
-                command=''.join(f'unwind_protect; {arm} unwind_protect_cleanup; {line} end_unwind_protect\n' for line in command.splitlines())
+                command=''.join(f'unwind_protect; {arm} unwind_protect_cleanup; {line} end_unwind_protect\n' for line in command.removesuffix('\n').split('\n'))
             wanted = get_language()
             if wanted == getattr(self, '_octave_language', None):
                 proc.stdin.write(command.encode())
@@ -773,6 +785,7 @@ class Kernel:
             folder=self.runtime/self.job
             if command=='eval':
                 if not isinstance(code,str) or not code.strip() or len(code)>100_000 or '\n' in code or '\r' in code:raise ValueError(tr('Enter a single-line Octave expression.'))
+                if '\x00' in code:raise ValueError(tr('Debug expressions cannot contain NUL (U+0000).'))
                 # Prompt-level eval via a handle literal: no helper frame, and return/dbcont keep their meaning.
                 # A pending `return` skips the rest of the line, so the snapshot sits in unwind_protect_cleanup.
                 line=f"unwind_protect; (@eval)({self.quote(code)},'(@__mf_debug_report__)();'); unwind_protect_cleanup; {self.call('__mf_debug_snapshot__',str(folder))} end_unwind_protect\n"

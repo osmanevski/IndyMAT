@@ -12,9 +12,9 @@ function uret(output_dir = fileparts(mfilename('fullpath')))
     'unsupported_units','unsupported_colorbar','json_budget',...
     'bar_grouped','barh_stacked','hist_flat','area_stacked','patch_missing_vertex',...
     'text_boxes','group_lines','figure_title',...
-    'patch_colors','unsupported_patch','unsupported_text'};
+    'patch_colors','unsupported_patch','unsupported_text','surf_scalar_alpha'};
   supported=[names(1:9),{'bar_grouped','barh_stacked','hist_flat','area_stacked',...
-    'patch_missing_vertex','text_boxes','group_lines','figure_title'}];
+    'patch_missing_vertex','text_boxes','group_lines','figure_title','surf_scalar_alpha'}];
   for k=1:numel(names)
     close all;
     f=figure(1,'visible','off');name=names{k};
@@ -55,13 +55,15 @@ function uret(output_dir = fileparts(mfilename('fullpath')))
         scatter(1:3,4:6,36,1);
       case 'scatter_colors'
         scatter3(1:4,5:8,9:12,36,[1 0 0;0 1 0;0 0 1;1 1 0]);
-      case 'transparency'
+      case 'surf_scalar_alpha'
         surf([1 3 5;2 4 6],'facealpha',.5);
+      case 'transparency'
+        surf([1 3 5;2 4 6],'facealpha','interp','alphadata',[0 .25 .5;.5 .75 1],'alphadatamapping','none');
       case 'lighting'
         surf([1 3 5;2 4 6],'facelighting','flat');light();
       case 'interpolated_color'
-        % Vertex faces are supported; interpolated edges still keep the PNG.
-        surf([1 3 5;2 4 6],'facecolor','interp','edgecolor','interp');
+        % 3D patch/surface interpolation is supported; 2D fill still is not.
+        fill([0 1 1],[0 0 1],[1 2 3]);
       case 'unsupported_surface'
         surf([1 3 5;2 4 6],'facecolor','texturemap');
       case 'log_3d'
@@ -129,6 +131,11 @@ function uret(output_dir = fileparts(mfilename('fullpath')))
       bytes=jsonencode(data);
       if any(strcmp(name,supported)),assert(data.supported,name);
       else assert(~data.supported&&strcmp(data.reason_code,name),name);endif
+      if strcmp(name,'surf_scalar_alpha')
+        assert(isequal(data.axes{1}.series{1}.face_alpha,struct('mode','constant','association','constant','value',.5)));
+      elseif strcmp(name,'transparency')
+        assert(strcmp(data.reason_args.detail,'unmeasured_data_mapping'));
+      endif
     endif
     fid=fopen(fullfile(output_dir,[name '.json']),'w');assert(fid>=0);fputs(fid,bytes);fclose(fid);
     fprintf('%s: version=%d supported=%d reason=%s\n',name,data.version,data.supported,data.reason_code);

@@ -1,0 +1,27 @@
+--- a/@lti/plus.m
++++ b/@lti/plus.m
+@@ -29,6 +29,24 @@
+ ## Version: 0.2
+ 
+ function sys = plus (sys1, sys2)
++
++  ## Scope applies only when a new representation is an original operand.
++  ## Validate before inv/conversion/static-gain promotion removes its identity.
++  if (nargin >= 2 && (isa(sys1,"pid") || isa(sys2,"pid") || isa(sys1,"zpk") || isa(sys2,"zpk")))
++    for operand = {sys1, sys2}
++      value = operand{1};
++      if (isa(value,"lti"))
++        if (!isequal(size(value),[1 1]))
++          error("IndyMAT:control:UnsupportedMIMO","This representation supports SISO models only.");
++        endif
++        if (get(value,"tsam") != 0)
++          error("IndyMAT:control:UnsupportedDiscreteTime","This representation supports continuous-time models with Ts equal to zero only.");
++        endif
++      elseif (!isnumeric(value) || !isscalar(value) || !isreal(value) || !isfinite(value))
++        error("IndyMAT:control:UnsupportedCallForm","This call form is outside the documented control representation subset.");
++      endif
++    endfor
++  endif
+ 
+   if (nargin != 2)  # prevent sys = plus (sys1, sys2, sys3, ...)
+     error ("lti: plus: this is a binary operator");

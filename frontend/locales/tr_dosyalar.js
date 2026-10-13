@@ -1,5 +1,11 @@
 // Turkish translations owned by one feature lane; merged in i18n.js.
 export default {
+  "Only the PNG view is available: transparency exceeds {limit} layers ({actual}).": "Yalnızca PNG görünümü kullanılabilir: saydamlık {limit} katmanı aşıyor ({actual}).",
+  "Only the PNG view is available: transparency took {actual_ms} ms (limit {limit_ms} ms).": "Yalnızca PNG görünümü kullanılabilir: saydamlık {actual_ms} ms sürdü (sınır {limit_ms} ms).",
+  "Only the PNG view is available: transparency framebuffer is unavailable.": "Yalnızca PNG görünümü kullanılabilir: saydamlık çerçeve arabelleği kullanılamıyor.",
+  "Only the PNG view is available: filled contour background holes.": "Yalnızca PNG görünümü kullanılabilir: dolgulu konturlarda arka plan boşlukları.",
+  "Only the PNG view is available: unsupported filled contour geometry.": "Yalnızca PNG görünümü kullanılabilir: desteklenmeyen dolgulu kontur geometrisi.",
+  "Only the PNG view is available: contour labels requiring 3D depth rendering.": "Yalnızca PNG görünümü kullanılabilir: 3B derinlik çizimi gerektiren kontur etiketleri.",
   "Restart the application to enable saved-file adaptation. Your current session has not been reset.": "Kayıtlı dosya uyarlamasını etkinleştirmek için uygulamayı yeniden başlatın. Mevcut oturumunuz sıfırlanmadı.",
   "— Click to download": "— İndirmek için tıkla",
   "No supported files were found in this folder.": "Bu klasörde desteklenen dosya bulunamadı.",
@@ -108,6 +114,7 @@ export default {
   "Only the PNG view is available: transparency.": "Yalnızca PNG görünümü kullanılabilir: saydamlık.",
   "Only the PNG view is available: lighting.": "Yalnızca PNG görünümü kullanılabilir: aydınlatma.",
   "Only the PNG view is available: interpolated colors.": "Yalnızca PNG görünümü kullanılabilir: ara değerli renkler.",
+  "Only the PNG view is available: interpolated patch faces with more than three corners.": "Yalnızca PNG görünümü kullanılabilir: üçten fazla köşesi olan ara değerli renkli yama yüzleri.",
   "Only the PNG view is available: unsupported surface configuration.": "Yalnızca PNG görünümü kullanılabilir: desteklenmeyen yüzey yapılandırması.",
   "Only the PNG view is available: logarithmic 3D axes.": "Yalnızca PNG görünümü kullanılabilir: logaritmik 3B eksenler.",
   "Only the PNG view is available: perspective projection.": "Yalnızca PNG görünümü kullanılabilir: perspektif izdüşüm.",

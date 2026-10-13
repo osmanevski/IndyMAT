@@ -1,0 +1,11 @@
+--- a/@ss/__c2d__.m
++++ b/@ss/__c2d__.m
+@@ -80,7 +80,7 @@
+       sys.b = sys.a * sys.b * tsam;
+       
+     case "m"                       # "matched"
+-      tmp = ss (c2d (zpk (sys), tsam, method));
++      tmp = ss (c2d (tf (sys), tsam, method));
+       sys.e = tmp.e;
+       sys.a = tmp.a;
+       sys.b = tmp.b;

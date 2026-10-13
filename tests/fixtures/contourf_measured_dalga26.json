@@ -1,0 +1,635 @@
+{
+  "provenance": {
+    "source": "olcum-3d-props.txt",
+    "sha256": "787d2921b4a3ffec499b14090fd8a198802befbcd51263e81912375c953292a3",
+    "selection": "Cases 1\u20133, BEFORE DRAWNOW patch properties in traversal/native draw order",
+    "precision": "Native property log display precision; finite-band duplicate coordinates separately confirmed with full-precision contourc numeric replay. This is a property transcription, not serializer or pixel output."
+  },
+  "cases": [
+    {
+      "name": "1 contourf finite regions",
+      "patches_in_draw_order": [
+        {
+          "vertices": {
+            "class": "double",
+            "shape": [
+              8,
+              2
+            ],
+            "rows": [
+              [
+                1.5,
+                1.0
+              ],
+              [
+                2.0,
+                1.0
+              ],
+              [
+                3.0,
+                1.0
+              ],
+              [
+                3.0,
+                1.0
+              ],
+              [
+                3.0,
+                2.0
+              ],
+              [
+                3.0,
+                2.0
+              ],
+              [
+                2.0,
+                2.0
+              ],
+              [
+                1.5,
+                2.0
+              ]
+            ]
+          },
+          "faces": {
+            "class": "double",
+            "shape": [
+              1,
+              8
+            ],
+            "rows": [
+              [
+                1.0,
+                2.0,
+                3.0,
+                4.0,
+                5.0,
+                6.0,
+                7.0,
+                8.0
+              ]
+            ]
+          },
+          "facevertexcdata": {
+            "class": "double",
+            "shape": [
+              1,
+              1
+            ],
+            "rows": [
+              [
+                0.5
+              ]
+            ]
+          },
+          "zdata": {
+            "class": "double",
+            "shape": [
+              0,
+              0
+            ],
+            "rows": []
+          }
+        },
+        {
+          "vertices": {
+            "class": "double",
+            "shape": [
+              6,
+              2
+            ],
+            "rows": [
+              [
+                2.5,
+                1.0
+              ],
+              [
+                3.0,
+                1.0
+              ],
+              [
+                3.0,
+                1.0
+              ],
+              [
+                3.0,
+                2.0
+              ],
+              [
+                3.0,
+                2.0
+              ],
+              [
+                2.5,
+                2.0
+              ]
+            ]
+          },
+          "faces": {
+            "class": "double",
+            "shape": [
+              1,
+              6
+            ],
+            "rows": [
+              [
+                1.0,
+                2.0,
+                3.0,
+                4.0,
+                5.0,
+                6.0
+              ]
+            ]
+          },
+          "facevertexcdata": {
+            "class": "double",
+            "shape": [
+              1,
+              1
+            ],
+            "rows": [
+              [
+                1.5
+              ]
+            ]
+          },
+          "zdata": {
+            "class": "double",
+            "shape": [
+              0,
+              0
+            ],
+            "rows": []
+          }
+        }
+      ],
+      "observed_reason": "unsupported_patch",
+      "observed_reason_args": {
+        "property": "polygon",
+        "face": 1,
+        "detail": "invalid_geometry"
+      }
+    },
+    {
+      "name": "2 contourf natural hole",
+      "patches_in_draw_order": [
+        {
+          "vertices": {
+            "class": "double",
+            "shape": [
+              12,
+              2
+            ],
+            "rows": [
+              [
+                1.0,
+                1.0
+              ],
+              [
+                1.0,
+                1.0
+              ],
+              [
+                2.0,
+                1.0
+              ],
+              [
+                3.0,
+                1.0
+              ],
+              [
+                3.0,
+                1.0
+              ],
+              [
+                3.0,
+                2.0
+              ],
+              [
+                3.0,
+                3.0
+              ],
+              [
+                3.0,
+                3.0
+              ],
+              [
+                2.0,
+                3.0
+              ],
+              [
+                1.0,
+                3.0
+              ],
+              [
+                1.0,
+                3.0
+              ],
+              [
+                1.0,
+                2.0
+              ]
+            ]
+          },
+          "faces": {
+            "class": "double",
+            "shape": [
+              1,
+              12
+            ],
+            "rows": [
+              [
+                1.0,
+                2.0,
+                3.0,
+                4.0,
+                5.0,
+                6.0,
+                7.0,
+                8.0,
+                9.0,
+                10.0,
+                11.0,
+                12.0
+              ]
+            ]
+          },
+          "facevertexcdata": {
+            "class": "double",
+            "shape": [
+              1,
+              1
+            ],
+            "rows": [
+              [
+                1.5
+              ]
+            ]
+          },
+          "zdata": {
+            "class": "double",
+            "shape": [
+              0,
+              0
+            ],
+            "rows": []
+          }
+        },
+        {
+          "vertices": {
+            "class": "double",
+            "shape": [
+              4,
+              2
+            ],
+            "rows": [
+              [
+                1.25,
+                2.0
+              ],
+              [
+                2.0,
+                1.25
+              ],
+              [
+                2.75,
+                2.0
+              ],
+              [
+                2.0,
+                2.75
+              ]
+            ]
+          },
+          "faces": {
+            "class": "double",
+            "shape": [
+              1,
+              4
+            ],
+            "rows": [
+              [
+                1.0,
+                2.0,
+                3.0,
+                4.0
+              ]
+            ]
+          },
+          "facevertexcdata": {
+            "class": "double",
+            "shape": [
+              1,
+              1
+            ],
+            "rows": [
+              [
+                0.5
+              ]
+            ]
+          },
+          "zdata": {
+            "class": "double",
+            "shape": [
+              0,
+              0
+            ],
+            "rows": []
+          }
+        },
+        {
+          "vertices": {
+            "class": "double",
+            "shape": [
+              4,
+              2
+            ],
+            "rows": [
+              [
+                1.75,
+                2.0
+              ],
+              [
+                2.0,
+                1.75
+              ],
+              [
+                2.25,
+                2.0
+              ],
+              [
+                2.0,
+                2.25
+              ]
+            ]
+          },
+          "faces": {
+            "class": "double",
+            "shape": [
+              1,
+              4
+            ],
+            "rows": [
+              [
+                1.0,
+                2.0,
+                3.0,
+                4.0
+              ]
+            ]
+          },
+          "facevertexcdata": {
+            "class": "double",
+            "shape": [
+              1,
+              1
+            ],
+            "rows": [
+              [
+                null
+              ]
+            ]
+          },
+          "zdata": {
+            "class": "double",
+            "shape": [
+              0,
+              0
+            ],
+            "rows": []
+          }
+        }
+      ],
+      "observed_reason": "unsupported_patch",
+      "observed_reason_args": {
+        "property": "polygon",
+        "face": 1,
+        "detail": "invalid_geometry"
+      }
+    },
+    {
+      "name": "3 contourf manual Z",
+      "patches_in_draw_order": [
+        {
+          "vertices": {
+            "class": "double",
+            "shape": [
+              8,
+              3
+            ],
+            "rows": [
+              [
+                1.5,
+                1.0,
+                7.0
+              ],
+              [
+                2.0,
+                1.0,
+                7.0
+              ],
+              [
+                3.0,
+                1.0,
+                7.0
+              ],
+              [
+                3.0,
+                1.0,
+                7.0
+              ],
+              [
+                3.0,
+                2.0,
+                7.0
+              ],
+              [
+                3.0,
+                2.0,
+                7.0
+              ],
+              [
+                2.0,
+                2.0,
+                7.0
+              ],
+              [
+                1.5,
+                2.0,
+                7.0
+              ]
+            ]
+          },
+          "faces": {
+            "class": "double",
+            "shape": [
+              1,
+              8
+            ],
+            "rows": [
+              [
+                1.0,
+                2.0,
+                3.0,
+                4.0,
+                5.0,
+                6.0,
+                7.0,
+                8.0
+              ]
+            ]
+          },
+          "facevertexcdata": {
+            "class": "double",
+            "shape": [
+              1,
+              1
+            ],
+            "rows": [
+              [
+                0.5
+              ]
+            ]
+          },
+          "zdata": {
+            "class": "double",
+            "shape": [
+              8,
+              1
+            ],
+            "rows": [
+              [
+                7.0
+              ],
+              [
+                7.0
+              ],
+              [
+                7.0
+              ],
+              [
+                7.0
+              ],
+              [
+                7.0
+              ],
+              [
+                7.0
+              ],
+              [
+                7.0
+              ],
+              [
+                7.0
+              ]
+            ]
+          }
+        },
+        {
+          "vertices": {
+            "class": "double",
+            "shape": [
+              6,
+              3
+            ],
+            "rows": [
+              [
+                2.5,
+                1.0,
+                7.0
+              ],
+              [
+                3.0,
+                1.0,
+                7.0
+              ],
+              [
+                3.0,
+                1.0,
+                7.0
+              ],
+              [
+                3.0,
+                2.0,
+                7.0
+              ],
+              [
+                3.0,
+                2.0,
+                7.0
+              ],
+              [
+                2.5,
+                2.0,
+                7.0
+              ]
+            ]
+          },
+          "faces": {
+            "class": "double",
+            "shape": [
+              1,
+              6
+            ],
+            "rows": [
+              [
+                1.0,
+                2.0,
+                3.0,
+                4.0,
+                5.0,
+                6.0
+              ]
+            ]
+          },
+          "facevertexcdata": {
+            "class": "double",
+            "shape": [
+              1,
+              1
+            ],
+            "rows": [
+              [
+                1.5
+              ]
+            ]
+          },
+          "zdata": {
+            "class": "double",
+            "shape": [
+              6,
+              1
+            ],
+            "rows": [
+              [
+                7.0
+              ],
+              [
+                7.0
+              ],
+              [
+                7.0
+              ],
+              [
+                7.0
+              ],
+              [
+                7.0
+              ],
+              [
+                7.0
+              ]
+            ]
+          }
+        }
+      ],
+      "observed_reason": "unsupported_patch",
+      "observed_reason_args": {
+        "property": "polygon",
+        "face": 1,
+        "detail": "invalid_geometry"
+      }
+    }
+  ]
+}

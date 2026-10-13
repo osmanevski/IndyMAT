@@ -1,0 +1,11 @@
+--- a/@ss/__d2c__.m
++++ b/@ss/__d2c__.m
+@@ -48,7 +48,7 @@
+       endif
+ 
+     case "m"                       # "matched"
+-      tmp = ss (d2c (zpk (sys), method));
++      tmp = ss (d2c (tf (sys), method));
+       sys.e = tmp.e;
+       sys.a = tmp.a;
+       sys.b = tmp.b;

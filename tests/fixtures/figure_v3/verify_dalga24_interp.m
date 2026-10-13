@@ -40,9 +40,18 @@ function verify_dalga24_interp(output_dir)
   colormap(flipud(d24_map));colorbar;view(0,90);
   title('D24 reversed colormap: integer direct indexing, interp');
 
-  d24_figures{end+1}=figure('name','D24 interp edge PNG fallback');
+  d24_figures{end+1}=figure('name','D24 interp edges (admitted in D26)');
   surf([0 1;1 0],'facecolor','interp','edgecolor','interp');
-  title('D24 edge interp MUST remain PNG: interpolated_color');
+  title('D26 edge interp: both endpoint colours');
+
+  d24_figures{end+1}=figure('name','D24 scalar alpha interp (admitted in D26)');
+  surf([0 1;1 0],'facecolor','interp','edgecolor','interp','facealpha',.5);
+  title('D26 scalar alpha: interactive interp surface');
+
+  d24_figures{end+1}=figure('name','D24 data-valued alpha PNG fallback');
+  surf([0 1;1 0],'facecolor','interp','edgecolor','interp',...
+       'facealpha','interp','alphadata',[0 .25;.5 1],'alphadatamapping','none');
+  title('Data-valued alpha remains PNG: transparency');
 
   if ~isempty(output_dir)
     if ~exist(output_dir,'dir'),mkdir(output_dir);end
@@ -58,8 +67,16 @@ function verify_dalga24_interp(output_dir)
         assert(d24_data.supported);
         assert(strcmp(d24_data.axes{1}.series{1}.face_color.mode,'interp'));
         assert(strcmp(d24_data.axes{1}.series{1}.face_color.association,'vertex'));
+        if d24_i>=7
+          assert(strcmp(d24_data.axes{1}.series{1}.edge_color.mode,'interp'));
+          assert(strcmp(d24_data.axes{1}.series{1}.edge_color.association,'vertex'));
+        end
+        if d24_i==8
+          assert(isequal(d24_data.axes{1}.series{1}.face_alpha,struct('mode','constant','association','constant','value',.5)));
+        end
       else
-        assert(~d24_data.supported&&strcmp(d24_data.reason_code,'interpolated_color'));
+        assert(~d24_data.supported&&strcmp(d24_data.reason_code,'transparency'));
+        assert(strcmp(d24_data.reason_args.detail,'unmeasured_data_mapping'));
       end
       d24_file=fopen(fullfile(output_dir,sprintf('interp_%02d.json',d24_i)),'w');
       assert(d24_file>=0);fputs(d24_file,jsonencode(d24_data));fclose(d24_file);

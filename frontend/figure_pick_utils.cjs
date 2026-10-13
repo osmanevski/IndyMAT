@@ -4,8 +4,9 @@
  * Pixels/normalisation/depth follow camera_utils; viewport origin TOP LEFT.
  * options: radiusPixels=6 (line-sample tolerance), pointRadiusPixels=6 (minimum
  * marker tolerance), pointsToPixels=96/72, depthEpsilon=1e-7. Points with size
- * zero and isolated line runs are not visible/pickable. Surface edges alone
- * are not pick targets. Picking clips against scene.bounds and GL depth [0,1].
+ * zero and isolated line runs are not visible/pickable. Interpolated surface
+ * edges offer original endpoints; flat surface edge picking is unchanged.
+ * Picking clips against scene.bounds and GL depth [0,1].
  * Two-sided Moller-Trumbore triangles are depth-tested, then surface hits snap
  * to the closest of the FOUR cell vertices in normalised Euclidean distance;
  * ties choose the smallest column-major grid index. Hit depth is the triangle
@@ -60,13 +61,14 @@ function frontSurface(scene, camera, viewport, x, y) {
   const ray = unprojectRay(camera, viewport, x, y);
   let best = null;
   for (const mesh of scene.meshes) {
+    if (mesh.source.series.face_alpha?.value === 0) continue;
     for (let triangle = 0; triangle < mesh.indices.length / 3; triangle++) {
       const offset = triangle * 3;
       const hit = intersectTriangle(ray, vertex(mesh.positions, mesh.indices[offset]),
         vertex(mesh.positions, mesh.indices[offset + 1]), vertex(mesh.positions, mesh.indices[offset + 2]));
       if (!hit || !inside(scene, hit.point)) continue;
       const depth = project(camera, viewport, hit.point).depth;
-      if (depth < 0 || depth > 1 || best && depth >= best.depth) continue;
+      if (depth < 0 || depth > 1 || best && depth > best.depth) continue;
       best = { mesh, origin: mesh.cellOfTriangle[triangle], point: hit.point, depth };
     }
   }
@@ -75,6 +77,7 @@ function frontSurface(scene, camera, viewport, x, y) {
 // Snap intersection to original cell vertex; return data units and raw CData.
 function surfaceTip(scene, hit) {
   const s = hit.mesh.source.series;
+  if (s.background_hole) return null;
   if (s.kind === "patch3d") {
     const rows = s.faces.shape[0], candidates = [];
     for (let c = 0; c < s.faces.shape[1]; c++) {
@@ -88,7 +91,7 @@ function surfaceTip(scene, hit) {
     }
     const [x, y, z] = patchPoint(s, index);
     return { kind: "patch3d", series: hit.mesh.series, face: hit.origin, vertex: index,
-      data: { x, y, z }, colorValue: rawPatchColor(s, hit.origin), depth: hit.depth };
+      data: { x, y, z }, ...(s.role === "contourf" ? { level: s.level } : {}), colorValue: rawPatchColor(s, hit.origin, index), depth: hit.depth };
   }
   const rows = s.shape[0];
   let index = hit.origin;
@@ -113,8 +116,9 @@ function pick(scene, camera, viewport, xPixel, yPixel, options = {}) {
   let best = surface ? surfaceTip(scene, surface) : null;
   let bestDistance = Infinity;
   const epsilon = options.depthEpsilon ?? 1e-7;
-  for (const [kind, objects] of [["line", scene.lines], ["point", scene.points], ["edge", scene.edges.filter((edge) => edge.source.series.kind === "patch3d")]]) {
+  for (const [kind, objects] of [["line", scene.lines], ["point", scene.points], ["edge", scene.edges.filter((edge) => edge.source.series.kind === "patch3d" || edge.colorInterpolation === "vertex-rgb" || edge.source.series.face_alpha || edge.source.series.edge_alpha)]]) {
     for (const object of objects) {
+      if (object.source.series.background_hole || kind === "edge" && object.source.series.edge_alpha?.value === 0) continue;
       for (let i = 0; i < object.positions.length / 3; i++) {
         if (kind === "line") {
           if (object.source.pickableVertices && !object.source.pickableVertices[i]) continue;
@@ -132,13 +136,21 @@ function pick(scene, camera, viewport, xPixel, yPixel, options = {}) {
         const radius = kind === "point" ? Math.max(options.pointRadiusPixels ?? 6, diameter / 2) : options.radiusPixels ?? 6;
         if (distance > radius) continue;
         const occluder = frontSurface(scene, camera, viewport, projected.x, projected.y);
-        if (occluder && projected.depth > occluder.depth + epsilon) continue;
+        if (occluder && (projected.depth > occluder.depth + epsilon ||
+          object.source.series.role === "contourf" && occluder.mesh.source.series.role === "contourf" &&
+          occluder.mesh.series > object.series && Math.abs(projected.depth - occluder.depth) <= epsilon)) continue;
         if (best && (projected.depth > best.depth + epsilon || Math.abs(projected.depth - best.depth) <= epsilon && distance >= bestDistance)) continue;
         const s = object.source.series;
         if (kind === "edge") {
-          const index = object.source.vertexIndices[i], face = object.source.faceIndices[i];
-          const [x, y, z] = patchPoint(s, index);
-          best = { kind: "patch3d", series: object.series, face, vertex: index, data: { x, y, z }, colorValue: rawPatchColor(s, face), depth: projected.depth };
+          const index = object.source.vertexIndices[i];
+          if (s.kind === "surface") {
+            const [x, y, z] = surfacePoint(s, index);
+            best = { kind: "surface", series: object.series, row: index % s.shape[0], column: Math.floor(index / s.shape[0]),
+              data: { x, y, z }, colorValue: rawColorValue(s, index), depth: projected.depth };
+          } else {
+            const face = object.source.faceIndices[i], [x, y, z] = patchPoint(s, index);
+            best = { kind: "patch3d", series: object.series, face, vertex: index, data: { x, y, z }, colorValue: rawPatchColor(s, face, index), ...(s.role === "contourf" ? { level: s.level } : {}), depth: projected.depth };
+          }
           bestDistance = distance; continue;
         }
         const sampleIndex = object.source.sampleIndices[i];

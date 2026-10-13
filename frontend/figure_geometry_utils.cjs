@@ -1,4 +1,5 @@
 "use strict";
+const {patchGeometry}=require("./figure_contour_ring_utils.cjs");
 
 /* Pure scene builder. Input is an axes record from validate().data.axes; no
  * validation/admission is duplicated here. Undefined axes produces an empty
@@ -63,32 +64,33 @@ function buildScene(axesRecord) {
     // Filled 2D shapes and free text belong to the 2D painter, never to a 3D scene.
     if (s.kind === "patch2d" || s.kind === "text") continue;
     if (s.kind === "patch3d") {
+      const topology=patchGeometry(s);
       scene.counts.vertices += s.rendered_points;
       const count = s.triangle_count;
-      if (s.face_color.mode !== "none") {
+      if (s.face_color.mode !== "none" && count > 0) {
         const positions = new Float32Array(count * 9), colors = new Float32Array(count * 9);
         const vertexIndices = new Uint32Array(count * 3);
         for (let i = 0; i < count; i++) for (let k = 0; k < 3; k++) {
-          const vertex = s.triangle_indices.values[i + k * count];
+          const vertex = topology.triangles[i][k];
           positions.set(dataToNormalised(axesRecord, patchPoint(s, vertex)), i * 9 + k * 3);
-          colors.set(patchColor(s.face_color, s.triangle_faces[i], axesRecord), i * 9 + k * 3);
+          colors.set(patchColor(s.face_color, s.face_color.mode === "interp" ? vertex : topology.faceOfTriangle[i], axesRecord), i * 9 + k * 3);
           vertexIndices[i * 3 + k] = vertex;
         }
         scene.meshes.push({ positions, colors, indices: Uint32Array.from({ length: count * 3 }, (_, i) => i),
-          cellOfTriangle: new Uint32Array(s.triangle_faces), series, colorInterpolation: "constant", source: { series: s, vertexIndices } });
+          cellOfTriangle: new Uint32Array(topology.faceOfTriangle), series, colorInterpolation: s.face_color.mode === "interp" ? SURFACE_COLOR_INTERPOLATION : "constant", source: { series: s, vertexIndices } });
         scene.counts.meshVertices += count * 3; scene.counts.triangles += count;
       }
       if (s.edge_color.mode !== "none" && s.line_style !== "none" && s.line_width > 0) {
-        const count = s.edge_indices.shape[0];
+        const count = topology.edges.length;
         const positions = new Float32Array(count * 6), colors = new Float32Array(count * 6);
         const vertexIndices = new Uint32Array(count * 2), faceIndices = new Uint32Array(count * 2);
         for (let i = 0; i < count; i++) for (let end = 0; end < 2; end++) {
-          const vertex = s.edge_indices.values[i + end * count], face = s.edge_indices.values[i + count * 2];
+          const vertex = topology.edges[i][end], face = topology.edges[i][2];
           positions.set(dataToNormalised(axesRecord, patchPoint(s, vertex)), i * 6 + end * 3);
-          colors.set(patchColor(s.edge_color, face, axesRecord), i * 6 + end * 3);
+          colors.set(patchColor(s.edge_color, s.edge_color.mode === "interp" ? vertex : face, axesRecord), i * 6 + end * 3);
           vertexIndices[i * 2 + end] = vertex; faceIndices[i * 2 + end] = face;
         }
-        scene.edges.push({ positions, colors, series, width: s.line_width, style: s.line_style, faced: s.face_color.mode !== "none",
+        scene.edges.push({ positions, colors, colorInterpolation: s.edge_color.mode === "interp" ? SURFACE_COLOR_INTERPOLATION : "constant", series, width: s.line_width, style: s.line_style, faced: s.face_color.mode !== "none" && !s.no_area,
           source: { series: s, vertexIndices, faceIndices } }); scene.counts.edges += count;
       }
       continue;
@@ -135,11 +137,12 @@ function buildScene(axesRecord) {
           for (let end = 0; end < 2; end++) {
             const vertex = s.edge_indices.values[i + end * count];
             positions.set(dataToNormalised(axesRecord, surfacePoint(s, vertex)), i * 6 + end * 3);
-            colors.set(edgeColors.subarray(i * 3, i * 3 + 3), i * 6 + end * 3);
+            const colorIndex = s.edge_color.mode === "interp" ? i * 2 + end : i;
+            colors.set(edgeColors.subarray(colorIndex * 3, colorIndex * 3 + 3), i * 6 + end * 3);
             vertexIndices[i * 2 + end] = vertex;
           }
         }
-        scene.edges.push({ positions, colors, series, width: s.line_width, style: s.line_style, faced: s.face_color.mode !== "none", source: { series: s, vertexIndices } });
+        scene.edges.push({ positions, colors, colorInterpolation: s.edge_color.mode === "interp" ? SURFACE_COLOR_INTERPOLATION : "constant", series, width: s.line_width, style: s.line_style, faced: s.face_color.mode !== "none", source: { series: s, vertexIndices } });
         scene.counts.edges += count;
       }
       continue;
@@ -182,6 +185,15 @@ function buildScene(axesRecord) {
         sourceIndices: sources, marker: s.marker, edgeColor: s.marker_edge_color, faceColor: s.marker_face_color,
         markerFaceAuto: s.marker_face_auto, series, source });
       scene.counts.points += sampleIndices.length;
+    }
+  }
+  for (const [objects, field] of [[scene.meshes, "face_alpha"], [scene.edges, "edge_alpha"]]) {
+    for (const object of objects) {
+      const descriptor = object.source.series[field];
+      if (descriptor && descriptor.value !== 1 && object.positions.length) {
+        object.alphas = new Float32Array(object.positions.length / 3).fill(descriptor.value);
+        scene.hasTransparency = true;
+      }
     }
   }
   return scene;

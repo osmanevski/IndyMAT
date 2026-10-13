@@ -7,7 +7,7 @@ const { assert, expect, openFigures, run } = require("./figure_ui_support.cjs");
     await page.setViewportSize({ width: 1280, height: 900 });
     const name = "Reason wraps";
     const reason = "saydamlık";
-    await run(page, `close all;figure('name','${name}');surf(ones(2),'facealpha',0.5);`);
+    await run(page, `close all;figure('name','${name}');surf(ones(2),'facealpha','interp','alphadata',[0 .25;.5 1],'alphadatamapping','none');`);
 
     const caption = page.locator("#figure-caption");
     await expect(caption).toContainText(name);

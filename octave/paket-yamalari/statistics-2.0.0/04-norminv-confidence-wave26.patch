@@ -1,0 +1,56 @@
+--- a/Distribution_Functions/norminv.m
++++ b/Distribution_Functions/norminv.m
+@@ -49,13 +49,36 @@
+ 
+ ## IndyMAT measured subset: with one output, a fourth character option or
+ ## real floating matrix is ignored, including upper/lower/other text. It does
+-## not select an upper tail. Confidence interval outputs remain outside this
+-## patch's scope; the one-output signature retains their native rejection.
+-function x = norminv (p, mu, sigma, unused)
++## not select an upper tail. Round4 confidence subset: four inputs, two/three
++## outputs, finite real double row-vector 0<p<1, scalar finite mu/sigma>0,
++## and finite symmetric positive-semidefinite 2-by-2 double covariance.
++## 95% delta bounds use [1,z]*PCOV*[1;z], z=standard normal quantile.
++## R2025b olc26-numeric-next covariance rows1-4 pin covariance contributions,
++## zero width and PSD rejection; docs explain the delta method:
++## https://www.mathworks.com/help/stats/norminv.html
++## Alpha, boundaries, non-row/single confidence inputs are outside this subset.
++function [x, xlo, xup] = norminv (p, mu, sigma, unused)
+ 
+   if (nargin == 4 && ! (ischar (unused) ...
+       || (isfloat (unused) && isreal (unused) && ismatrix (unused))))
+     error ("norminv: fourth-input type is outside the measured subset.");
++  endif
++
++  if (nargout > 1)
++    if (nargin != 4 || ! isa(p,'double') || ! isreal(p) || ! isrow(p) ...
++        || isempty(p) || any(! isfinite(p)) || any(p <= 0 | p >= 1) ...
++        || ! isa(mu,'double') || ! isreal(mu) || ! isscalar(mu) || ! isfinite(mu) ...
++        || ! isa(sigma,'double') || ! isreal(sigma) || ! isscalar(sigma) ...
++        || ! isfinite(sigma) || sigma <= 0 || ! isa(unused,'double') ...
++        || ! isreal(unused) || ! isequal(size(unused),[2 2]) ...
++        || any(! isfinite(unused(:))) || ! isequal(unused,unused.'))
++      error('IndyMAT:norminv:UnsupportedConfidenceForm', ...
++            'Confidence outputs require the documented finite double row-vector subset.');
++    endif
++    if (any(eig(unused) < 0))
++      error('stats:norminv:BadCovarianceSymPos', ...
++            'PCOV must be a positive semi-definite matrix.');
++    endif
+   endif
+ 
+   ## Check for valid number of input arguments
+@@ -106,6 +129,13 @@
+     x(k) = mu(k) + sigma(k) .* (-sqrt (2) * erfcinv (2 * p(k)));
+   endif
+ 
++  if (nargout > 1)
++    z = -sqrt(2) * erfcinv(2*p);
++    variance = unused(1,1) + z .* (2*unused(1,2) + unused(2,2)*z);
++    width = (-sqrt(2)*erfcinv(1.95)) * sqrt(max(variance,0));
++    xlo = x - width;
++    xup = x + width;
++  endif
+ endfunction
+ 
+ %!demo

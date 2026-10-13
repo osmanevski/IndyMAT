@@ -24,7 +24,8 @@ Uygulamanın teknik yapısı:
 - Matris işlemleri, doğrusal cebir ve kompleks sayılarla hesaplama.
 - Veri analizi, interpolasyon, FFT ve diferansiyel denklem çözümleri.
 - Sinyal işleme ve filtre tasarımı; kontrol sistemleri ve frekans cevabı inceleme.
-- 2B ve 3B grafik oluşturma, desteklenen 2B grafiklerde yakınlaştırma, kaydırma ve veri ipuçları.
+- 2B ve 3B grafik oluşturma; desteklenen grafiklerde yakınlaştırma, kaydırma, 3B döndürme ve veri ipuçları.
+- Blok diyagramı modellerini metin olarak (netlist) tanımlama ve Octave üzerinde simüle etme: `im_compile` modeli doğrular, `im_simulate` çalıştırır; `workspace/examples/netlist_*.m` örnekleri hazır gelir.
 - Ders örnekleri, mühendislik hesapları ve tekrarlanabilir sayısal deneyler hazırlama.
 
 ## Çalışma ortamı
@@ -42,7 +43,7 @@ Ayarlar'daki deneysel metin uyarlaması varsayılan olarak kapalıdır. Editör 
 
 `control`, `signal`, `datatypes` ve `statistics` paketleri kuruluysa oturum başlarken yüklenir. Paketler depoya dahil değildir; ayrı kurulurlar.
 
-`datatypes` paketinin string sınıfındaki bazı karışık char/string çağrıları için sürümlü yamalar `octave/paket-yamalari/` altındadır. `python3 scripts/patch_packages.py` bunları kurulu pakete uygular (`--check` yalnızca durumu gösterir, `--revert` geri alır); betik tanımadığı bir paket sürümüne dokunmaz.
+Bu paketler için sürümlü yamalar `octave/paket-yamalari/` altındadır: `datatypes` string sınıfındaki bazı karışık char/string çağrıları, `control` için sürekli zamanlı tek giriş-tek çıkışlı `zpk` ve `pid` gösterimleri, `signal` için `sos2tf` ve `interp`, `statistics` için `norminv` alt kümeleri. `python3 scripts/patch_packages.py --package <paket-sürüm>` (örneğin `control-4.2.3`) yamaları kurulu pakete uygular; `--package` verilmezse yalnızca `datatypes` işlenir. `--check` yalnızca durumu gösterir, `--revert` geri alır; betik tanımadığı bir paket sürümüne ve kendisinin oluşturmadığı dosyalara dokunmaz.
 
 ## Kodlama asistanları (isteğe bağlı)
 
@@ -97,7 +98,10 @@ grid on;
 ## Kapsam ve sınırlar
 
 - macOS doğrulanmıştır; Linux kabul testleri yapılmamıştır, Windows başlatıcısı desteklenmez.
-- Grafikler hesaplama sonunda aktarılır. Etkileşimli görünüm 2B line/stem/stairs ve tek renkli scatter ile sınırlıdır; diğer grafikler PNG olarak gösterilir.
+- Grafikler hesaplama sonunda aktarılır. Etkileşimli görünüm belgelenmiş bir alt kümedir: 2B çizgi türleri ile 3B `plot3`, `scatter3`, `surf`, `mesh`, `contour`/`contourf` ve düzlemsel `patch` grafikleri, tek değerli saydamlık dahil. Işıklandırma, veriyle değişen saydamlık, çok köşeli renk enterpolasyonu ve boyut bütçesini aşan grafikler PNG olarak, nedeni yazılarak gösterilir.
+- Netlist katmanı Simulink değildir: 13 blok türü ve tek örnekleme hızıyla sınırlıdır; görsel blok editörü ve `.slx`/`.mdl` desteği yoktur.
+- MATLAB ile tam dil ya da Toolbox uyumluluğu iddia edilmez; ölçülen davranış durumları ve bilinen farklar `uyumluluk/` altında kayıtlıdır.
+- Hata ayıklama duraklamasındayken `input` çağıran bir ifade değerlendirmek bilinen bir kusurdur: istek kullanıcının yanıtı yerine iç bir satır alabilir. Duraklamada `input` kullanmayın.
 - Kod denetimi yalnızca Octave ayrıştırma hatalarını gösterir. Değişken düzenleyici verileri sayfa sayfa okur; hücre dizisi ve yapı içerikleri salt okunurdur.
 - Kaydetme mekanizması hard link destekleyen bir dosya sistemi gerektirir.
 - Çalıştırılan Octave kodu kullanıcının işletim sistemi yetkilerine sahiptir. Dosya panelinin sınırları kod yürütme için bir sandbox oluşturmaz.
@@ -117,7 +121,7 @@ python3 scripts/check.py
 
 **Test komutu bu proje klasöründeki açık sunucuyu kapatır. Aktif hesaplama sırasında çalıştırmayın.**
 
-Kaynaklar: `backend/` yerel servis ve motor, `octave/` hesaplama köprüsü, `frontend/` arayüz kaynakları, `static/` hazır arayüz, `macos/` masaüstü penceresi, `tests/` kontroller ve `workspace/examples/` örnekler.
+Kaynaklar: `backend/` yerel servis ve motor, `octave/` hesaplama köprüsü, `frontend/` arayüz kaynakları, `static/` hazır arayüz, `macos/` masaüstü penceresi, `scripts/` denetim ve paket araçları, `uyumluluk/` MATLAB karşılaştırma ölçümleri, `tests/` kontroller ve `workspace/examples/` örnekler.
 
 ## Lisans
 

@@ -110,7 +110,12 @@ function examples() {
     "kutle_yay_sonum.m": [t("Mass-Spring-Damper"), t("Initial condition · ss / ode45 · analytic reference")],
     "ayrik_kontrol.m": [t("Discrete Control"), t("ZOH · two sample times · difference equation")],
     "doyum_antiwindup.m": [t("Saturation and Anti-Windup"), t("PI · actuator limits · clamping · step refinement")],
-    "sinyal_suzme.m": [t("Signal Filtering"), t("Sine and noise · FIR / IIR · time and spectrum")]
+    "sinyal_suzme.m": [t("Signal Filtering"), t("Sine and noise · FIR / IIR · time and spectrum")],
+    "netlist_pid_kapali_cevrim.m": [t("Netlist: PID Closed Loop"), t("Basic blocks · P / PI / filtered PID")],
+    "netlist_kutle_yay_sonum.m": [t("Netlist: Mass-Spring-Damper"), t("Two integrators · initial conditions")],
+    "netlist_ayrik_kontrol.m": [t("Netlist: Discrete Control"), t("Unit delays · two sample times")],
+    "netlist_doyum_antiwindup.m": [t("Netlist: Saturation and Anti-Windup"), t("Discrete clamping · step refinement")],
+    "netlist_sinyal_suzme.m": [t("Netlist: Signal Filtering"), t("Run Signal Filtering first · use its recorded input")]
   };
   for (let [name, [title, desc]] of Object.entries(descriptions)) {
     let b = registry.el("button", "example-card");

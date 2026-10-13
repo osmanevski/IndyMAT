@@ -1,5 +1,6 @@
 import cameraMath from "./figure_camera_utils.cjs";
 import colors from "./figure_color_utils.cjs";
+import peeling from "./figure_peeling.cjs";
 
 // Contained policy-dependent shader path. B (scalar -> fragment colormap)
 // would add its varying/lookup here and its static scalar buffer/map texture
@@ -87,7 +88,7 @@ export function screenPolyline(projected, width, breaks = [0, projected.length],
   appendScreenPolyline(projected, width, breaks, style, viewport, output);
   return new Float32Array(output);
 }
-function appendScreenPolyline(projected, width, breaks, style, viewport, output) {
+function appendScreenPolyline(projected, width, breaks, style, viewport, output, endpointColors, outputColors, endpointAlphas, outputAlphas) {
   const pattern = { "--": [7, 4], ":": [2, 3], "-.": [7, 3, 2, 3] }[style];
   if (style === "none" || !(width > 0)) return;
   const cycle = pattern?.reduce((sum, value) => sum + value, 0);
@@ -128,6 +129,17 @@ function appendScreenPolyline(projected, width, breaks, style, viewport, output)
         output.push(p.x + nx, p.y + ny, p.depth, p.x - nx, p.y - ny, p.depth,
           q.x + nx, q.y + ny, q.depth, q.x + nx, q.y + ny, q.depth,
           p.x - nx, p.y - ny, p.depth, q.x - nx, q.y - ny, q.depth);
+        if (endpointAlphas) {
+          const alphaAt = t => endpointAlphas[i - 1] + (endpointAlphas[i] - endpointAlphas[i - 1]) * t;
+          const pAlpha = alphaAt(start), qAlpha = alphaAt(end);
+          outputAlphas.push(pAlpha, pAlpha, qAlpha, qAlpha, pAlpha, qAlpha);
+        }
+        if (endpointColors) {
+          const aRGB = endpointColors[i - 1], bRGB = endpointColors[i];
+          const rgbAt = t => aRGB.map((v, k) => v + (bRGB[k] - v) * t);
+          const pRGB = rgbAt(start), qRGB = rgbAt(end);
+          outputColors.push(...pRGB, ...pRGB, ...qRGB, ...qRGB, ...pRGB, ...qRGB);
+        }
       };
       if (low < high) {
         if (!pattern) emit(low, high);
@@ -155,6 +167,10 @@ export class FigureWebGL {
     activeRenderer?.dispose();
     this.canvas = canvas;
     this.failed = failed;
+    this.transparent = scenes.some(scene => scene.hasTransparency);
+    this.pending = false;
+    this.peeling = null;
+    this.transparencyDiagnostics = { enabled: this.transparent, pending: false, limit: peeling.LIMITS.layers };
     this.buffers = [];
     this.vaos = [];
     this.shaders = [];
@@ -163,7 +179,7 @@ export class FigureWebGL {
     this.disposed = false;
     this.lost = (event) => {
       event.preventDefault();
-      this.fail("context_lost");
+      this.fail(this.transparent ? "transparency_unavailable" : "context_lost");
     };
     canvas.addEventListener("webglcontextlost", this.lost);
     try {
@@ -173,7 +189,8 @@ export class FigureWebGL {
     }
     if (!this.gl) {
       this.dispose();
-      throw Object.assign(new Error("webgl_unavailable"), { reason_code: "webgl_unavailable" });
+      const code = this.transparent ? "transparency_unavailable" : "webgl_unavailable";
+      throw Object.assign(new Error(code), { reason_code: code });
     }
     activeRenderer = this;
     try {
@@ -201,7 +218,8 @@ export class FigureWebGL {
       this.markerUV = new Float32Array();
     } catch {
       this.dispose();
-      throw Object.assign(new Error("shader_failure"), { reason_code: "shader_failure" });
+      const code = this.transparent ? "transparency_unavailable" : "shader_failure";
+      throw Object.assign(new Error(code), { reason_code: code });
     }
   }
   buffer(target, values, usage) {
@@ -215,6 +233,7 @@ export class FigureWebGL {
   }
   upload(mesh) {
     const gl = this.gl;
+    if (this.transparent) mesh = peeling.expandMesh(mesh);
     const vao = gl.createVertexArray();
     if (!vao) throw new Error("vertex array");
     this.vaos.push(vao);
@@ -227,13 +246,23 @@ export class FigureWebGL {
       gl.vertexAttribPointer(index, index === 3 ? 4 : index === 2 ? 2 : 3, gl.FLOAT, false, 0, 0);
       return buffer;
     });
+    if (this.transparent) {
+      // Attribute 3 remains the marker slot even on ordinary meshes.
+      if (!mesh.markerData) attributes[3] = null;
+      attributes[4] = this.buffer(gl.ARRAY_BUFFER, mesh.alphas || new Float32Array(), gl.STATIC_DRAW);
+      gl.vertexAttribPointer(4, 1, gl.FLOAT, false, 0, 0);
+      if (mesh.alphas) gl.enableVertexAttribArray(4);
+      else gl.disableVertexAttribArray(4);
+    }
     const indices = mesh.indices ? this.buffer(gl.ELEMENT_ARRAY_BUFFER, mesh.indices, gl.STATIC_DRAW) : null;
     return { vao, attributes, indices, count: mesh.indices?.length || mesh.positions.length / 3 };
   }
-  fail(code) {
+  fail(code, args = {}) {
     if (this.disposed) return;
+    this.pending = false;
+    Object.assign(this.transparencyDiagnostics, { pending: false, reason_code: code, reason_args: args });
     this.dispose();
-    this.failed(code);
+    this.failed(code, args);
   }
   requestRender(draw) {
     if (this.disposed || this.frame !== null) return;
@@ -243,7 +272,7 @@ export class FigureWebGL {
     });
   }
   // Pixel geometry reuses four buffers; no resource accumulation per gesture.
-  pixels(positions, rgb, uv, markerData) {
+  pixels(positions, rgb, uv, markerData, alphas) {
     if (!positions.length) return;
     const gl = this.gl;
     const uvLength = positions.length / 3 * 2;
@@ -259,6 +288,13 @@ export class FigureWebGL {
       gl.bindBuffer(gl.ARRAY_BUFFER, this.dynamic.attributes[index]);
       gl.bufferData(gl.ARRAY_BUFFER, value, gl.DYNAMIC_DRAW);
     });
+    if (this.transparent) {
+      if (alphas) {
+        gl.enableVertexAttribArray(4);
+        gl.bindBuffer(gl.ARRAY_BUFFER, this.dynamic.attributes[4]);
+        gl.bufferData(gl.ARRAY_BUFFER, alphas, gl.DYNAMIC_DRAW);
+      } else gl.disableVertexAttribArray(4);
+    }
     gl.drawArrays(gl.TRIANGLES, 0, positions.length / 3);
   }
   solid(positions, rgb) {
@@ -268,6 +304,48 @@ export class FigureWebGL {
     this.pixels(positions, values);
   }
   render(frames, palette, dpr) {
+    if (this.disposed) return;
+    if (!this.transparent) return this.renderOpaque(frames, palette, dpr);
+    const started = performance.now();
+    try {
+      if (!this.peeling) this.peeling = new peeling.Peeling(this.gl, peeling.shaderSources(VERTEX, FRAGMENT), {
+        pending: () => {
+          this.pending = true;
+          this.transparencyDiagnostics.pending = true;
+          this.canvas.dispatchEvent(new CustomEvent("figuretransparencypending"));
+        },
+        fail: (code, args) => this.fail(code, args),
+        ready: diagnostics => {
+          if (this.disposed) return;
+          this.pending = false;
+          Object.assign(this.transparencyDiagnostics, diagnostics, { pending: false });
+          this.canvas.dispatchEvent(new CustomEvent("figuretransparencyready"));
+        }
+      });
+      const gl = this.gl;
+      const groups = peeling.capture(gl, this.uniforms, this.dynamic, proxy => {
+        this.gl = proxy;
+        try { this.renderOpaque(frames, palette, dpr); }
+        finally { this.gl = gl; }
+      });
+      this.peeling.render(groups, this.canvas.width, this.canvas.height, palette.background, started);
+    } catch {
+      this.fail("transparency_unavailable");
+    }
+  }
+  // Local deterministic acceptance hook: exercise the same completion policy
+  // and normal whole-figure fallback without relying on a slow machine.
+  testTransparencyTiming(samples) {
+    if (!this.transparent || this.disposed || !Array.isArray(samples) || samples.length > 16 ||
+        samples.some(ms => !Number.isFinite(ms) || ms < 0)) return false;
+    const timing = new peeling.TransparencyTiming();
+    for (const ms of samples) {
+      const result = timing.record(ms);
+      if (result.failure) { this.fail("transparency_time", result.failure); return true; }
+    }
+    return false;
+  }
+  renderOpaque(frames, palette, dpr) {
     if (this.disposed) return;
     const gl = this.gl;
     const u = this.uniforms;
@@ -369,19 +447,18 @@ export class FigureWebGL {
       gl.uniform1i(u.screen, 0);
       gl.uniform1i(u.clip, 1);
       gl.uniform1f(u.slack, 0.00001);
-      gl.enable(gl.POLYGON_OFFSET_FILL);
-      gl.polygonOffset(1, 1);
-      for (const mesh of this.meshes[axis]) {
-        gl.bindVertexArray(mesh.vao);
-        gl.drawElements(gl.TRIANGLES, mesh.count, gl.UNSIGNED_INT, 0);
-      }
-      gl.disable(gl.POLYGON_OFFSET_FILL);
-      gl.uniform1i(u.screen, 1);
-      for (const edge of scene.edges) {
+      const drawEdge = (edge) => {
+        gl.uniform1i(u.screen, 1);
         const projected = project(edge.positions, edge.source.vertexIndices);
         const positions = [];
         const rgb = [];
+        const alphas = edge.alphas ? [] : null;
         const width = edge.width * 96 / 72;
+        const interpolated = edge.colorInterpolation === "vertex-rgb";
+        const endpointColors = interpolated ? projected.map((_, i) => {
+          const rgb = Array.from(edge.colors.subarray(i * 3, i * 3 + 3));
+          return edge.faced ? rgb : adjust(rgb);
+        }) : null;
         for (let i = 0; i < projected.length; i += 2) {
           const start = positions.length;
           // Patch edges retain source polygon order and continuous dash phase.
@@ -389,20 +466,55 @@ export class FigureWebGL {
           let end = i + 2;
           if (edge.source.series.kind === "patch3d") {
             while (end < projected.length && edge.source.faceIndices[end] === edge.source.faceIndices[i]) end += 2;
-            const path = [projected[i]];
-            for (let k = i + 1; k < end; k += 2) path.push(projected[k]);
-            appendScreenPolyline(path, width, [0, path.length], edge.style, local, positions);
-          } else appendScreenPolyline(projected, width, [i, i + 2], edge.style, local, positions);
+            const path = [projected[i]], inks = interpolated ? [endpointColors[i]] : null;
+            const opacity = alphas ? [edge.alphas[i]] : null;
+            for (let k = i + 1; k < end; k += 2) {
+              path.push(projected[k]);
+              if (inks) inks.push(endpointColors[k]);
+              if (opacity) opacity.push(edge.alphas[k]);
+            }
+            appendScreenPolyline(path, width, [0, path.length], edge.style, local, positions, inks, rgb, opacity, alphas);
+          } else appendScreenPolyline(projected, width, [i, i + 2], edge.style, local, positions, endpointColors, rgb, edge.alphas, alphas);
           // An edge drawn on its own opaque faces is read against them, not the
           // plot background: keep the serialised colour (mesh edges on white).
           const raw = edge.colors.subarray(i * 3, i * 3 + 3);
           const ink = edge.faced ? raw : adjust(raw);
-          for (let j = start; j < positions.length; j += 3) rgb.push(...ink);
+          if (!interpolated) for (let j = start; j < positions.length; j += 3) rgb.push(...ink);
           i = end - 2;
         }
         slack(width);
-        this.pixels(new Float32Array(positions), new Float32Array(rgb));
+        this.pixels(new Float32Array(positions), new Float32Array(rgb), undefined, undefined, alphas ? new Float32Array(alphas) : undefined);
+      };
+      // Octave contourf patches overpaint earlier regions, including their
+      // borders. Keep each fill and border together. Borders test against the
+      // offset faces but do not write depth: later coplanar fills overwrite
+      // them instead of failing against an earlier border's nearer depth.
+      const meshSlots = scene.meshes.map((source, index) => ({ source, mesh: this.meshes[axis][index] }));
+      // Native no-area contour children have a border but no fill mesh. Give
+      // them their original series slot so subsequent regions overpaint them.
+      for (const edge of scene.edges) if (edge.source.series.role === "contourf" &&
+        !scene.meshes.some(source => source.series === edge.series)) meshSlots.push({ source: edge });
+      meshSlots.sort((a, b) => a.source.series - b.source.series);
+      for (const { source, mesh } of meshSlots) {
+        const filledContour = source.source.series.role === "contourf";
+        if (mesh) {
+          gl.enable(gl.POLYGON_OFFSET_FILL);
+          gl.polygonOffset(1, 1);
+          gl.uniform1i(u.screen, 0);
+          gl.uniform1f(u.slack, 0.00001);
+          gl.bindVertexArray(mesh.vao);
+          gl.drawElements(gl.TRIANGLES, mesh.count, gl.UNSIGNED_INT, 0);
+        }
+        if (filledContour) {
+          gl.disable(gl.POLYGON_OFFSET_FILL);
+          gl.depthMask(false);
+          for (const edge of scene.edges) if (edge.series === source.series) drawEdge(edge);
+          gl.depthMask(true);
+        }
       }
+      gl.disable(gl.POLYGON_OFFSET_FILL);
+      gl.uniform1i(u.screen, 1);
+      for (const edge of scene.edges) if (edge.source.series.role !== "contourf") drawEdge(edge);
       for (const line of scene.lines) {
         slack(line.width * 96 / 72);
         this.solid(screenPolyline(project(line.positions), line.width * 96 / 72, line.breaks, line.style, local), contourColors.get(line.source?.series) ?? adjust(line.color));
@@ -458,19 +570,35 @@ export class FigureWebGL {
     if (this.zeroRGB.length < expanded.positions.length) this.zeroRGB = new Float32Array(expanded.positions.length);
     this.pixels(expanded.positions, this.zeroRGB.subarray(0, expanded.positions.length), expanded.uv, expanded.markerData);
   }
-  // Read immediately after a fresh draw, without preserveDrawingBuffer.
+  // Opaque callers draw immediately before reading. A certified transparent
+  // image remains in the offscreen target after the compositor clears canvas.
   readPixels(x, y, dpr) {
-    if (this.disposed) return null;
+    if (this.disposed || this.pending) return null;
+    if (this.transparent && !this.peeling?.frames) return null;
+    const gl = this.gl;
     const rgba = new Uint8Array(4);
-    this.gl.readPixels(Math.floor(x * dpr), this.canvas.height - 1 - Math.floor(y * dpr), 1, 1, this.gl.RGBA, this.gl.UNSIGNED_BYTE, rgba);
+    const read = () => gl.readPixels(Math.floor(x * dpr), this.canvas.height - 1 - Math.floor(y * dpr), 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, rgba);
+    if (this.transparent) {
+      const previous = gl.getParameter(gl.READ_FRAMEBUFFER_BINDING);
+      try {
+        gl.bindFramebuffer(gl.READ_FRAMEBUFFER, this.peeling.output.fbo);
+        read();
+      } finally {
+        gl.bindFramebuffer(gl.READ_FRAMEBUFFER, previous);
+      }
+    } else read();
     return Array.from(rgba);
   }
   dispose() {
     if (this.disposed) return;
     this.disposed = true;
+    this.pending = false;
+    this.transparencyDiagnostics.pending = false;
     if (this.frame !== null) cancelAnimationFrame(this.frame);
     this.frame = null;
     this.canvas.removeEventListener("webglcontextlost", this.lost);
+    this.peeling?.dispose();
+    this.peeling = null;
     const gl = this.gl;
     if (gl) {
       this.buffers.forEach((buffer) => gl.deleteBuffer(buffer));

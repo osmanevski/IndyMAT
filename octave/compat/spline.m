@@ -1,0 +1,13 @@
+function varargout = spline (varargin)
+% SPLINE Real numeric vector data use n values, or n+2 clamped values.
+% Reject the native n+1 vector extension; other forms delegate unchanged.
+  if (nargin >= 2 && isnumeric (varargin{1}) && isreal (varargin{1}) ...
+      && isvector (varargin{1}) && isnumeric (varargin{2}) ...
+      && isreal (varargin{2}) && isvector (varargin{2}) ...
+      && numel (varargin{2}) == numel (varargin{1}) + 1)
+    error ('MATLAB:chckxy:NumSitesMismatchValues', ...
+           'The number of sample points is incompatible with the number of values.');
+  endif
+  original = __mf_original_function__ ('spline');
+  [varargout{1:nargout}] = original (varargin{:});
+endfunction

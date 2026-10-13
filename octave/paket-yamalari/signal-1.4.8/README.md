@@ -37,3 +37,34 @@ Wave 15's attempted elliptic precision patch was not retained because improving
 the stop-band solve did not establish correct poles and gain. Wave 16 replaces
 the approximate prototype within the supported subset; see the
 [Y4 report](REPORT-Y4.md) for verification, overhead and remaining differences.
+
+## Wave 26: measured `interp` short-input validation
+
+`15-interp-wave26.patch` rejects fewer than nine samples for real nonempty
+single/double vectors, finite positive integer rates, and `n=4, Wc=0.5`.
+This includes the default form, rate one, and explicit three/four-argument
+filter forms. Other settings and longer inputs retain the signal algorithm.
+The raw MATLAB error contains a newline followed by a space; that text and
+`signal:interp:InvalidDimensions` are preserved.
+
+Provenance: `dalga26/olc/olc26.m`, `dalga26/olcum-uyum-snippet.txt`, interp
+rows 1, 2, 3, 6 and 7 establish the rejection. Rows 4, 9 and 11 establish
+row/column output sizes for longer inputs. Rows 5 and 8 establish that `n=1`
+permits three samples; those calls retain the native algorithm. The table
+prints single output for row 10: default rate-two real single vectors with
+at least nine samples are cast to single after the native algorithm. Single
+class behavior in other call forms and numerical parity remain open.
+No general minimum rule for other `n` or cutoff values is inferred.
+
+The recorded interpolation values and two-output filter coefficients do not
+establish MATLAB's numerical algorithm. They are not hardcoded or recreated
+by this patch. `sos2tf`'s seven measured rows show asymmetric trailing-zero
+output lengths, but do not establish a general trimming rule: it remains
+unchanged pending section-order, three-section, gain, cancellation and
+nonunit-leading-coefficient measurements.
+
+`tests/test_compat_signal26.py` applies the manifest to a private package copy,
+checks hashes, `--check`, idempotence, measured validation, and unchanged
+native numerical delegation with real `octave-cli`. The live package is never
+written by these tests; applying the patch and MATLAB reference runs belong
+to the orchestrator.

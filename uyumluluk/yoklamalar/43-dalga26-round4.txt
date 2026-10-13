@@ -1,0 +1,7 @@
+# MATLAB reference pending, measured R2025b control/numeric rows guide these probes.
+wave26-zpk-stored-roots | q=zpk([-2 -1],[-4 -3],2); [z,p,k]=zpkdata(q,'v'); r={class(q),z,p,k};
+wave26-pid-representation | q=pid(2,3,4,.2); [n,d]=tfdata(tf(q),'v'); r={class(q),[q.Kp q.Ki q.Kd q.Tf],n,d};
+wave26-zpk-conversion-types | q=zpk(-1,[-2 -3],2); r={class(tf(q)),class(ss(q)),class(zpk(tf(q))),class(zpk(ss(q)))};
+wave26-norm-negative-p | r=[norm([3 2],-1),norm([3 2],-2),norm([3 2],-Inf)];
+wave26-sos2tf-trailing-zero | [b,a]=sos2tf([1 2 3 1 -.5 .1;1 0 0 1 -.2 .05]); r={b,a};
+wave26-norminv-confidence | [x,lo,hi]=norminv([.1 .5 .9],2,3,eye(2)); r={x,lo,hi};

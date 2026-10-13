@@ -3,10 +3,11 @@
 /* Pure colour API; all RGB inputs/outputs are sRGB triples in [0,1], NOT bytes.
  * resolveSurfaceColors(surface, axes) returns {faceColors,vertexColors,edgeColors}:
  * Float32 RGB triples ordered by cell_origins and edge_indices respectively.
+ * Flat edges have one RGB per edge; interp edges have start/end RGB pairs.
  * Interp faces instead return vertexColors indexed by original grid vertex.
  * Only referenced vertices are resolved; unused entries are NaN, never zero
  * substitutes for missing data. A 'none' descriptor returns an empty buffer.
- * Flat faces use grid origin; edges use FIRST endpoint. Descriptor data is planar
+ * Flat faces use grid origin; flat edges use FIRST endpoint. Descriptor data is planar
  * column-major; truecolor uint8/uint16 divides by 255/65535. Indexed scaled
  * uses floor(N*(v-low)/(high-low)); direct uses integer v, floating trunc(v)-1;
  * both clip to the existing map without resampling. These are the FROZEN
@@ -68,9 +69,12 @@ function resolveSurfaceColors(surface, axes) {
     const vertices = new Set(faces.flatMap((i) => [i, i + 1, i + rows, i + rows + 1]));
     for (const i of vertices) vertexColors.set(descriptorColor(surface.face_color, i, axes), i * 3);
   }
-  const edgeColors = new Float32Array(surface.edge_color.mode === "none" ? 0 : count * 3);
+  const edgeStride = surface.edge_color.mode === "interp" ? 2 : 1;
+  const edgeColors = new Float32Array(surface.edge_color.mode === "none" ? 0 : count * 3 * edgeStride);
   for (let i = 0; i < faceColors.length / 3; i++) faceColors.set(descriptorColor(surface.face_color, faces[i], axes), i * 3);
-  for (let i = 0; i < edgeColors.length / 3; i++) edgeColors.set(descriptorColor(surface.edge_color, surface.edge_indices.values[i], axes), i * 3);
+  if (surface.edge_color.mode !== "none") for (let i = 0; i < count; i++) {
+    for (let end = 0; end < edgeStride; end++) edgeColors.set(descriptorColor(surface.edge_color, surface.edge_indices.values[i + end * count], axes), (i * edgeStride + end) * 3);
+  }
   return { faceColors, vertexColors, edgeColors };
 }
 // Two unit-offset stops per colormap entry; reversed physical direction supported.
@@ -167,13 +171,14 @@ function rawColorValue(surface, index) {
 function resolveContourColor(series, axes) {
   return descriptorColor(series.contour_color, 0, axes) ?? "none";
 }
-function patchColor(descriptor, face, axes) {
-  return descriptorColor(descriptor, descriptor.mode === "flat" && descriptor.data.shape[0] === 1 ? 0 : face, axes);
+// Owner is a source face for flat data, or source vertex for explicit interp.
+function patchColor(descriptor, owner, axes) {
+  return descriptorColor(descriptor, descriptor.mode === "flat" && descriptor.data.shape[0] === 1 ? 0 : owner, axes);
 }
-function rawPatchColor(series, face) {
-  const c = [series.face_color, series.edge_color].find((c) => c.mode === "flat");
+function rawPatchColor(series, face, vertex) {
+  const c = [series.face_color, series.edge_color].find((c) => ["flat", "interp"].includes(c.mode));
   if (!c) return undefined;
-  const n = c.data.shape[0], i = n === 1 ? 0 : face;
+  const n = c.data.shape[0], i = c.mode === "interp" ? vertex : n === 1 ? 0 : face;
   return c.encoding === "truecolor" ? [c.data.values[i], c.data.values[i + n], c.data.values[i + 2 * n]] : c.data.values[i];
 }
 module.exports = { luminance, adjustContourPalette, contourDisplayColors, SURFACE_COLOR_INTERPOLATION, resolveSurfaceColors, resolveContourColor, patchColor, rawPatchColor, colorbarGradient, contrast, adjustForContrast, mapColor, descriptorColor, rawColorValue };

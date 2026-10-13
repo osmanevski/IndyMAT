@@ -86,7 +86,7 @@ for(const [name,mutate,reason] of [
  ['wrong bound',s=>s.polygon_vertex_limit=128,'invalid_data'],
  ['padded face width budget',s=>s.faces=descriptor([2,66],[0,4,1,5,2,6,...Array(126).fill(null)]),'budget_exceeded'],
  ['triangle budget',s=>s.faces.shape[0]=80001,'budget_exceeded'],
- ['interp',s=>s.face_color.mode='interp','interpolated_color'],
+ ['interp wrong association',s=>s.face_color.mode='interp','unsupported_patch'],
  ['texture',s=>s.face_color.mode='texturemap','unsupported_patch'],
  ['vertex colours',s=>s.face_color=flat(Array(8).fill(1)),'patch_colors'],
  ['alpha',s=>s.facealpha=.5,'transparency'],
