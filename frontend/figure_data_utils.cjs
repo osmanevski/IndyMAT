@@ -192,7 +192,19 @@ function surface(s, path) {
   surfaceColor(s.face_color, s.shape, path + ".face_color");
   surfaceColor(s.edge_color, s.shape, path + ".edge_color", "vertex");
 }
+const ALPHA_KEYS = ["face_alpha", "edge_alpha", "marker_face_alpha", "marker_edge_alpha"];
+// Scalar (single-value) alpha keys: each is present only on the kinds in
+// `allowed`, and only with a valid constant descriptor. Anything else is invalid.
+function scalarAlpha(s, path, allowed) {
+  for (const key of ALPHA_KEYS) {
+    if (!own(s, key)) continue;
+    requireThat(allowed.includes(key), path + "." + key);
+    const result = validateAlphaDescriptor(s[key]);
+    requireThat(result.ok && record(s[key]) && s[key].value !== 1, path + "." + key, result.reason_code, result.reason_args);
+  }
+}
 function patch2d(s, path) {
+  scalarAlpha(s, path, s.role === "textbox" ? [] : ["face_alpha", "edge_alpha"]);
   requireThat(["patch", "bar", "area", "textbox"].includes(s.role) && s.index_base === 0, path + ".role");
   descriptor(s.vertices, path + ".vertices", LIMITS.patch_vertices * 2);
   requireThat(s.vertices.shape.length === 2 && s.vertices.shape[1] === 2 && s.vertices.shape[0] > 0, path + ".vertices.shape");
@@ -328,6 +340,7 @@ function textRecord(s, path) {
   requireThat(s.decimated === false && s.original_points === 0 && s.rendered_points === 0, path + ".counts");
 }
 function samples(s, version, path) {
+  scalarAlpha(s, path, s.kind === "scatter" && !own(s, "z") ? ["marker_face_alpha", "marker_edge_alpha"] : []);
   requireThat(["line", "scatter", "stem", "stairs"].includes(s.kind), path + ".kind", "unsupported_object");
   if (own(s, "span")) requireThat(version === 3 && s.kind === "line" && ["horizontal", "vertical"].includes(s.span) && s.x.length === 2, path + ".span");
   if (own(s, "role")) requireThat(version === 3 && typeof s.role === "string", path + ".role");
@@ -585,6 +598,7 @@ function validate(payload) {
         } else if (s.kind === "image") {
           requireThat(payload.version === 3 && dimension === 2 && a.xscale === "linear" && a.yscale === "linear", p + ".kind", "unsupported_object", { type: "image" });
           requireThat(payload.limits.image_pixels === OPTIONAL_LIMITS.image_pixels, "limits.image_pixels");
+          scalarAlpha(s, p, []);
           image(s, p);
           pixels += s.pixel_count;
         } else if (s.kind === "patch2d" || s.kind === "text") {
@@ -594,7 +608,7 @@ function validate(payload) {
             requireThat(a.xscale === "linear" && a.yscale === "linear", p, "unsupported_patch", { property: "scale" });
             patch2d(s, p);
             vertices += s.rendered_points;
-          } else textRecord(s, p);
+          } else { scalarAlpha(s, p, []); textRecord(s, p); }
         } else {
           samples(s, payload.version, p);
           requireThat(!own(s, "z") || dimension === 3, p + ".z");

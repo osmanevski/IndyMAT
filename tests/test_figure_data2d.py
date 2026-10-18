@@ -235,8 +235,8 @@ class FigureData2DTests(unittest.TestCase):
                 self.assertEqual(patch['triangle_indices']['values'], [0, 1, 2])
                 self.assertEqual(patch['face_color'], {'mode': 'constant', 'association': 'constant', 'rgb': [1, 0, 0]})
         cases = [
-            ("fill([0 1 1],[0 0 1],'r','facealpha',.5)", 'transparency', {}),
-            ("area(1:3,[1 2 3],'facealpha',.4)", 'transparency', {}),
+            ("patch([0 1 1],[0 0 1],'r','facealpha','flat','facevertexalphadata',[.1;.5;.9])", 'transparency', {'property': 'facealpha', 'detail': 'unmeasured_data_mapping'}),
+            ("area(1:3,[1 2 3],'facealpha',.4);set(findobj(gca,'type','patch'),'facealpha','interp')", 'transparency', {'property': 'facealpha', 'detail': 'unmeasured_data_mapping'}),
             ("fill([0 1 1],[0 0 1],[1 2 3])", 'interpolated_color', {}),
             ("patch([0 1 1;2 3 3]',[0 0 1;0 0 1]',[1;2])", 'patch_colors', {}),
             ("patch([0 1 1],[0 0 1],1,'cdatamapping','direct')", 'unsupported_color', {}),

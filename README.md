@@ -25,7 +25,7 @@ Uygulamanın teknik yapısı:
 - Veri analizi, interpolasyon, FFT ve diferansiyel denklem çözümleri.
 - Sinyal işleme ve filtre tasarımı; kontrol sistemleri ve frekans cevabı inceleme.
 - 2B ve 3B grafik oluşturma; desteklenen grafiklerde yakınlaştırma, kaydırma, 3B döndürme ve veri ipuçları.
-- Blok diyagramı modellerini metin olarak (netlist) tanımlama ve Octave üzerinde simüle etme: `im_compile` modeli doğrular, `im_simulate` çalıştırır; `workspace/examples/netlist_*.m` örnekleri hazır gelir.
+- Blok diyagramı modellerini metin olarak (netlist) tanımlama ve Octave üzerinde simüle etme: `im_compile` modeli doğrular, `im_simulate` çalıştırır, `im_example_model` hazır örnek modeller kurar. Model biçimi `octave/block-models.md` dosyasında anlatılır; `workspace/examples/netlist_*.m` örnekleri hazır gelir.
 - Ders örnekleri, mühendislik hesapları ve tekrarlanabilir sayısal deneyler hazırlama.
 
 ## Çalışma ortamı
@@ -41,9 +41,16 @@ Uygulamanın teknik yapısı:
 
 Ayarlar'daki deneysel metin uyarlaması varsayılan olarak kapalıdır. Editör seçimleri/bölümleri ve kayıtlı giriş betikleri için ayrı ayrı açılabilir. Desteklenen çift tırnaklı metin ifadeleri çalıştırma sırasında uyarlanır; kayıtlı `.m` dosyası değiştirilmez. Belirsiz sözdizimi, yerel fonksiyonlar, özel/paket dizinleri veya etkin hata ayıklama/profil durumu varsa dosyanın tamamı değiştirilmeden çalışır. Bu seçenek tam dil ya da Toolbox uyumluluğu sağlamaz; uyarlanan giriş betiğinde `mfilename` ve ham çağrı yığını geçici yürütme dosyasını gösterir.
 
-`control`, `signal`, `datatypes` ve `statistics` paketleri kuruluysa oturum başlarken yüklenir. Paketler depoya dahil değildir; ayrı kurulurlar.
+`control`, `signal`, `datatypes` ve `statistics` paketleri kuruluysa oturum başlarken yüklenir. Paketler depoya dahil değildir; ayrı kurulurlar. Uygulamanın paket yöneticisi onları projenin `.packages/` klasörüne kurar.
 
-Bu paketler için sürümlü yamalar `octave/paket-yamalari/` altındadır: `datatypes` string sınıfındaki bazı karışık char/string çağrıları, `control` için sürekli zamanlı tek giriş-tek çıkışlı `zpk` ve `pid` gösterimleri, `signal` için `sos2tf` ve `interp`, `statistics` için `norminv` alt kümeleri. `python3 scripts/patch_packages.py --package <paket-sürüm>` (örneğin `control-4.2.3`) yamaları kurulu pakete uygular; `--package` verilmezse yalnızca `datatypes` işlenir. `--check` yalnızca durumu gösterir, `--revert` geri alır; betik tanımadığı bir paket sürümüne ve kendisinin oluşturmadığı dosyalara dokunmaz.
+Bu paketler için sürümlü yamalar `octave/paket-yamalari/` altındadır. Her yamanın değiştirdiği dosyaların tam listesi kendi klasöründeki `manifest.json` dosyasındadır:
+
+- `datatypes`: string sınıfındaki bazı karışık char/string çağrıları.
+- `control`: sürekli zamanlı tek giriş-tek çıkışlı `zpk` ve `pid` gösterimleri. Bunlarla birlikte `bode`, `nyquist`, `margin`, `minreal`, `c2d`/`d2c`, `tf` özelliklerini okuma/yazma ve sistemlerin toplama, çıkarma, çarpma, bölme, `feedback`, `series`, `parallel` işlemleri de değişir.
+- `signal`: `sos2tf`, `interp`, `fir1`, `fir2`, `pwelch`, `findpeaks`, `resample`, `hann`, `ellip`, `buttord`, `cheb2ord`, `besself`, `tf2ss` ve `residuez`.
+- `statistics`: `norminv`, `poisspdf` ve `grpstats`.
+
+Bu fonksiyonların sonuçları yamasız paketinkinden farklı olabilir. `python3 scripts/patch_packages.py --package <paket-sürüm>` (örneğin `control-4.2.3`) yamaları projenin `.packages/` klasöründeki pakete uygular; sistem genelinde kurulu paketlere dokunmaz. `--package` verilmezse yalnızca `datatypes` işlenir. `--check` yalnızca durumu gösterir, `--revert` özgün dosyaları geri yükler. Betik paketin kendi dosyalarını yerinde değiştirir, ama yalnızca içerikleri beklenen özgün sürümle birebir aynıysa. Tanımadığı bir paket sürümüne, içeriği değişmiş bir dosyaya ve oluşturacağı yerde zaten var olan bir dosyaya dokunmaz. Bir paket yeniden kurulur ya da güncellenirse yamalar kaybolur; betiği o paket için yeniden çalıştırın.
 
 ## Kodlama asistanları (isteğe bağlı)
 
@@ -98,7 +105,11 @@ grid on;
 ## Kapsam ve sınırlar
 
 - macOS doğrulanmıştır; Linux kabul testleri yapılmamıştır, Windows başlatıcısı desteklenmez.
-- Grafikler hesaplama sonunda aktarılır. Etkileşimli görünüm belgelenmiş bir alt kümedir: 2B çizgi türleri ile 3B `plot3`, `scatter3`, `surf`, `mesh`, `contour`/`contourf` ve düzlemsel `patch` grafikleri, tek değerli saydamlık dahil. Işıklandırma, veriyle değişen saydamlık, çok köşeli renk enterpolasyonu ve boyut bütçesini aşan grafikler PNG olarak, nedeni yazılarak gösterilir.
+- Grafikler hesaplama sonunda aktarılır. Etkileşimli görünüm belgelenmiş bir alt kümedir:
+  - 2B: `plot`, `stairs`, `stem`, `scatter`, `bar`, `area`, `errorbar`, `xline`/`yline`, `image`/`imagesc`, `fill`/`patch`, `text`, `contour` ve `contourf`.
+  - 3B: `plot3`, `scatter3`, `surf`, `mesh`, `contour`/`contourf` ve `patch`.
+  - Tek değerli saydamlık etkileşimlidir: `surf`, `mesh`, `patch`, `fill`, `area`, `bar` ve `contourf` için `FaceAlpha`/`EdgeAlpha`, 2B `scatter` için `MarkerFaceAlpha`/`MarkerEdgeAlpha`. Octave'da `bar` saydamlığı çubuğun patch'ine ayarlanır: `set(findobj(h,'type','patch'),'FaceAlpha',0.4)`.
+  - Şunlar PNG olarak, nedeni yazılarak gösterilir: ışıklandırma; `scatter3` işaretçilerinde ve resimlerde saydamlık; veriyle değişen saydamlık; 8 katmandan derin saydam sahneler; `scatter`/`scatter3`'te nokta başına renk; 2B `patch`'te yüz başına renk ya da renk geçişi (`'interp'`); 3B `patch`'te üçten fazla köşeli yüzlerde renk geçişi; renk geçişli `contourf`; boyut bütçesini aşan grafikler.
 - Netlist katmanı Simulink değildir: 13 blok türü ve tek örnekleme hızıyla sınırlıdır; görsel blok editörü ve `.slx`/`.mdl` desteği yoktur.
 - MATLAB ile tam dil ya da Toolbox uyumluluğu iddia edilmez; ölçülen davranış durumları ve bilinen farklar `uyumluluk/` altında kayıtlıdır.
 - Hata ayıklama duraklamasındayken `input` çağıran bir ifade değerlendirmek bilinen bir kusurdur: istek kullanıcının yanıtı yerine iç bir satır alabilir. Duraklamada `input` kullanmayın.

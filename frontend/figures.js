@@ -118,6 +118,8 @@ function plotColor(value, palette = plotTheme()) {
 function rawColor(value) {
   return `rgb(${value.map((v) => Math.max(0, Math.min(1, v)) * 255).join(",")})`;
 }
+// Scalar alpha descriptor ({mode:"constant",value}) or absent: 1.
+const alphaValue = (d) => d && Number.isFinite(d.value) ? Math.max(0, Math.min(1, d.value)) : 1;
 const plotDash = (style) => ({ "--": [7, 4], ":": [2, 3], "-.": [7, 3, 2, 3] }[style] || []);
 const sansFont = (size, bold = false, italic = false) => `${italic ? "italic " : ""}${bold ? "600 " : ""}${size}px -apple-system, sans-serif`;
 const monoFont = (size) => `${size}px "JetBrains Mono", Menlo, "SF Mono", ui-monospace, monospace`;
@@ -473,6 +475,7 @@ class InteractiveFigure {
   drawPatch(s, i, j) {
     const c = this.ctx, face = s.face_color === "none" ? null : rawColor(s.face_color);
     const edge = s.edge_color === "none" || s.line_style === "none" ? null : plotColor(s.edge_color, this.palette);
+    const faceAlpha = alphaValue(s.face_alpha), edgeAlpha = alphaValue(s.edge_alpha);
     c.lineWidth = Math.max(1, s.line_width);
     c.lineJoin = "miter";
     for (const polygon of shapes.facePolygons(s)) {
@@ -487,15 +490,18 @@ class InteractiveFigure {
       points.forEach(([px, py], n) => n ? c.lineTo(px, py) : c.moveTo(px, py));
       c.closePath();
       if (face && points.length > 2) {
+        c.globalAlpha = faceAlpha;
         c.fillStyle = face;
         c.fill("evenodd");
       }
       if (edge) {
+        c.globalAlpha = edgeAlpha;
         c.strokeStyle = edge;
         c.setLineDash(plotDash(s.line_style));
         c.stroke();
         c.setLineDash([]);
       }
+      c.globalAlpha = 1;
       const tip = s.role === "textbox" ? null : shapes.faceTip(s, polygon);
       // Every opaque polygon participates in occlusion, even when it has no
       // rectangular/bar tip. General shapes retain their original vertex tips.
@@ -552,10 +558,10 @@ class InteractiveFigure {
     this.texts.push({ axis: i, id: j, text: s.lines.map((line) => shapes.plainText(line, s.interpreter)).join("\n"), x, y, rotation: s.rotation, box: { x: x + layout.box.x, y: y + layout.box.y, w: layout.box.w, h: layout.box.h }, boxed, color });
   }
   seriesStyle(s) {
-    if (s.kind === "patch2d") return { line: null, edge: s.edge_color === "none" || s.line_style === "none" ? null : plotColor(s.edge_color, this.palette), face: s.face_color === "none" ? null : rawColor(s.face_color) };
+    if (s.kind === "patch2d") return { faceAlpha: alphaValue(s.face_alpha), edgeAlpha: alphaValue(s.edge_alpha), line: null, edge: s.edge_color === "none" || s.line_style === "none" ? null : plotColor(s.edge_color, this.palette), face: s.face_color === "none" ? null : rawColor(s.face_color) };
     // Keep the exported source mode: an explicit RGB equal to Octave's axes
     // colour is not necessarily 'auto'. Only auto tracks the displayed canvas.
-    return { line: s.kind !== "scatter" && s.line_style !== "none" && s.line_color !== "none" ? (this.contourColors?.has(s) ? rawColor(this.contourColors.get(s)) : plotColor(s.line_color, this.palette)) : null, edge: s.marker_edge_color === "none" ? null : plotColor(s.marker_edge_color, this.palette), face: s.marker_face_auto ? this.palette.background : s.marker_face_color === "none" ? null : plotColor(s.marker_face_color, this.palette) };
+    return { faceAlpha: alphaValue(s.marker_face_alpha), edgeAlpha: alphaValue(s.marker_edge_alpha), line: s.kind !== "scatter" && s.line_style !== "none" && s.line_color !== "none" ? (this.contourColors?.has(s) ? rawColor(this.contourColors.get(s)) : plotColor(s.line_color, this.palette)) : null, edge: s.marker_edge_color === "none" ? null : plotColor(s.marker_edge_color, this.palette), face: s.marker_face_auto ? this.palette.background : s.marker_face_color === "none" ? null : plotColor(s.marker_face_color, this.palette) };
   }
   drawSeries(s, a, i, j) {
     const c = this.ctx, style = this.seriesStyle(s), points = [];
@@ -611,11 +617,11 @@ class InteractiveFigure {
     }
     c.setLineDash([]);
     for (let p of points) if (p) {
-      const marked = this.marker(p.x, p.y, s.marker, style.edge, style.face);
+      const marked = this.marker(p.x, p.y, s.marker, style.edge, style.face, style.faceAlpha, style.edgeAlpha);
       if (style.line || marked) this.hits.push({ ...p, axis: i, seriesIndex: j });
     }
   }
-  marker(x, y, kind, edge, face) {
+  marker(x, y, kind, edge, face, faceAlpha = 1, edgeAlpha = 1) {
     if (!kind || kind === "none" || !edge && !face) return false;
     const c = this.ctx, r = kind === "." ? 2 : 3.5, open = ["+", "x", "*", "."].includes(kind);
     if (open && !edge) return false;
@@ -645,14 +651,17 @@ class InteractiveFigure {
       c.closePath();
     } else c.arc(x, y, r, 0, Math.PI * 2);
     if (kind === ".") {
+      c.globalAlpha = edgeAlpha;
       c.fillStyle = edge;
       c.fill();
     } else {
       if (!open && face) {
+        c.globalAlpha = faceAlpha;
         c.fillStyle = face;
         c.fill();
       }
       if (edge) {
+        c.globalAlpha = edgeAlpha;
         c.strokeStyle = edge;
         c.stroke();
       }
@@ -679,13 +688,16 @@ class InteractiveFigure {
       let yy = y + 13 + n * 16;
       if (item.series.kind === "patch2d") {
         if (item.style.face) {
+          c.globalAlpha = item.style.faceAlpha;
           c.fillStyle = item.style.face;
           c.fillRect(x + 6, yy - 8, 17, 9);
         }
         if (item.style.edge) {
+          c.globalAlpha = item.style.edgeAlpha;
           c.strokeStyle = item.style.edge;
           c.strokeRect(x + 6, yy - 8, 17, 9);
         }
+        c.globalAlpha = 1;
         c.fillStyle = p.text;
         this.drawRuns(shapes.parseTex(item.label), x + 27, yy, 10);
         return;
@@ -699,7 +711,7 @@ class InteractiveFigure {
         c.stroke();
       }
       c.setLineDash([]);
-      this.marker(x + 14.5, yy - 3, item.series.marker, item.style.edge, item.style.face);
+      this.marker(x + 14.5, yy - 3, item.series.marker, item.style.edge, item.style.face, item.style.faceAlpha, item.style.edgeAlpha);
       c.fillStyle = p.text;
       this.drawRuns(shapes.parseTex(item.label), x + 27, yy, 10);
     });

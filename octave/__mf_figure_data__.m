@@ -362,7 +362,9 @@ function [s,code,args]=__mf_series__(leaf,ax,limits,has_light,tree,dimension)
     else code='unsupported_group';args=struct('type',type,'creator',creator);return;endif
     if ~isempty(__mf_prop__(h,'zdata',[])),code='unsupported_group';args=struct('type','3d_hggroup');return;endif
   elseif ~any(strcmp(type,{'line','scatter'})),code='unsupported_object';args=struct('type',type);return;endif
-  if ~__mf_opaque__(h,tree),code='transparency';return;endif
+  % Scalar marker alpha is interactive for 2D scatter only; 3D keeps its PNG.
+  scatter2d=strcmp(type,'scatter')&&isempty(__mf_prop__(h,'zdata',[]));
+  if ~__mf_opaque__(h,tree,scatter2d),code='transparency';return;endif
   x=__mf_prop__(h,'xdata',[]);y=__mf_prop__(h,'ydata',[]);z=__mf_prop__(h,'zdata',[]);n=numel(x);
   if ~__mf_vector__(x)||~__mf_vector__(y)||numel(y)~=n||(~isempty(z)&&(~__mf_vector__(z)||numel(z)~=n)),code='invalid_data';args=struct('property','coordinates');return;endif
   if n>limits.source_samples,code='budget_exceeded';args=__mf_budget__('source_samples',n,limits.source_samples);return;endif
@@ -383,6 +385,11 @@ function [s,code,args]=__mf_series__(leaf,ax,limits,has_light,tree,dimension)
     'decimated',numel(idx)<n,'original_points',n,'rendered_points',numel(idx),...
     'source_indices',{__mf_array__(idx-1)});
   if is3,s.z=__mf_array__(z(idx));endif
+  if scatter2d
+    [alphas,code,args]=__mf_scalar_alphas__(h,'marker');
+    if ~isempty(code),s=[];return;endif
+    for name=fieldnames(alphas).',s.(name{1})=alphas.(name{1});endfor
+  endif
   if strcmp(kind,'scatter')
     sizes=__mf_prop__(h,'sizedata',36);
     if ~__mf_real__(sizes)||~(isscalar(sizes)||(__mf_vector__(sizes)&&numel(sizes)==n))||any(~isfinite(sizes(:)))||any(sizes(:)<0),s=[];code='invalid_data';args=struct('property','sizedata');return;endif
@@ -585,7 +592,14 @@ function [s,code,args]=__mf_patch__(leaf,ax,limits,has_light,tree)
   f=double(f);used=~isnan(f);
   % Indices are one-based integers; NaN is only trailing padding of a face.
   if any(f(used)<1|f(used)>n|f(used)~=fix(f(used)))||any(any(diff(used,1,2)>0)),code='invalid_data';args=struct('property','faces');return;endif
-  if ~__mf_opaque__(h,tree),code='transparency';return;endif
+  if strcmp(leaf.role,'textbox')
+    if ~__mf_opaque__(h,tree),code='transparency';return;endif
+    alphas=struct();
+  else
+    % Scalar Face/EdgeAlpha is interactive; data-driven alpha keeps the PNG.
+    [alphas,code,args]=__mf_scalar_alphas__(h);if ~isempty(code),return;endif
+    if ~isempty(fieldnames(alphas))&&~isempty(__mf_prop__(h,'facevertexalphadata',[])),code='transparency';args=struct('property','facevertexalphadata');return;endif
+  endif
   if has_light,code='lighting';return;endif
   if ~strcmp(__mf_prop__(h,'marker','none'),'none'),code='unsupported_patch';args=struct('property','marker');return;endif
   [face,code]=__mf_patch_color__(get(h,'facecolor'),h,ax);
@@ -599,6 +613,7 @@ function [s,code,args]=__mf_patch__(leaf,ax,limits,has_light,tree)
     'faces',__mf_descriptor__(f-1),'index_base',0,'face_color',face,'edge_color',edge,...
     'line_style',get(h,'linestyle'),'line_width',double(get(h,'linewidth')),...
     'display_name',name,'decimated',false,'original_points',n,'rendered_points',n);
+  for name=fieldnames(alphas).',s.(name{1})=alphas.(name{1});endfor
   if strcmp(role,'bar')
     % The group's own data describes each face for data tips; the drawn
     % geometry stays the patch Octave computed.
@@ -842,9 +857,11 @@ function [line,edge,face,ok,code]=__mf_colors__(h,ax,kind,is3)
   [edge,edge_ok]=__mf_rgb_or_none__(edge);[face,face_ok]=__mf_rgb_or_none__(face);ok=edge_ok&&face_ok;
 endfunction
 
-function ok=__mf_opaque__(h,tree)
+function ok=__mf_opaque__(h,tree,scalar_marker)
+  if nargin<3,scalar_marker=false;endif
   ok=false;
   for name={'markeredgealpha','markerfacealpha','edgealpha','facealpha','alphadata'}
+    if scalar_marker&&any(strcmp(name{1},{'markeredgealpha','markerfacealpha'})),continue;endif
     % get() accepts abbreviations: 'alphadata' would read a patch's alphadatamapping.
     if ~isprop(h,name{1}),continue;endif
     value=__mf_prop__(h,name{1},1);
@@ -947,12 +964,16 @@ function text = __mf_text__(english, turkish)
   if strcmp(getenv('INDYMAT_LANGUAGE'), 'tr'), text = turkish; endif
 endfunction
 
-function [alphas,code,args]=__mf_scalar_alphas__(h)
+function [alphas,code,args]=__mf_scalar_alphas__(h,prefix)
+  if nargin<2,prefix='';endif
   alphas=struct();code='';args=struct();
   for item={'face','edge'}
-    property=[item{1} 'alpha'];
+    property=[prefix item{1} 'alpha'];
     [value,code,args]=__mf_figure_alpha__(get(h,property),[],'none',[0 1],[],'constant',1);
     if ~isempty(code),args.property=property;return;endif
-    if value.value~=1,alphas.([item{1} '_alpha'])=value;endif
+    if value.value~=1
+      key=[item{1} '_alpha'];if ~isempty(prefix),key=[prefix '_' key];endif
+      alphas.(key)=value;
+    endif
   endfor
 endfunction

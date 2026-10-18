@@ -167,7 +167,7 @@ const { assert, expect, openFigures, run, settle } = require("./figure_ui_suppor
     // Still PNG only, with a precise Turkish reason.
     for (const [name, code, reason] of [
       ["G1 interp", "fill([0 1 1],[0 0 1],[1 2 3]);", "ara değerli renkler"],
-      ["G1 alpha", "area(1:3,[1 2 3],'facealpha',0.4);", "saydamlık"],
+      ["G1 alpha", "patch([0 1 1],[0 0 1],'r','facealpha','flat','facevertexalphadata',[.1;.5;.9]);", "saydamlık"],
       ["G1 faces", "patch([0 1 1;2 3 3]',[0 0 1;0 0 1]',[1;2]);", "yüz veya köşe başına yama renkleri"],
       ["G1 pie", "pie([1 2 3]);", "desteklenmeyen dolgulu şekil (dataaspectratio)"]
     ]) {
