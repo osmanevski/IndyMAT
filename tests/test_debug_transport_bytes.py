@@ -4,10 +4,12 @@ import time
 import unittest
 from pathlib import Path
 from backend.kernel import Kernel
+from backend.i18n import get_language, set_language
 ROOT=Path(__file__).resolve().parents[1]
 FLEET=ROOT
 class DebugTransportBytes(unittest.TestCase):
  def setUp(self):
+  previous_language=get_language();set_language('en');self.addCleanup(set_language,previous_language)
   self.temp=tempfile.TemporaryDirectory(dir=FLEET,prefix='transport-')
   self.work=Path(self.temp.name)
   self.k=Kernel(ROOT,self.work/'runtime',self.work,executable='octave-cli')

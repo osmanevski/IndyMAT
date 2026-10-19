@@ -84,6 +84,7 @@ async function poll() {
       if (s.kind?.startsWith("variable-") && s.job === shared.lastJob) await registry.variableJobCompleted(s);
       if (s.kind === "profile" && s.profile && !s.error && s.job === shared.lastJob) registry.showProfile(s.profile);
       if (s.kind?.startsWith("workspace-") && s.job === shared.lastJob) await registry.workspaceJobCompleted(s);
+      registry.blockDiagramJobCompleted?.(s);
       if (s.kind === "publish" && s.publish && !s.error && s.job === shared.lastJob) {
         await registry.showPublished(s.publish, s.job, publishRender);
       }

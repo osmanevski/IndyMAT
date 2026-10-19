@@ -70,6 +70,7 @@ async function runFile() {
   registry.requireIdle();
   let t = shared.active;
   if (!t) return;
+  if (registry.isDiagramTab?.(t) === true) return registry.runDiagram(t);
   if (t.dirty || !t.hash) {
     if (!await registry.saveActive()) return;
   }
@@ -79,6 +80,7 @@ async function runFileMode(mode, label) {
   registry.requireIdle();
   let t = shared.active;
   if (!t) return;
+  requireCodeTab();
   if (t.dirty || !t.hash) {
     if (!await registry.saveActive()) return;
   }
@@ -100,8 +102,12 @@ function runProfile() {
 function publishFile() {
   return runFileMode("publish", t("Publish"));
 }
+function requireCodeTab() {
+  if (registry.isDiagramTab?.(shared.active) === true) throw new Error(t("This action is not available for block diagrams."));
+}
 async function runSelection() {
   registry.requireIdle();
+  requireCodeTab();
   let range = shared.editor.state.selection.main, code = shared.editor.state.sliceDoc(range.from, range.to);
   if (!code.trim()) throw new Error(t("Select code to run."));
   let count = code.replace(/\r?\n$/, "").split(/\r?\n/).length;
@@ -110,6 +116,7 @@ async function runSelection() {
 }
 async function runEditorSection(kind = "section") {
   registry.requireIdle();
+  requireCodeTab();
   const profile = registry.getSetting("preferences", "adaptEditorLiterals") ? "matlab" : "native-octave";
   let tab = shared.active, source = shared.editor.state.doc.toString(), position = shared.editor.state.selection.main.head, throughEnd = kind === "to-end", range = sectionRange(source, position, throughEnd, profile);
   let code = source.slice(range.from, range.to), name = (tab?.path || "").split("/").pop(), label = kind === "to-end" ? t("To end · {name}:{start}–{end}", { name, start: range.startLine, end: range.endLine }) : t("Section · {name}:{start}–{end}", { name, start: range.startLine, end: range.endLine });
@@ -153,6 +160,7 @@ function setStatus(s) {
   document.body.classList.toggle("busy", running || shared.starting);
   document.body.classList.toggle("debug-paused", paused);
   registry.$("#status-text").textContent = { idle: t("Ready"), running: t("Running"), paused: t("Paused at breakpoint"), stopping: t("Stopping"), starting: t("Starting engine"), dead: t("Session closed") }[s.status] || t("Disconnected");
+  if (s.status === "running" && s.input_reply_consumed) registry.$("#status-text").textContent = t("One reply was sent. Further readers cannot be authenticated; only Stop is available.");
   registry.$("#elapsed").textContent = s.elapsed ? `${s.elapsed.toFixed(2)} s` : "";
   registry.$("#stop").disabled = !running && !paused;
   for (let selector of ["#run", "#run-section", "#run-selection", "#run-profile", "#publish", "#editor-run-section", "#editor-run-advance", "#editor-run-to-end", "#editor-run-selection"]) registry.$(selector).disabled = s.status !== "idle";

@@ -135,4 +135,6 @@ export default {
   ,"Compatibility Limits": "Uyumluluk sınırları"
   ,"Supported functions depend on GNU Octave and installed packages. The debugger uses the documented subset of GNU Octave file and line breakpoints and step commands. Figures appear as PNGs when execution ends; they are not live animations or graphics callbacks.": "Desteklenen işlevler GNU Octave ve kurulu paketlerin kapsamına bağlıdır. Hata ayıklayıcı, GNU Octave’ın dosya ve satır kesme noktaları ile adım komutlarının belgelenmiş alt kümesini kullanır. Grafikler çalışma sonunda PNG olarak görünür; canlı animasyon veya grafik callback'leri değildir."
   ,"Variables persist while Octave is open; use <code>save('veriler.mat')</code> to keep them. Resetting the session clears memory. Run only code you trust.": "Değişkenler Octave açıkken korunur; kalıcı saklamak için <code>save('veriler.mat')</code> kullan. Oturum düğmesi belleği sıfırlar. Yalnız güvendiğin kodu çalıştır."
+  ,"Block Diagram: PID Closed Loop": "Blok diyagramı: PID kapalı çevrim"
+  ,"IndyMAT block model · edit and run · filtered PID": "IndyMAT blok modeli · düzenle ve çalıştır · filtreli PID"
 };

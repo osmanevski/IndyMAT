@@ -1,6 +1,8 @@
 """Turkish server messages; values preserve the original UI text."""
 
 TRANSLATIONS = {
+    'The Octave collector failed ({error}); reset the session. Variables could not be recovered.': 'Octave sonuç toplayıcısı başarısız oldu ({error}); oturumu sıfırlayın. Değişkenler kurtarılamadı.',
+    'Native input replies cannot contain control characters (U+0000–U+001F or U+007F).': 'Doğrudan giriş yanıtları denetim karakterleri (U+0000–U+001F veya U+007F) içeremez.',
     'Retained source files could not be removed.': 'Saklanan kaynak dosyaları silinemedi.',
     'A saved file hash is required for file adaptation.': 'Dosya uyarlaması için kayıtlı dosyanın özeti gereklidir.',
     'Select a saved .m file.': 'Kayıtlı bir .m dosyası seçin.',

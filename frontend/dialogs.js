@@ -115,7 +115,8 @@ function examples() {
     "netlist_kutle_yay_sonum.m": [t("Netlist: Mass-Spring-Damper"), t("Two integrators · initial conditions")],
     "netlist_ayrik_kontrol.m": [t("Netlist: Discrete Control"), t("Unit delays · two sample times")],
     "netlist_doyum_antiwindup.m": [t("Netlist: Saturation and Anti-Windup"), t("Discrete clamping · step refinement")],
-    "netlist_sinyal_suzme.m": [t("Netlist: Signal Filtering"), t("Run Signal Filtering first · use its recorded input")]
+    "netlist_sinyal_suzme.m": [t("Netlist: Signal Filtering"), t("Run Signal Filtering first · use its recorded input")],
+    "pid_kapali_cevrim.imbd.json": [t("Block Diagram: PID Closed Loop"), t("IndyMAT block model · edit and run · filtered PID")]
   };
   for (let [name, [title, desc]] of Object.entries(descriptions)) {
     let b = registry.el("button", "example-card");

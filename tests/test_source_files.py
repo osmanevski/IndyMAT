@@ -53,7 +53,7 @@ class SavedSourceTests(unittest.TestCase):
         k._retained_file_jobs = set()
         k._file_request_count = k._file_staged_bytes = 0
         k._source_package = lambda **kw: PROFILE.package
-        k._write_command = lambda *args: None
+        k._write_command = lambda *args, **kwargs: None
         return k
 
     def submit(self, k, source):

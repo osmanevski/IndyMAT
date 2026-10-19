@@ -45,6 +45,7 @@ class _Detached:
 
 class Kernel:
     # Class-level default: kernels assembled without __init__ (test doubles) still have the field.
+    HELPER_STOP_WATCHDOG = 10.0  # measured helper completion upper bound: 0.300 s
     run_to_cursor_state = None
     _debug_ticket = None
 
@@ -96,7 +97,72 @@ class Kernel:
 
     def _marker_command(self,text): return self.call('__mf_marker__',text)
 
-    def _write_command(self, proc, command):
+    def _attestation(self, kind, ticket):
+        # Builtins only: a helper frame consumes pending return / step flags.
+        fd="(@str2double)((@getenv)('INDYMAT_DEBUG_FID'))"
+        return (f"(@setenv)('INDYMAT_DEBUG_FID',(@sprintf)('%d',(@fopen)({self.quote(self._debug_prompt_file)},'a'))); "
+                f"if {fd}>=0; unwind_protect; if (@fprintf)({fd},'%s\\n',{self.quote(kind+' '+ticket)}), endif; "
+                f"if (@fflush)({fd}), endif; unwind_protect_cleanup; if (@fclose)({fd}), endif; "
+                "if (@unsetenv)('INDYMAT_DEBUG_FID'), endif; end_unwind_protect; endif; ")
+
+    def _record_engine_action_locked(self):
+        path=getattr(self,'_debug_prompt_file',None)
+        try:self._trace_offset=path.stat().st_size if path else 0
+        except OSError:self._trace_offset=0
+
+    def _watch_stop_readers_locked(self):
+        path=getattr(self,'_debug_prompt_file',None)
+        if path:Path(str(path)+'.stop').touch()
+
+    def _send_interrupt_locked(self,proc):
+        self._watch_stop_readers_locked()
+        os.killpg(proc.pid,signal.SIGINT)
+        # Offset after the signal: a record counts only if it was appended
+        # once this signal had been sent.
+        self._record_engine_action_locked()
+        self._signal_job=self.job
+
+    def _root_recovery_proven(self,proof,ticket,*,require_signal=True):
+        records=proof.splitlines(keepends=True)
+        received=False;dispatched=False;root=False;offset=0
+        for line in records:
+            if not line.endswith('\n'):break
+            record=line.rstrip('\n')
+            if record=='A '+ticket:received=True
+            if record=='D '+ticket:dispatched=True
+            if record=='Q '+ticket+' 0 0' and offset>=getattr(self,'_trace_offset',0):root=True
+            offset+=len(line.encode())
+        return received and root and (not require_signal or getattr(self,'_signal_job',None)==self.job or dispatched)
+
+    def _write_recovery_locked(self,job,folder,proc,gen,ticket,cleanup):
+        if (self.state['status']!='stopping' or self.proc is not proc or self.generation!=gen
+                or self.job!=job or self._debug_ticket!=ticket or self.closed
+                or getattr(self,'_completed_job',None)==job):return False
+        try:proof=self._debug_prompt_file.read_text()
+        except OSError:return False
+        if not self._root_recovery_proven(proof,ticket):return False
+        # Keep this ticket when readline discards a recovery line on SIGINT.
+        # The next attempt needs a new Q beyond this write's trace offset.
+        command=self.call('addpath',self.root/'octave')+self.call('__mf_recover__',str(folder),ticket,cleanup,str(self._debug_prompt_file))+'\n'
+        self._record_engine_action_locked()
+        self._reader_authorized=False
+        self._reader_owned=True
+        self._helper_progress_at=time.monotonic()
+        self._helper_trace_size=self._trace_offset
+        self._pending_interrupt=False
+        proc.stdin.write(command.encode())
+        return True
+
+    def _write_control(self, proc, control, prefix=''):
+        allowed={self.call('dbcont'),self.call('dbquit'),self.call('dbstep'),self.call('dbstep','in'),self.call('dbstep','out')}
+        if control not in allowed:raise ValueError('Invalid internal debugger control.')
+        with self.lock:
+            # Authorization and the write that consumes it are one operation.
+            # Collector callers also revalidate their captured ticket/generation.
+            if not getattr(self,'_reader_authorized',False):raise ValueError('Unauthenticated debugger control.')
+            self._write_command(proc, prefix+control+'\n', reader='control', control=control)
+
+    def _write_command(self, proc, command, *, reader='job', control=None, user_eval=False, internal=False):
         """Carry a language change on an existing protocol command, never an input reply.
 
         Header updates only change Python state. A running job keeps its
@@ -116,9 +182,27 @@ class Kernel:
                 # this new ticket before Octave has actually read the command.
                 self._debug_ticket=uuid.uuid4().hex
                 arm=self.call('setenv','INDYMAT_DEBUG_TICKET',self._debug_ticket)
-                # Builtin arming preserves pending return; cleanup executes
-                # the original command even when a return skips the body.
-                command=''.join(f'unwind_protect; {arm} unwind_protect_cleanup; {line} end_unwind_protect\n' for line in command.removesuffix('\n').split('\n'))
+                if reader!='control':arm+=self.call('eval',self._attestation('A',self._debug_ticket))
+                self._debug_prompt_file.write_text('')
+                self._reader_mode=reader
+                self._reader_owned=internal or (reader=='eval' and not user_eval)
+                self._helper_progress_at=time.monotonic()
+                self._helper_trace_size=0
+                self._reader_authorized=False
+                self._native_input_ticket=None
+                self._reader_record_count=0
+                self.state['input_reply_consumed']=False
+                lines=command.removesuffix('\n').split('\n')
+                if reader=='eval':
+                    assert len(lines)==1
+                    done=self._attestation('C',self._debug_ticket)+self.call('setenv','INDYMAT_DEBUG_SEEN','')
+                    lines=[f'unwind_protect; {lines[0]} unwind_protect_cleanup; {done} end_unwind_protect']
+                elif reader=='control':
+                    assert len(lines)==1 and lines[0].endswith(control)
+                    lines=[lines[0][:-len(control)]+self.call('setenv','INDYMAT_DEBUG_CONTROL',self._debug_ticket)+self._attestation('A',self._debug_ticket)+self._attestation('D',self._debug_ticket)+control]
+                # Arming and completion run even across a pending return.
+                command=''.join(f'unwind_protect; {arm} unwind_protect_cleanup; {line} end_unwind_protect\n' for line in lines)
+            self._record_engine_action_locked()
             wanted = get_language()
             if wanted == getattr(self, '_octave_language', None):
                 proc.stdin.write(command.encode())
@@ -132,6 +216,13 @@ class Kernel:
         self.generation += 1
         self._debug_prompt_file=None
         self._debug_ticket=None
+        self._reader_mode='job'
+        self._reader_authorized=False
+        self._native_input_ticket=None
+        self._pending_interrupt=False
+        self._trace_offset=0
+        self._signal_job=None
+        self._completed_job=None
         self._retained_file_jobs = set()
         self._file_request_count = 0
         self._file_staged_bytes = 0
@@ -305,13 +396,32 @@ class Kernel:
             # enter code.m first while the removed old file is still cached, so
             # dbclear can remove its breakpoint before any path refresh.
             command=f"(@getappdata)(0,'__mf_entry__')({self.quote(folder)},{self.quote(mode)},{self.quote(argument)}{',1' if source_guard else ''});\n"
-        self._write_command(proc, command)
+        self._write_command(proc, command,internal=mode in ('inspect','snapshot'))
         threading.Thread(target=self._collect,args=(job,folder,proc,events,gen,float(timeout)),daemon=True).start()
         return job
 
     def _collect(self,job,folder,proc,events,gen,timeout):
+        # A background collector must never disappear with a live busy state.
+        try:
+            self._collect_loop(job,folder,proc,events,gen,timeout)
+        except BaseException as exc:
+            with self.lock:
+                if gen!=self.generation or proc is not self.proc or self.job!=job or self.closed:return
+                self._reader_authorized=False
+                self._native_input_ticket=None
+                self._pending_interrupt=False
+                self.debug_frame_target=None
+                self.run_to_cursor_state=None
+                self.state.update(status='dead',debug=None,waiting_input=False,input_reply_consumed=False,
+                    error=tr('The Octave collector failed ({error}); reset the session. Variables could not be recovered.',
+                             error=f'{type(exc).__name__}: {exc}'))
+                try:self._kill(proc)
+                except Exception:pass  # The visible terminal state still holds.
+
+    def _collect_loop(self,job,folder,proc,events,gen,timeout):
         marker=f'__MF_DONE_{job}__';clear_marker=f'__MF_CLC_{job}__';debug_marker=f'__MF_DEBUG_{job}__';debug_inspect_marker=f'__MF_DEBUG_INSPECT_{job}__';rtc_ready_marker=f'__MF_RTC_READY_{job}__'
-        raw=''; snapshot_pending=False; clear_count=0; debug_serial=0; cleanup_marker=None; deadline=time.monotonic()+timeout if timeout else float('inf'); interrupted=None; reason=None; synced=False; ack=False
+        stop_attempts=0; last_stop_signal=0; recovery_attempts=0; recovery_cleanup=None; cleanup_pending=None; cleanup_sent=False
+        raw=''; snapshot_pending=False; clear_count=0; debug_serial=0; cleanup_marker=None; deadline=time.monotonic()+timeout if timeout else float('inf'); interrupted=None; reason=None; recovered=False
         decoder=codecs.getincrementaldecoder('utf-8')(errors='replace')
         def sync_file_fallback():
             # Called under the kernel lock. This job-local decision survives
@@ -333,39 +443,77 @@ class Kernel:
                     interrupted=time.monotonic(); reason=tr('Operation stopped.')
             if time.monotonic()>deadline and interrupted is None:
                 interrupted=time.monotonic(); reason=tr('The {seconds:g}-second time limit was exceeded.', seconds=timeout)
-                with self.lock:self.state['status']='stopping'
-                try: os.killpg(proc.pid,signal.SIGINT)
-                except ProcessLookupError: pass
-            with self.lock:pending_debug_continue=self.run_to_cursor_state is not None and self.state['status']=='stopping'
-            if interrupted and pending_debug_continue and time.monotonic()-interrupted>.25:
                 with self.lock:
-                    repeat_interrupt=self.run_to_cursor_state is not None and not self.run_to_cursor_state.get('interrupt_repeated')
-                    if repeat_interrupt:self.run_to_cursor_state['interrupt_repeated']=True
-                if repeat_interrupt:
-                    try:os.killpg(proc.pid,signal.SIGINT)
-                    except ProcessLookupError:pass
-            if interrupted and not synced and time.monotonic()-interrupted>.25 and (not pending_debug_continue or time.monotonic()-interrupted>2):
-                with self.lock:cleanup=self._take_run_to_cursor_cleanup_locked()
-                try: self._write_command(proc, f"{cleanup} {self.call('addpath', self.root / 'octave')} {self._marker_command(f'__MF_ACK_{job}__')} {self.call('__mf_execute__', str(folder), 'snapshot', '')}\n")
-                except (BrokenPipeError,OSError): pass
-                synced=True
-            if interrupted and time.monotonic()-interrupted>(30 if ack else 3):
-                self._kill(proc)
-                reason += tr(' Octave was terminated; reset the session. Variables could not be recovered.')
-                break
+                    self.state['status']='stopping'
+                    self._pending_interrupt=True
+                    self._watch_stop_readers_locked()
+            with self.lock:
+                if self.state['status']=='stopping' and getattr(self,'_pending_interrupt',False) and time.monotonic()-last_stop_signal>.25:
+                    try:dispatch=self._debug_prompt_file.read_text().split('\n')
+                    except OSError:dispatch=[]
+                    receipt=('D' if self._reader_mode=='control' else 'A')+' '+str(self._debug_ticket)
+                    finished=self._root_recovery_proven('\n'.join(dispatch),self._debug_ticket)
+                    completed=self._reader_mode=='eval' and 'C '+str(self._debug_ticket) in dispatch
+                    helper_wait=False; watchdog=False
+                    if getattr(self,'_reader_owned',False):
+                        size=sum(len(r)+1 for r in dispatch)
+                        if size!=getattr(self,'_helper_trace_size',0):
+                            self._helper_trace_size=size
+                            self._helper_progress_at=time.monotonic()
+                        waiting=False;position=0
+                        for record in dispatch:
+                            if position>=self._trace_offset and (record=='P '+str(self._debug_ticket) or
+                                    re.fullmatch('Q '+str(self._debug_ticket)+r' 0 [1-9][0-9]*',record)):
+                                waiting=True
+                            position+=len(record)+1
+                        watchdog=time.monotonic()-self._helper_progress_at>=self.HELPER_STOP_WATCHDOG
+                        helper_wait=not waiting and not watchdog
+                    if (receipt in dispatch or watchdog) and not finished and not completed and not helper_wait:
+                        # One signal consumes this request. Another requires a
+                        # new private reader record, not elapsed wall time: an
+                        # engine unwinding user cleanup must never get a burst.
+                        self._pending_interrupt=False
+                        self._reader_record_count=sum(r.startswith('Q '+str(self._debug_ticket)+' ') for r in dispatch)
+                        if stop_attempts>=4:
+                            self._kill(proc)
+                            reason=(reason or tr('Operation stopped.'))+tr(' Octave was terminated; reset the session. Variables could not be recovered.')
+                            break
+                        stop_attempts+=1;last_stop_signal=time.monotonic()
+                        try:self._send_interrupt_locked(proc)
+                        except ProcessLookupError:pass
             try: data=events.get(timeout=.1)
-            except queue.Empty: continue
+            except queue.Empty:
+                with self.lock:
+                    if self.state['status']!='stopping' and cleanup_pending is None:continue
+                data=b''
             if data is None:
                 reason=reason or tr('The Octave session closed. Reset the session to continue.')
                 break
             raw += decoder.decode(data)
+            with self.lock:
+                # A DONE already in transit is not a barrier for a SIGINT sent
+                # meanwhile. Await the ticket-tagged recovery acknowledgement
+                # before exposing idle and accepting the next user command.
+                recovery_marker=f'__MF_RECOVER_{self._debug_ticket}__'
+                if recovery_marker in raw:
+                    try:recovery_proof=self._debug_prompt_file.read_text().split('\n')
+                    except OSError:recovery_proof=[]
+                    if 'R '+str(self._debug_ticket) in recovery_proof:
+                        recovered=True
+                        raw=raw.replace(recovery_marker,'')+marker
+                if (self.state['status']=='stopping' and not recovered
+                        and (getattr(self,'_signal_job',None)==job or recovery_attempts)):
+                    raw=raw.replace(marker,'')
             if clear_marker in raw:
                 clear_count+=raw.count(clear_marker);raw=raw.rsplit(clear_marker,1)[1]
                 with self.lock:self.state['console_clear']=clear_count
             input_marker=f'__MF_INPUT_{job}__'
             if input_marker in raw:
                 raw=raw.replace(input_marker,'')
-                with self.lock:self.state['waiting_input']=True
+                with self.lock:
+                    stopping=self.state['status']=='stopping'
+                    self.state['waiting_input']=not stopping
+                    # Stdout is presentation, never evidence to retry a signal.
             # Neither a printed prompt nor a printed stop location authorizes
             # stdin. The input-wait hook must attest this executed command's
             # ticket in its separate file, with an ordered stdout marker.
@@ -374,108 +522,185 @@ class Kernel:
                 ticket=self._debug_ticket
                 prompt_marker=f'__MF_PROMPT_{ticket}__'
                 new_debug_prompt=False
-                if prompt_marker in raw:
+                root_reader=False
+                cleanup_reader=False
+                user_reader=False
+                reader_marker=f'__MF_READER_{ticket}__'
+                if prompt_marker in raw or reader_marker in raw or self.state['status']=='stopping' or cleanup_pending is not None:
                     try:proof=self._debug_prompt_file.read_text()
                     except OSError:proof=''
-                    if proof==ticket:
-                        new_debug_prompt=True
+                    records=proof.split('\n')
+                    cleanup_reader=self._root_recovery_proven(proof,ticket,require_signal=False)
+                    mode=getattr(self,'_reader_mode','job')
+                    # Consume records in order: a C after a P cannot prove that
+                    # earlier reader. Neither stdout nor a bare D is a permit.
+                    completed=mode=='job'
+                    attested=False
+                    dispatched=False
+                    received=False
+                    reader_records=[]
+                    # Program readers attested after the latest write/signal.
+                    fresh_readers=0;position=0
+                    for record in records:
+                        if record=='D '+str(ticket):dispatched=True
+                        if record in ('A '+str(ticket),'D '+str(ticket)):received=True
+                        if received and re.fullmatch('Q '+str(ticket)+r' 0 [0-9]+',record):
+                            reader_records.append(record)
+                            if not record.endswith(' 0 0') and position>=getattr(self,'_trace_offset',0):fresh_readers+=1
+                        if record==(('D' if mode=='control' else 'C')+' '+str(ticket)):completed=True
+                        if record=='P '+str(ticket):
+                            attested=True
+                            if completed:new_debug_prompt=True
+                        position+=len(record.encode())+1
+                    if len(reader_records)>getattr(self,'_reader_record_count',0):
+                        self._reader_record_count=len(reader_records)
+                        at_root=reader_records[-1].endswith(' 0 0')
+                        root_reader=at_root and self._root_recovery_proven(proof,ticket)
+                        # The hook tick that was running when a SIGINT arrived
+                        # still writes its record; that interrupt reaches the
+                        # reader at the next tick. Only a second record after
+                        # the signal shows a reader that outlived it.
+                        user_reader=not at_root and fresh_readers>=2
+                    raw=raw.replace(reader_marker,'')
+                    if attested:
                         raw=re.sub(r'(?:\[\d+\])?debug> \n'+re.escape(prompt_marker)+r'\n','',raw)
                         raw=raw.replace(prompt_marker,'')
-            if new_debug_prompt:
-                with self.lock:stop_at_debug_prompt=self.state['status']=='stopping' and self.run_to_cursor_state is not None
-                if stop_at_debug_prompt:
-                    with self.lock:cleanup=self._take_run_to_cursor_cleanup_locked()
-                    try:self._write_command(proc, f"{cleanup} {self.call('dbquit')}\n")
-                    except (BrokenPipeError,OSError):pass
-                    ack=True;synced=True;interrupted=time.monotonic()
-            pending_rtc_prompt=rtc_ready_marker in raw
-            if pending_rtc_prompt and new_debug_prompt:
-                raw=raw.replace(rtc_ready_marker,'')
-                with self.lock:
-                    stopping=self.state['status']=='stopping'
-                    pending_rtc=self.run_to_cursor_state is not None
-                if stopping and pending_rtc:
-                    with self.lock:cleanup=self._take_run_to_cursor_cleanup_locked()
-                    try:self._write_command(proc, f"{cleanup} {self.call('dbquit')}\n")
-                    except (BrokenPipeError,OSError):pass
-                    ack=True;interrupted=time.monotonic()
-                elif stopping:
-                    pass
-                elif (folder/'run-to-cursor-error.txt').exists():
-                    with self.lock:cleanup=self._take_run_to_cursor_cleanup_locked()
-                    try:self._write_command(proc, f"{cleanup} {self.call('__mf_debug_snapshot__', str(folder))}\n")
-                    except (BrokenPipeError,OSError):pass
-                else:
-                    with self.lock:
-                        if self.run_to_cursor_state:self.run_to_cursor_state['continued']=True
-                    try:self._write_command(proc, self.call('dbcont') + '\n')
-                    except (BrokenPipeError,OSError):pass
-            # Source text is only presentation. The snapshot obtains the real
-            # location after the input-wait hook has proved a debugger pause.
+                        if new_debug_prompt:
+                            self._reader_authorized=True
+                            self._native_input_ticket=None
+                            self.state.update(waiting_input=False,input_reply_consumed=False)
+                        elif mode=='eval' and not self.state.get('input_reply_consumed') and self.state['status']!='stopping':
+                            self._native_input_ticket=ticket
+                            self.state.update(status='running',waiting_input=True)
+                            if self.state.get('debug'):self.state['debug']['ready']=False
             with self.lock:
-                if gen!=self.generation or self.closed:return
-                needs_snapshot=self.state['status']=='running' or (self.state['status']=='paused' and not (self.state.get('debug') or {}).get('ready'))
-                if new_debug_prompt and needs_snapshot and not snapshot_pending and not pending_rtc_prompt and debug_marker not in raw and debug_inspect_marker not in raw:
-                    navigating=self.debug_frame_target is not None
-                    debug={'file':'','line':0,'ready':False,'serial':debug_serial}
-                    if not navigating:self.state.update(status='paused',debug=debug,waiting_input=False)
-                    cleanup=self._run_to_cursor_hit_cleanup_locked(debug['file'],debug['line']) if not navigating else ''
-                    snapshot_pending=True
-                    try:self._write_command(proc, f"{cleanup} {self.call('__mf_debug_snapshot__',str(folder))}\n")
-                    except (BrokenPipeError,OSError):pass
-            if debug_marker in raw and new_debug_prompt:
-                snapshot_pending=False
-                raw=raw.replace(debug_marker,'');debug_serial+=1
-                try:debug_meta=json.loads((folder/'debug.json').read_text())
-                except (OSError,ValueError):debug_meta={'variables':[]}
+                # Stop/reset can consume the permit after proof parsing. Never
+                # dispatch or publish a snapshot using that superseded prompt.
+                if gen!=self.generation or proc is not self.proc or self.closed:return
+                if ticket!=self._debug_ticket:continue
+                if new_debug_prompt and not self._reader_authorized:new_debug_prompt=False
+                with self.lock:stopping=self.state['status']=='stopping'
+                if stopping and root_reader and marker not in raw:
+                    if recovery_cleanup is None:recovery_cleanup=self._take_run_to_cursor_cleanup_locked()
+                    if recovery_attempts<3:
+                        try:
+                            if self._write_recovery_locked(job,folder,proc,gen,ticket,recovery_cleanup):
+                                recovery_attempts+=1
+                        except (BrokenPipeError,OSError):pass
+                    elif stop_attempts<4:
+                        try:self._send_interrupt_locked(proc)
+                        except ProcessLookupError:pass
+                        stop_attempts+=1
+                    else:
+                        self._kill(proc)
+                        reason=(reason or tr('Operation stopped.'))+tr(' Octave was terminated; reset the session. Variables could not be recovered.')
+                        break
+                elif stopping and user_reader:
+                    # Use the same bounded scheduler as explicit input markers.
+                    # A fresh Q must not send a second SIGINT during the abort
+                    # already started by the receipt check above.
+                    with self.lock:self._pending_interrupt=True
+                if new_debug_prompt:
+                    with self.lock:stop_at_debug_prompt=self.state['status']=='stopping'
+                    if stop_at_debug_prompt and stop_attempts<4:
+                        with self.lock:
+                            cleanup=self._take_run_to_cursor_cleanup_locked()
+                            self._pending_interrupt=False
+                        try:self._write_control(proc, self.call('dbquit'), cleanup+' ')
+                        except (BrokenPipeError,OSError):pass
+                        stop_attempts+=1
+                    if stop_at_debug_prompt:new_debug_prompt=False
+                pending_rtc_prompt=rtc_ready_marker in raw
+                if pending_rtc_prompt and new_debug_prompt:
+                    raw=raw.replace(rtc_ready_marker,'')
+                    with self.lock:
+                        stopping=self.state['status']=='stopping'
+                    if stopping:
+                        pass
+                    elif (folder/'run-to-cursor-error.txt').exists():
+                        with self.lock:cleanup=self._take_run_to_cursor_cleanup_locked()
+                        try:self._write_command(proc, f"{cleanup} {self.call('__mf_debug_snapshot__', str(folder))}\n", reader='eval')
+                        except (BrokenPipeError,OSError):pass
+                    else:
+                        with self.lock:
+                            if self.run_to_cursor_state:self.run_to_cursor_state['continued']=True
+                        try:self._write_control(proc, self.call('dbcont'))
+                        except (BrokenPipeError,OSError):pass
+                # Source text is only presentation. The snapshot obtains the real
+                # location after the input-wait hook has proved a debugger pause.
                 with self.lock:
-                    if (folder/'run-to-cursor-error.txt').exists():self.run_to_cursor_state=None
-                    if gen==self.generation and self.state.get('debug'):
-                        self.state['variables']=debug_meta.get('variables',[])
-                        self.state['debug']['stack']=debug_meta.get('stack',[])
-                        if self.debug_frame_target is not None:
-                            for frame in self.state['debug']['stack']:frame['current']=frame.get('index')==self.debug_frame_target
-                            self.debug_frame_target=None
-                        current=next((frame for frame in self.state['debug']['stack'] if frame.get('current')),None)
-                        if current:self.state['debug'].update(file=current['file'],line=current['line'],frame=current['index'])
-                        # Dynamic/native prompts may omit the textual stop.
-                        # Use the actual snapshot location for temporary-breakpoint
-                        # cleanup too, before exposing the pause as ready.
-                        cleanup=self._run_to_cursor_hit_cleanup_locked(self.state['debug']['file'],self.state['debug']['line'])
-                        if cleanup:
-                            snapshot_pending=True
-                            try:self._write_command(proc, f"{cleanup} {self.call('__mf_debug_snapshot__',str(folder))}\n")
-                            except (BrokenPipeError,OSError):pass
-                            continue
-                        self.state['debug'].pop('detail',None)
-                        self.state['debug'].update(ready=True,serial=debug_serial)
-                        self.state['status']='paused'
-                        sync_file_fallback()
-            if debug_inspect_marker in raw and new_debug_prompt:
-                raw=raw.replace(debug_inspect_marker,'');debug_serial+=1
-                try:debug_detail=json.loads((folder/'debug-inspect.json').read_text())
-                except (OSError,ValueError):debug_detail={'error':tr('Could not retrieve the variable view.')}
-                with self.lock:
-                    if gen==self.generation and self.state.get('debug'):
-                        self.state['debug'].pop('detail',None)
-                        if debug_detail.get('error'):self.state['error']=debug_detail['error']
-                        else:self.state['debug']['detail']=debug_detail.get('detail')
-                        self.state['debug'].update(ready=True,serial=debug_serial)
-                        self.state['status']='paused'
+                    if gen!=self.generation or self.closed:return
+                    needs_snapshot=self.state['status']=='running' or (self.state['status']=='paused' and not (self.state.get('debug') or {}).get('ready'))
+                    if new_debug_prompt and needs_snapshot and not snapshot_pending and not pending_rtc_prompt and debug_marker not in raw and debug_inspect_marker not in raw:
+                        navigating=self.debug_frame_target is not None
+                        debug={'file':'','line':0,'ready':False,'serial':debug_serial}
+                        if not navigating:self.state.update(status='paused',debug=debug,waiting_input=False)
+                        cleanup=self._run_to_cursor_hit_cleanup_locked(debug['file'],debug['line']) if not navigating else ''
+                        snapshot_pending=True
+                        try:self._write_command(proc, f"{cleanup} {self.call('__mf_debug_snapshot__',str(folder))}\n", reader='eval')
+                        except (BrokenPipeError,OSError):pass
+                if debug_marker in raw and new_debug_prompt and self.state['status']!='stopping':
+                    snapshot_pending=False
+                    raw=raw.replace(debug_marker,'');debug_serial+=1
+                    try:debug_meta=json.loads((folder/'debug.json').read_text())
+                    except (OSError,ValueError):debug_meta={'variables':[]}
+                    with self.lock:
+                        if (folder/'run-to-cursor-error.txt').exists():self.run_to_cursor_state=None
+                        if gen==self.generation and self.state.get('debug'):
+                            self.state['variables']=debug_meta.get('variables',[])
+                            self.state['debug']['stack']=debug_meta.get('stack',[])
+                            if self.debug_frame_target is not None:
+                                for frame in self.state['debug']['stack']:frame['current']=frame.get('index')==self.debug_frame_target
+                                self.debug_frame_target=None
+                            current=next((frame for frame in self.state['debug']['stack'] if frame.get('current')),None)
+                            if current:self.state['debug'].update(file=current['file'],line=current['line'],frame=current['index'])
+                            # Dynamic/native prompts may omit the textual stop.
+                            # Use the actual snapshot location for temporary-breakpoint
+                            # cleanup too, before exposing the pause as ready.
+                            cleanup=self._run_to_cursor_hit_cleanup_locked(self.state['debug']['file'],self.state['debug']['line'])
+                            if cleanup:
+                                snapshot_pending=True
+                                try:self._write_command(proc, f"{cleanup} {self.call('__mf_debug_snapshot__',str(folder))}\n", reader='eval')
+                                except (BrokenPipeError,OSError):pass
+                                continue
+                            self.state['debug'].pop('detail',None)
+                            self.state['debug'].update(ready=True,serial=debug_serial)
+                            self.state['status']='paused'
+                            sync_file_fallback()
+                if debug_inspect_marker in raw and new_debug_prompt and self.state['status']!='stopping':
+                    raw=raw.replace(debug_inspect_marker,'');debug_serial+=1
+                    try:debug_detail=json.loads((folder/'debug-inspect.json').read_text())
+                    except (OSError,ValueError):debug_detail={'error':tr('Could not retrieve the variable view.')}
+                    with self.lock:
+                        if gen==self.generation and self.state.get('debug'):
+                            self.state['debug'].pop('detail',None)
+                            if debug_detail.get('error'):self.state['error']=debug_detail['error']
+                            else:self.state['debug']['detail']=debug_detail.get('detail')
+                            self.state['debug'].update(ready=True,serial=debug_serial)
+                            self.state['status']='paused'
             ack_marker=f'__MF_ACK_{job}__'
             if ack_marker in raw:
-                raw=raw.replace(ack_marker,'');ack=True;interrupted=time.monotonic()
+                raw=raw.replace(ack_marker,'')
             if marker in raw:
+                with self.lock:
+                    self._completed_job=job
+                    cleanup_pending=self._take_run_to_cursor_cleanup_locked()
                 raw=raw.split(marker)[0]
-                with self.lock:cleanup=self._take_run_to_cursor_cleanup_locked()
-                if cleanup:
-                    cleanup_marker=f'__MF_RTC_CLEAN_{job}__'
-                    try:self._write_command(proc, f'{cleanup} {self._marker_command(cleanup_marker)}\n')
-                    except (BrokenPipeError,OSError):break
-                else:break
-            if cleanup_marker and cleanup_marker in raw:
-                raw=raw.replace(cleanup_marker,'')
-                break
+                if not cleanup_pending:break
+                cleanup_marker=f'__MF_RTC_CLEAN_{job}__'
+            if cleanup_pending is not None:
+                with self.lock:
+                    if gen!=self.generation or proc is not self.proc or self.job!=job or self.closed:return
+                    if not cleanup_sent and ticket==self._debug_ticket and (cleanup_reader or (new_debug_prompt and self._reader_authorized)):
+                        self._write_command(proc,f'{cleanup_pending} {self._marker_command(cleanup_marker)}\n',reader='eval')
+                        cleanup_sent=True
+                    elif cleanup_sent and cleanup_marker in raw:
+                        try:cleanup_proof=self._debug_prompt_file.read_text()
+                        except OSError:cleanup_proof=''
+                        if ('C '+str(self._debug_ticket)+'\n' in cleanup_proof and
+                                (self._root_recovery_proven(cleanup_proof,self._debug_ticket,require_signal=False) or self._reader_authorized)):
+                            raw=raw.replace(cleanup_marker,'')
+                            break
             if len(raw)>1_000_000: raw=tr('[Previous output truncated]\n')+raw[-800_000:]
             with self.lock:
                 if gen==self.generation:
@@ -483,6 +708,9 @@ class Kernel:
                     self.state['elapsed']=round(time.time()-self.state['started'],2)
         with self.lock:
             if gen!=self.generation or self.closed:return
+            # Stop may arrive while get() is returning DONE, after the loop's
+            # stop check. Commit its note under the same lock as the result.
+            if self.state['status']=='stopping' and not reason:reason=tr('Operation stopped.')
             self.state['output']=self._clean(raw)
             self.state['elapsed']=round(time.time()-self.state['started'],3)
             try:
@@ -524,6 +752,10 @@ class Kernel:
             self.state['status']='dead' if proc.poll() is not None or not (folder/'result.json').exists() else 'idle'
             self.state['job']=job
             self.state['waiting_input']=False
+            self.state['input_reply_consumed']=False
+            self._pending_interrupt=False
+            if getattr(self,'_debug_prompt_file',None):
+                Path(str(self._debug_prompt_file)+'.stop').unlink(missing_ok=True)
             self.state['debug']=None
             self.debug_frame_target=None
             self._prune()
@@ -532,7 +764,7 @@ class Kernel:
         import re
         text=re.sub(r'\x1b\[[0-9;]*[A-Za-z]','',text)
         text=re.sub(r'^octave:\d+> ?','',text,flags=re.M)
-        text=re.sub(r'__MF_(?:DONE|ACK|INPUT|CLC|DEBUG(?:_INSPECT)?|RTC_CLEAN|RTC_READY|PROMPT)_[a-f0-9]{32}__','',text)
+        text=re.sub(r'__MF_(?:DONE|ACK|INPUT|CLC|RECOVER|DEBUG(?:_INSPECT)?|RTC_CLEAN|RTC_READY|PROMPT|READER)_[a-f0-9]{32}__','',text)
         text=re.sub(r'(?:^|\n)stopped in .*? at line \d+ \[[^\]\r\n]+\]\s*\n\d+:.*?(?=\n|$)','',text)
         text=re.sub(r'(?:^|\n)stopped in .*? at line \d+ \[[^\]\r\n]+\]\s*(?=\n|$)','',text)
         text=re.sub(r'__MF_[A-Za-z0-9_]*$','',text)
@@ -541,30 +773,35 @@ class Kernel:
 
     def interrupt(self):
         with self.lock:
-            if self.state['status']=='paused':
-                self.state['status']='stopping';self.state['debug']=None
-                cleanup=self._take_run_to_cursor_cleanup_locked()
-                try:self._write_command(self.proc, f"{cleanup} {self.call('dbquit')}\n")
-                except (BrokenPipeError,OSError):pass
-                return
-            if self.state['status']=='running' and self.run_to_cursor_state and not self.run_to_cursor_state.get('continued'):
-                self.state['status']='stopping';self.state['debug']=None
-                cleanup=self._take_run_to_cursor_cleanup_locked()
-                try:self._write_command(self.proc, f"{cleanup} {self.call('dbquit')}\n")
-                except (BrokenPipeError,OSError):pass
-                return
-            if self.state['status']=='stopping' and self.run_to_cursor_state and self.run_to_cursor_state.get('continued'):
-                try:os.killpg(self.proc.pid,signal.SIGINT)
-                except ProcessLookupError:pass
-                return
-            if self.state['status'] not in ('running','starting'):return
+            if self.state['status'] not in ('paused','running','starting'):return
             self.state['status']='stopping'
-            try:os.killpg(self.proc.pid,signal.SIGINT)
-            except ProcessLookupError:pass
+            self._watch_stop_readers_locked()
+            self.state['waiting_input']=False
+            if getattr(self,'_reader_authorized',False):
+                self.state['debug']=None
+                cleanup=self._take_run_to_cursor_cleanup_locked()
+                try:self._write_control(self.proc, self.call('dbquit'), cleanup+' ')
+                except (BrokenPipeError,OSError):pass
+            else:
+                # A helper/control may still be unread. The collector waits for
+                # its receipt before bounded SIGINT retries; never queue dbquit.
+                self._pending_interrupt=True
+
 
     def input(self,text):
         with self.lock:
             if self.state['status']!='running' or not self.state.get('waiting_input'):raise ValueError(tr('No operation is waiting for input.'))
+            if getattr(self,'_native_input_ticket',None)==self._debug_ticket:
+                if not isinstance(text,str) or any(ord(c)<32 or ord(c)==127 for c in text):
+                    raise ValueError(tr('Native input replies cannot contain control characters (U+0000–U+001F or U+007F).'))
+                self._native_input_ticket=None
+                self.state.update(waiting_input=False,input_reply_consumed=True)
+                # Exactly one explicit user line. No ticket, language, snapshot
+                # or protocol suffix may accompany it. Do not rotate out of band:
+                # an old-reader hook can attest a new ticket before consuming it.
+                self._record_engine_action_locked()
+                self.proc.stdin.write((text+'\n').encode())
+                return
             self.state['waiting_input']=False
             folder=self.runtime/self.job
             tmp=folder/'input.tmp';tmp.write_text(text,encoding='utf-8');tmp.replace(folder/'input.txt')
@@ -691,7 +928,7 @@ class Kernel:
             command=self.call('__mf_run_to_cursor__',str(folder),str(path),str(line))+'\n'
             self.run_to_cursor_state={'file':key,'line':line,'actual_line':None,'original':dict(original) if original else None,'job':self.job,'folder':str(folder),'continued':False,'interrupt_repeated':False}
             self.state['status']='running';self.state['debug']['ready']=False
-            try:self._write_command(self.proc, command)
+            try:self._write_command(self.proc, command, reader='eval')
             except (BrokenPipeError,OSError):
                 self.run_to_cursor_state=None
                 raise ValueError(tr('Octave closed. Reset the session.'))
@@ -802,11 +1039,13 @@ class Kernel:
                 move=self.call('dbup',delta) if delta>0 else self.call('dbdown',-delta)
                 line=move+'\n'
                 self.debug_frame_target=target
-            elif command=='quit':line=f"{self._take_run_to_cursor_cleanup_locked()} {self.call('dbquit')}\n{self.call('addpath',self.root/'octave')} {self.call('__mf_execute__',str(folder),'snapshot','')}\n"
+            elif command=='quit':line=controls[command]+'\n'
             elif command in controls:line=controls[command]+'\n'
             else:raise ValueError(tr('Invalid debugger command.'))
-            self.state['status']='running';self.state['debug']['ready']=False
-            try:self._write_command(self.proc, line)
+            self.state['status']='stopping' if command=='quit' else 'running';self.state['debug']['ready']=False
+            try:
+                if command in controls:self._write_control(self.proc,controls[command],self._take_run_to_cursor_cleanup_locked()+' ' if command=='quit' else '')
+                else:self._write_command(self.proc,line,reader='eval',user_eval=command=='eval')
             except (BrokenPipeError,OSError):
                 self.debug_frame_target=None
                 raise ValueError(tr('Octave closed. Reset the session.'))
@@ -856,6 +1095,7 @@ class Kernel:
             except (OSError,AttributeError):pass
         if proc is self.proc and getattr(self,'_debug_prompt_file',None):
             self._debug_prompt_file.unlink(missing_ok=True)
+            Path(str(self._debug_prompt_file)+'.stop').unlink(missing_ok=True)
 
     def close(self):
         with self.lock:

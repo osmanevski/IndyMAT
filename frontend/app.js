@@ -7,6 +7,7 @@ import "./settings.js";
 import "./layout.js";
 import "./symbols.js";
 import "./editor.js";
+import "./block_editor.js";
 import "./outline.js";
 import "./files.js";
 import "./file_ops.js";
@@ -34,6 +35,7 @@ registry.setupLayout();
 // The CSP allows this bundled script; reveal only after stored language is applied.
 document.body.style.removeProperty("visibility");
 registry.setupEditor();
+registry.setupBlockEditor();
 registry.setupEditorIntel();
 registry.setupModal();
 registry.setupFileSearch();

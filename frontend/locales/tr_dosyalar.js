@@ -129,5 +129,6 @@ export default {
   "Only the PNG view is available: invalid figure data indices.": "Yalnızca PNG görünümü kullanılabilir: geçersiz grafik verisi indeksleri.",
   "Only the PNG view is available: WebGL2 is unavailable.": "Yalnızca PNG görünümü kullanılabilir: WebGL2 kullanılamıyor.",
   "Only the PNG view is available: the 3D renderer could not start.": "Yalnızca PNG görünümü kullanılabilir: 3B işleyicisi başlatılamadı.",
-  "Only the PNG view is available: the graphics context was lost.": "Yalnızca PNG görünümü kullanılabilir: grafik bağlamı kayboldu."
+  "Only the PNG view is available: the graphics context was lost.": "Yalnızca PNG görünümü kullanılabilir: grafik bağlamı kayboldu.",
+  "This action is not available for block diagrams.": "Bu işlem blok diyagramlarında kullanılamaz."
 };

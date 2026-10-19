@@ -677,3 +677,54 @@ body.resizing-rows,body.resizing-rows *{cursor:row-resize!important;user-select:
 .settings-note, .file-source-settings-note { color: var(--muted); font-size: 12px; line-height: 1.5; }
 .source-error-location { font: inherit; color: var(--danger); margin: 4px 0; }
 .source-snapshot { width: 100%; min-height: 300px; white-space: pre; font-family: monospace; }
+
+/* Block diagram editor (frontend/block_editor.js): app tokens only, one accent. */
+.block-editor{flex:1;min-height:0;display:flex;flex-direction:column;background:var(--surface)}
+.block-editor[hidden]{display:none}
+.block-toolbar{display:flex;align-items:center;gap:4px;height:34px;padding:0 8px;border-bottom:1px solid var(--line);flex-shrink:0;min-width:0;overflow:hidden}
+.block-toolbar button,.block-toolbar select{height:24px;padding:0 8px;white-space:nowrap;font-size:12px}
+.block-toolbar select{background:var(--surface-2);color:var(--text);border:1px solid var(--line);border-radius:5px;max-width:190px}
+.block-toolbar .block-icon-button{width:24px;padding:0}
+.block-zoom{min-width:40px;text-align:center;font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums}
+.block-separator{width:1px;height:16px;background:var(--line);margin:0 4px}
+.block-status{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11px;color:var(--muted);text-align:right}
+.block-status.error{color:var(--danger)}
+.block-main{flex:1;min-height:0;display:flex}
+.block-canvas{flex:1;min-width:0;position:relative;overflow:hidden}
+.block-svg{display:block;width:100%;height:100%;outline:none;touch-action:none;user-select:none;-webkit-user-select:none;cursor:grab}
+.block-node{cursor:move}
+.block-node rect{fill:var(--surface-2);stroke:var(--line);stroke-width:1.2}
+.block-node:hover rect{fill:var(--hover)}
+.block-node.selected rect{stroke:var(--accent);stroke-width:2.2}
+.block-node.failed rect{stroke:var(--danger);stroke-width:2.2}
+.block-node:focus{outline:none}
+.block-node:focus-visible rect{stroke:var(--accent);stroke-width:3}
+.block-node text{fill:var(--text);text-anchor:middle;pointer-events:none;font-size:12px}
+.block-node .block-sub{fill:var(--muted);font-size:10.5px;font-family:var(--mono)}
+.block-node .block-port-label{text-anchor:start;fill:var(--muted);font-size:11px;font-family:var(--mono)}
+.block-port{fill:var(--surface);stroke:var(--muted);stroke-width:1.4;cursor:crosshair}
+.block-port:hover,.block-port.candidate{fill:var(--accent);stroke:var(--accent)}
+.block-wire{cursor:pointer}
+.block-wire:focus{outline:none}
+.block-wire-line{fill:none;stroke:var(--muted);stroke-width:1.6;pointer-events:none}
+.block-wire-hit{fill:none;stroke:transparent;stroke-width:12}
+.block-wire.selected .block-wire-line,.block-wire:focus-visible .block-wire-line{stroke:var(--accent);stroke-width:2.6}
+.block-wire.failed .block-wire-line{stroke:var(--danger);stroke-width:2.6}
+.block-wire-ghost{fill:none;stroke:var(--accent);stroke-width:1.6;stroke-dasharray:5 4;pointer-events:none}
+.block-panel{width:220px;flex-shrink:0;overflow:auto;padding:10px 12px;border-left:1px solid var(--line);background:var(--surface-side);font-size:12px}
+.block-panel h3{margin:0 0 8px;font-size:12px;font-weight:600}
+.block-field{display:flex;flex-direction:column;gap:3px;margin-bottom:8px}
+.block-field>span:first-child{color:var(--muted);font-family:var(--mono);font-size:11px}
+.block-field input,.block-field select{height:24px;padding:0 6px;border:1px solid var(--line);border-radius:5px;background:var(--surface);color:var(--text);font-family:var(--mono);font-size:12px}
+.block-field input:focus{border-color:var(--accent)}
+.block-field input[readonly]{color:var(--muted)}
+.block-field input[aria-invalid="true"]{border-color:var(--danger)}
+.block-field-error{color:var(--danger);font-size:11px;line-height:1.35}
+.block-field-error:empty{display:none}
+.block-meta,.block-hint{margin:0 0 8px;color:var(--muted);line-height:1.45}
+.block-danger{height:26px;padding:0 10px;border:1px solid var(--line);color:var(--danger)}
+.diagram-switch{width:auto!important;padding:0 8px!important;font-size:11px!important;border:1px solid var(--line)!important}
+.diagram-note{color:var(--warn);max-width:420px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.console-generated{margin:2px 0 4px;color:var(--muted);font-size:11px}
+.console-generated summary{cursor:pointer}
+.console-generated pre{max-height:180px;overflow:auto;white-space:pre-wrap;word-break:break-all}

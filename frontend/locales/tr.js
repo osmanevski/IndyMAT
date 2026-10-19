@@ -1,4 +1,5 @@
 export default {
+  "One reply was sent. Further readers cannot be authenticated; only Stop is available.": "Bir yanıt gönderildi. Sonraki okuyucular doğrulanamıyor; yalnızca Durdur kullanılabilir.",
   "New File": "Yeni dosya",
   "New": "Yeni",
   "Import a file from your computer": "Bilgisayarından dosya al",

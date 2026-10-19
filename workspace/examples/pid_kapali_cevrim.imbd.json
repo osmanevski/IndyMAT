@@ -1,0 +1,51 @@
+{
+  "imbVersion": 1,
+  "model": {
+    "schemaVersion": 1,
+    "blocks": [
+      {"id": "reference", "type": "Step", "params": {"time": 0, "before": 0, "after": 1}, "sampleTime": 0},
+      {"id": "error", "type": "Sum", "params": {"signs": [1, -1]}, "sampleTime": 0},
+      {"id": "proportional", "type": "Gain", "params": {"gain": 2}, "sampleTime": 0},
+      {"id": "integral", "type": "Integrator", "params": {}, "sampleTime": 0, "initialState": 0},
+      {"id": "integral_gain", "type": "Gain", "params": {"gain": 1}, "sampleTime": 0},
+      {"id": "derivative_filter", "type": "TransferFcn", "params": {"num": 1, "den": [0.1, 1]}, "sampleTime": 0},
+      {"id": "derivative_error", "type": "Sum", "params": {"signs": [1, -1]}, "sampleTime": 0},
+      {"id": "derivative_gain", "type": "Gain", "params": {"gain": 10}, "sampleTime": 0},
+      {"id": "control", "type": "Sum", "params": {"signs": [1, 1, 1]}, "sampleTime": 0},
+      {"id": "plant", "type": "TransferFcn", "params": {"num": 1, "den": [1, 2, 1]}, "sampleTime": 0},
+      {"id": "output", "type": "Scope", "params": {}, "sampleTime": 0}
+    ],
+    "connections": [
+      {"from": {"block": "reference", "port": 1}, "to": {"block": "error", "port": 1}},
+      {"from": {"block": "plant", "port": 1}, "to": {"block": "error", "port": 2}},
+      {"from": {"block": "error", "port": 1}, "to": {"block": "proportional", "port": 1}},
+      {"from": {"block": "error", "port": 1}, "to": {"block": "integral", "port": 1}},
+      {"from": {"block": "integral", "port": 1}, "to": {"block": "integral_gain", "port": 1}},
+      {"from": {"block": "error", "port": 1}, "to": {"block": "derivative_filter", "port": 1}},
+      {"from": {"block": "error", "port": 1}, "to": {"block": "derivative_error", "port": 1}},
+      {"from": {"block": "derivative_filter", "port": 1}, "to": {"block": "derivative_error", "port": 2}},
+      {"from": {"block": "derivative_error", "port": 1}, "to": {"block": "derivative_gain", "port": 1}},
+      {"from": {"block": "proportional", "port": 1}, "to": {"block": "control", "port": 1}},
+      {"from": {"block": "integral_gain", "port": 1}, "to": {"block": "control", "port": 2}},
+      {"from": {"block": "derivative_gain", "port": 1}, "to": {"block": "control", "port": 3}},
+      {"from": {"block": "control", "port": 1}, "to": {"block": "plant", "port": 1}},
+      {"from": {"block": "plant", "port": 1}, "to": {"block": "output", "port": 1}}
+    ],
+    "simulation": {"mode": "continuous", "t0": 0, "tf": 40, "solver": "ode45", "outputDt": 0.01, "relTol": 1e-9, "absTol": 1e-11, "maxStep": 0.05}
+  },
+  "layout": {
+    "blocks": {
+      "reference": {"x": 20, "y": 170},
+      "error": {"x": 190, "y": 170},
+      "proportional": {"x": 380, "y": 40},
+      "integral": {"x": 380, "y": 170},
+      "integral_gain": {"x": 550, "y": 170},
+      "derivative_filter": {"x": 380, "y": 300},
+      "derivative_error": {"x": 550, "y": 300},
+      "derivative_gain": {"x": 720, "y": 300},
+      "control": {"x": 890, "y": 170},
+      "plant": {"x": 1060, "y": 170},
+      "output": {"x": 1230, "y": 170}
+    }
+  }
+}

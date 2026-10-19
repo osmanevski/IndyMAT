@@ -26,6 +26,7 @@ Uygulamanın teknik yapısı:
 - Sinyal işleme ve filtre tasarımı; kontrol sistemleri ve frekans cevabı inceleme.
 - 2B ve 3B grafik oluşturma; desteklenen grafiklerde yakınlaştırma, kaydırma, 3B döndürme ve veri ipuçları.
 - Blok diyagramı modellerini metin olarak (netlist) tanımlama ve Octave üzerinde simüle etme: `im_compile` modeli doğrular, `im_simulate` çalıştırır, `im_example_model` hazır örnek modeller kurar. Model biçimi `octave/block-models.md` dosyasında anlatılır; `workspace/examples/netlist_*.m` örnekleri hazır gelir.
+- Blok diyagramı editörü: Geçerli klasörde açılan `.imbd.json` dosyası diyagram olarak gösterilir. `im_compile`'ın 13 blok türü eklenir, taşınır, bağlanır ve silinir. Parametreler yan panelde yalnız sayı olarak girilir. Geri alma, klavyeyle düzenleme ve metin olarak açma vardır. Çalıştır, modeli görünür bir komutla `im_simulate`'e verir ve her Scope'u ayrı bir grafikte çizer. Editör IndyMAT blok modellerini düzenler; Simulink uyumluluğu değildir. Örnek: `workspace/examples/pid_kapali_cevrim.imbd.json`.
 - Ders örnekleri, mühendislik hesapları ve tekrarlanabilir sayısal deneyler hazırlama.
 
 ## Çalışma ortamı
@@ -110,9 +111,9 @@ grid on;
   - 3B: `plot3`, `scatter3`, `surf`, `mesh`, `contour`/`contourf` ve `patch`.
   - Tek değerli saydamlık etkileşimlidir: `surf`, `mesh`, `patch`, `fill`, `area`, `bar` ve `contourf` için `FaceAlpha`/`EdgeAlpha`, 2B `scatter` için `MarkerFaceAlpha`/`MarkerEdgeAlpha`. Octave'da `bar` saydamlığı çubuğun patch'ine ayarlanır: `set(findobj(h,'type','patch'),'FaceAlpha',0.4)`.
   - Şunlar PNG olarak, nedeni yazılarak gösterilir: ışıklandırma; `scatter3` işaretçilerinde ve resimlerde saydamlık; veriyle değişen saydamlık; 8 katmandan derin saydam sahneler; `scatter`/`scatter3`'te nokta başına renk; 2B `patch`'te yüz başına renk ya da renk geçişi (`'interp'`); 3B `patch`'te üçten fazla köşeli yüzlerde renk geçişi; renk geçişli `contourf`; boyut bütçesini aşan grafikler.
-- Netlist katmanı Simulink değildir: 13 blok türü ve tek örnekleme hızıyla sınırlıdır; görsel blok editörü ve `.slx`/`.mdl` desteği yoktur.
+- Netlist katmanı ve blok diyagramı editörü Simulink değildir: 13 blok türü ve tek örnekleme hızıyla sınırlıdır; `.slx`/`.mdl` desteği yoktur.
 - MATLAB ile tam dil ya da Toolbox uyumluluğu iddia edilmez; ölçülen davranış durumları ve bilinen farklar `uyumluluk/` altında kayıtlıdır.
-- Hata ayıklama duraklamasındayken `input` çağıran bir ifade değerlendirmek bilinen bir kusurdur: istek kullanıcının yanıtı yerine iç bir satır alabilir. Duraklamada `input` kullanmayın.
+- Hata ayıklama duraklamasında değerlendirilen bir ifadedeki `input` yanıtını kullanıcıdan alır. Octave'ın kendi okuyucusu (`builtin('input', ...)` ya da ifadedeki `keyboard`) bu durumda yalnızca bir satır alır. Aynı ifade ikinci bir satır beklerse yalnızca Durdur kullanılabilir.
 - Kod denetimi yalnızca Octave ayrıştırma hatalarını gösterir. Değişken düzenleyici verileri sayfa sayfa okur; hücre dizisi ve yapı içerikleri salt okunurdur.
 - Kaydetme mekanizması hard link destekleyen bir dosya sistemi gerektirir.
 - Çalıştırılan Octave kodu kullanıcının işletim sistemi yetkilerine sahiptir. Dosya panelinin sınırları kod yürütme için bir sandbox oluşturmaz.

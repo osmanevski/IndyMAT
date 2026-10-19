@@ -212,7 +212,7 @@ registry.registerShortcut({ id: "global.run", label: "Run File", scope: "global"
 registry.registerShortcut({ id: "global.run-selection", label: "Run Selected Code", scope: "global", scopeLabel: "General", bindings: ["F9"], command: () => registry.safe(registry.runSelection) });
 registry.registerShortcut({ defaultMatch: { keys: ["c"], lowercase: true, modifiers: "control" }, id: "global.stop", label: "Stop the running computation", scope: "global", scopeLabel: "General", bindings: ["Ctrl+KeyC"], configurable: false, when: (event) => {
   if (!shared.busy) return false;
-  const command = event.target === registry.$("#command"), editing = event.target.closest?.("#editor");
-  const selected = command ? event.target.selectionStart !== event.target.selectionEnd : editing ? shared.editor.state.selection.ranges.some((range) => !range.empty) : true;
-  return (command || editing) && !selected;
+  const command = event.target === registry.$("#command"), editing = event.target.closest?.("#editor"), diagram = event.target.closest?.(".block-svg");
+  const selected = command ? event.target.selectionStart !== event.target.selectionEnd : editing ? shared.editor.state.selection.ranges.some((range) => !range.empty) : !diagram;
+  return (command || editing || diagram) && !selected;
 }, command: () => registry.safe(() => registry.api("stop", {})) });

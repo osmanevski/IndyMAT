@@ -58,5 +58,7 @@ export default {
   "No function or variable name to search for at the cursor.": "İmleçte aranacak bir işlev veya değişken adı yok.",
   "Go to Definition": "Tanıma git",
   "Find Usages": "Kullanımları bul",
-  "Untitled section": "Adsız bölüm"
+  "Untitled section": "Adsız bölüm",
+  "Block diagram": "Blok diyagramı",
+  "A block diagram file name must end with .imbd.json.": "Blok diyagramı dosya adı .imbd.json ile bitmeli."
 };

@@ -32,8 +32,10 @@ class ChannelCleanup(unittest.TestCase):
  def test_nested_keyboard(self):
   self.k.submit('keyboard;');serial=self.paused()['debug']['serial']
   self.k.debug('eval',"eval('keyboard'); nested_done=17;")
-  s=self.paused(serial);self.assertFalse(s['waiting_input']);serial=s['debug']['serial']
-  self.k.debug('continue');s=self.paused(serial)
+  # A reader inside the still-running eval cannot be distinguished from input.
+  s=self.wait(lambda s:s['waiting_input']);self.assertEqual(s['status'],'running')
+  with self.assertRaises(ValueError):self.k.debug('continue')
+  self.k.input('(@dbcont)();');s=self.paused(serial)
   self.assertEqual(next(v['preview'] for v in s['variables'] if v['name']=='nested_done'),'17')
   self.k.debug('continue');self.assertFalse(self.wait(lambda s:s['status']=='idle')['error'])
  def test_fclose_keyboard(self):

@@ -120,6 +120,11 @@ const sections = ViewPlugin.fromClass(class {
 }, { decorations: (v) => v.decorations });
 function updateLintCaption() {
   let node = registry.$("#code-issues"), state = shared.active?.lintState;
+  if (registry.isDiagramTab?.(shared.active) === true) {
+    node.classList.remove("error");
+    node.textContent = tr("Block diagram");
+    return;
+  }
   node.classList.toggle("error", state?.kind === "error");
   node.textContent = state?.kind === "ok" ? tr("No issues") : state?.kind === "error" ? tr("1 syntax error, line {line}", { line: state.line }) : state?.kind === "unavailable" ? tr("Unable to check") : tr("Checking…");
   registry.scheduleEditorIntel?.();
@@ -176,7 +181,7 @@ const themeFor = (dark) => EditorView.theme({}, { dark });
 const isDark = () => document.body.classList.contains("dark");
 function makeState(content) {
   return EditorState.create({ doc: content, extensions: [basicSetup, StreamLanguage.define(octave), syntaxHighlighting(highlight), sections, octaveFold, autocompletion({ override: [completion] }), linter(lintSource, { delay: 500 }), lintGutter(), breakpointField, debugLineField, breakpointGutter, themeCompartment.of(themeFor(isDark())), EditorView.updateListener.of((update) => {
-    if (update.docChanged && shared.active) {
+    if (update.docChanged && shared.active && registry.isDiagramTab?.(shared.active) !== true) {
       shared.active.content = update.state.doc.toString();
       shared.active.dirty = shared.active.content !== shared.active.saved;
       shared.active.lintState = { kind: "checking", issues: [] };
@@ -260,6 +265,7 @@ function migrateLegacyDrafts() {
   return migrated;
 }
 function updateCursor() {
+  if (registry.isDiagramTab?.(shared.active) === true && registry.diagramFooter?.()) return;
   let pos = shared.editor.state.selection.main.head, line = shared.editor.state.doc.lineAt(pos);
   registry.$("#cursor").textContent = tr("Line {line}, Column {column}", { line: line.number, column: pos - line.from + 1 });
   registry.$("#lines").textContent = tr("{count} lines", { count: shared.editor.state.doc.lines });
@@ -304,20 +310,30 @@ function renderTabs() {
   registry.$("#editor-label").textContent = shared.active ? shared.active.path.split("/").pop() : tr("New File");
   registry.$("#editor-label").title = shared.active?.path || "";
   updateLintCaption();
+  registry.renderDiagramCaption?.();
   registry.renderAssistantDiskMarks?.();
   registry.renderFiles();
 }
+// A block diagram tab shows the diagram editor; the code editor then holds an
+// empty read-only document so editor commands cannot change the tab's content.
+// It keeps the fields that late gutter/completion events of the previous state read.
+const diagramPlaceholder = () => EditorState.create({ doc: "", extensions: [EditorState.readOnly.of(true), EditorView.editable.of(false), breakpointField, debugLineField, autocompletion({ override: [completion] })] });
 function switchTab(t) {
-  if (shared.active) shared.active.state = shared.editor.state;
+  if (shared.active && registry.isDiagramTab?.(shared.active) !== true) shared.active.state = shared.editor.state;
   shared.active = null;
-  shared.editor.setState(t.state || makeState(t.content));
+  const diagram = registry.prepareDiagramTab?.(t) === true;
+  shared.editor.setState(diagram ? diagramPlaceholder() : t.state || makeState(t.content));
   shared.editor.dispatch({ effects: themeCompartment.reconfigure(themeFor(isDark())) });
   shared.active = t;
+  registry.showDiagramTab?.(diagram ? t : null);
   renderTabs();
   refreshDebugEditor();
   updateCursor();
-  shared.editor.focus();
+  if (!diagram) shared.editor.focus();
   persistDrafts();
+}
+function requireDiagramName(t, path) {
+  if (registry.isDiagramTab?.(t) === true && !path.toLowerCase().endsWith(".imbd.json")) throw new Error(tr("A block diagram file name must end with .imbd.json."));
 }
 function closeTab(t) {
   if (t.dirty && !confirm(tr("Discard unsaved changes in {name}?", { name: t.path }))) return;
@@ -399,6 +415,7 @@ async function saveActive() {
     let name = await askName(path);
     if (!name) return false;
     path = registry.joinPath(shared.currentFolder, name);
+    requireDiagramName(t, path);
   }
   const written = t.content;
   let data = await registry.api("file", { path, content: written, hash: t.hash || "absent" });
@@ -416,6 +433,7 @@ async function saveAs() {
   const t = shared.active, name = await askName(t.path);
   if (!name) return;
   const path = registry.joinPath(shared.currentFolder, name);
+  requireDiagramName(t, path);
   if (path === t.path && t.hash) return saveActive();
   if (shared.tabs.some((other) => other !== t && other.path === path)) throw new Error(tr("This file is already open in another tab."));
   const written = t.content;
@@ -436,10 +454,12 @@ registry.setupEditor = () => {
   applyTheme(registry.getSetting("preferences", "theme") !== "light", false);
   registry.$("#theme").onclick = () => applyTheme(!document.body.classList.contains("dark"));
   registry.$("#undo").onclick = () => {
+    if (registry.isDiagramTab?.(shared.active) === true) return registry.diagramUndo();
     undo(shared.editor);
     shared.editor.focus();
   };
   registry.$("#redo").onclick = () => {
+    if (registry.isDiagramTab?.(shared.active) === true) return registry.diagramRedo();
     redo(shared.editor);
     shared.editor.focus();
   };

@@ -1,7 +1,8 @@
 # IndyMAT block models, schema 1 (experimental)
 
-This is a narrow Octave netlist layer, **not Simulink compatibility**. No editor,
-`.slx`/`.mdl` interpreter, model callbacks, or generated code is provided.
+This is a narrow Octave netlist layer, **not Simulink compatibility**. No
+`.slx`/`.mdl` interpreter, model callbacks, or generated code is provided. The
+IndyMAT block diagram editor (see "Diagram files" below) edits these models.
 Version 1 extends the feasibility study's v0 with exactly two blocks authorized
 on 13 October 2026: discrete `SampledInput` and `ClampingGate`. There is no PID
 mask or DiscreteFilter block. FIR/IIR and Euler integrals are ordinary networks
@@ -187,6 +188,47 @@ Structural errors in connections/endpoints use Connection, in parameters use
 Parameter, and in root/block/simulation use Schema. Compiler source contains
 the complete formatted messages. Internal Octave errors and interrupts retain
 their own information; known adaptive solver exhaustion maps to Solver.
+
+## Diagram files (`.imbd.json`) and the editor
+
+The IndyMAT block diagram editor keeps one diagram per file. A file whose name
+ends in `.imbd.json` opens from the Current Folder as a diagram. The file wraps
+an unchanged schema-1 model with the editor's block positions:
+
+```json
+{"imbVersion":1,
+ "model":{"schemaVersion":1,"blocks":[...],"connections":[...],"simulation":{...}},
+ "layout":{"blocks":{"u":{"x":20,"y":170},"x":{"x":190,"y":170},"output":{"x":360,"y":170}}}}
+```
+
+- `imbVersion` is 1. `model` is exactly the schema-1 model of this document, so
+  `im_compile`/`im_simulate` accept it unchanged. `layout.blocks` has exactly one
+  `{x,y}` entry per block id (finite numbers, |value| <= 1e6). Unknown fields at
+  any level and duplicate JSON keys are errors; nothing else is stored.
+- The editor checks structure when it opens a file (fields, types, block types,
+  exact parameter names, numbers, port numbers that exist). A file that fails
+  opens as text with the reason; "Open as Diagram" retries after a repair.
+  Value rules stay in `im_compile` and appear at Run: signs of +/-1, strict
+  properness, SampledInput length, drivers, algebraic loops, the time grid. An
+  incomplete diagram can be edited and saved.
+- Parameters are typed as plain decimal numbers; nothing is evaluated. The
+  property panel applies the rules of the table above where it can. `sampleTime`
+  follows the simulation: 0 in continuous mode, `Ts` in discrete mode.
+- The file is ordinary text in the editor tab: dirty state, drafts, the close
+  prompt, Save As (the name must end in `.imbd.json`) and the atomic save with the
+  hash conflict check are the text editor's. The editor writes one block,
+  connection or position per line.
+- Run saves first and then sends ordinary, visible Octave code through the
+  normal execute path (no new route): `<stem>_result = (@im_simulate)('<model
+  JSON>')`, with the model as compact single-line ASCII JSON in a text literal.
+  `<stem>` is the file name without `.imbd.json` when it is a valid identifier of
+  at most 56 characters, otherwise the variable is `diagram_result`. No other
+  base variable is written. Each Scope gets one figure named `<file name>: <Scope
+  id>`; the code first closes only figures with exactly that name, then plots
+  (`plot` in continuous mode, `stairs` in discrete mode; a Mux-fed Scope has a
+  legend of the Mux sources). Stop, job identity and the console are those of any
+  command. When an `im_compile` message names a block or connection, the editor
+  selects it.
 
 ## Examples and acceptance
 

@@ -453,9 +453,11 @@ require('mathjax').init({loader:{load:['input/tex','output/svg']},tex:{packages:
         kernel=PublishKernel.__new__(PublishKernel)
         kernel.__dict__.update(self.app.kernel.__dict__)
         kernel.publish_app=self.app;kernel.breakpoints={};kernel.breakpoint_jobs={};kernel.closed=False
+        # The collector only acts for the current engine process and job.
+        kernel.proc=SimpleNamespace(poll=lambda:None);kernel.job=self.job
         kernel.state.update(status='running',started=time.time())
         events=queue.Queue();events.put(('__MF_DONE_'+self.job+'__').encode())
-        kernel._collect(self.job,self.stage.parent,SimpleNamespace(poll=lambda:None),events,1,1)
+        kernel._collect(self.job,self.stage.parent,kernel.proc,events,1,1)
         self.assertEqual(kernel.state['status'],'idle');self.assertIsNone(kernel.state['error'])
         self.assertIn('Content-Security-Policy',self.target.read_text())
         self.assertFalse(self.stage.exists())
