@@ -16,7 +16,7 @@ ROOT=Path(__file__).resolve().parents[1]
 class SavedEntryKernelTests(unittest.TestCase):
     def setUp(self):
         self.temp=tempfile.TemporaryDirectory()
-        self.base=Path(self.temp.name)
+        self.base=Path(self.temp.name).resolve()
         self.work=self.base/'work';self.work.mkdir()
         self.entry_dir=self.work/'entries';self.entry_dir.mkdir()
         self.file=self.entry_dir/'entry.m'

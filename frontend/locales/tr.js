@@ -142,6 +142,7 @@ export default {
   "Connecting": "Bağlanıyor",
   "Working folder": "Çalışma klasörü",
   "Octave working directory": "Octave çalışma dizini",
+  "Rust engine (experimental)": "Rust motoru (deneysel)",
   "Rename File": "Yeniden adlandır",
   "Create a Copy": "Kopyasını oluştur",
   "Move to Folder…": "Klasöre taşı…",
@@ -151,5 +152,6 @@ export default {
   "Figures": "Grafikler",
   "Debugger": "Hata ayıklayıcı",
   "Workspace": "Çalışma alanı",
-  "Command History": "Komut geçmişi"
+  "Command History": "Komut geçmişi",
+  "This feature is not supported by the Rust engine yet.": "Bu özellik Rust motorunda henüz desteklenmiyor."
 };

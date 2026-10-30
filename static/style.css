@@ -156,6 +156,9 @@ button.primary:hover:not(:disabled){background:var(--accent-hover)}
 .cm-foldGutter{width:12px;color:var(--faint)}
 .cm-foldGutter .cm-gutterElement{padding:0!important;text-align:center;cursor:pointer}
 .cm-breakpoint-gutter{width:16px;cursor:pointer}
+body.breakpoints-unsupported .cm-breakpoint-gutter{cursor:default}
+/* A feature the active engine lacks stays off the screen, even where a button rule sets display. */
+body.engine-rust button[hidden]{display:none!important}
 .cm-breakpoint-gutter .cm-gutterElement{width:16px;padding:0!important;display:flex;align-items:center;justify-content:center}
 .cm-breakpoint-marker{display:block;width:9px;height:9px;border-radius:50%;background:var(--danger)}
 .cm-content{padding:10px 0!important;caret-color:var(--text)}
@@ -206,6 +209,7 @@ button.primary:hover:not(:disabled){background:var(--accent-hover)}
 #plot-area{flex:1;min-height:0;overflow:auto;position:relative;padding:10px;display:flex;align-items:center;justify-content:center}
 #plot-area img{display:block;max-width:100%;max-height:100%;object-fit:contain;cursor:zoom-in;background:#fff}
 #plot-area.zoomed{display:block}
+#plot-area .figure-unavailable{max-width:32em;text-align:center;color:var(--muted);font-size:13px;line-height:1.5}
 #plot-area.zoomed img{max-width:none;max-height:none;cursor:zoom-out}
 .interactive-plot{position:absolute;inset:0;background:var(--plot-bg);overflow:hidden}
 .interactive-plot canvas{display:block;width:100%;height:100%;touch-action:none;cursor:crosshair;background:var(--plot-bg)}
@@ -248,6 +252,8 @@ dialog.figure-expanded-dialog[open]{resize:both;width:min(1040px,92vw);height:mi
 .figure-window-controls button{padding:5px 9px;border:1px solid var(--plot-axis);border-radius:5px;background:var(--plot-bg);color:var(--plot-text);font:inherit;font-size:11px;box-shadow:0 1px 4px #0003}
 .figure-window-controls button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .figure-window-controls button[hidden]{display:none}
+/* Rust engine only: in the small plot panel the overlay would cover the right-hand axes title; show it on hover or focus there (pointer devices only). */
+@media (hover:hover){body.engine-rust #plot-area .figure-window-controls{opacity:0;transition:opacity .12s}body.engine-rust #plot-area:hover .figure-window-controls,body.engine-rust #plot-area .figure-window-controls:focus-within{opacity:1}}
 
 .workspace-panel{width:var(--right);flex-shrink:0;display:flex;flex-direction:column;background:var(--surface-side)}
 .workspace-table-wrap{flex:1;overflow:auto;min-height:80px}
@@ -674,7 +680,7 @@ body.resizing-rows,body.resizing-rows *{cursor:row-resize!important;user-select:
 /* Editor source adaptation: compact metadata beside original submitted code. */
 .source-adapter-note { color: var(--muted); font-size: 11px; margin: 4px 0; }
 .console-source { white-space: pre-wrap; font: inherit; margin: 4px 0; }
-.settings-note, .file-source-settings-note { color: var(--muted); font-size: 12px; line-height: 1.5; }
+.settings-note, .file-source-settings-note, .engine-note { color: var(--muted); font-size: 12px; line-height: 1.5; }
 .source-error-location { font: inherit; color: var(--danger); margin: 4px 0; }
 .source-snapshot { width: 100%; min-height: 300px; white-space: pre; font-family: monospace; }
 

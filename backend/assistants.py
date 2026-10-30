@@ -81,7 +81,7 @@ def command(provider, mode, executable, folder, conversation=None, prompt='', se
     return argv
 
 
-def environment_note(mode, folder, home, version='', packages=(), session_access='none', editor=(), first=True):
+def environment_note(mode, folder, home, version='', packages=(), session_access='none', editor=(), first=True, rust_engine=False):
     """Server-written note that opens a conversation: where the agent is and what it can rely on.
 
     Only facts the application knows; the folder is JSON-quoted so a folder name cannot pose as instructions.
@@ -100,9 +100,13 @@ def environment_note(mode, folder, home, version='', packages=(), session_access
         '- Answer in the language the user writes in.',
         'End of IndyMAT context.',
     ]
+    if rust_engine:
+        lines[2] = "- The engine is IndyMAT's own experimental Rust engine, not MATLAB and not GNU Octave. Octave packages and a separate octave-cli do not apply."
+        lines[3] = '- Write MATLAB-syntax code (end, single-quoted char, % comments). Do not assume every function exists; when unsure, say so instead of guessing.'
+        lines[6] = lines[6].replace("live Octave session", "live session").replace(" A separate octave-cli process, if your tools allow one, does not share that session's state.", "")
     if session_access != 'none':
         if mode == 'read-only': lines[5] = '- File access mode chosen by the user: read-only: you may read files here but must not change files.'
-        lines[6] = '- The indymat MCP tools can inspect your live session: session_status, workspace_variables, variable_value (bounded typed preview while idle), and figure_image (open-figure PNG). ' + ('Code cannot be run in the session at this access level.' if session_access == 'inspect' else "run_code runs code in the user's LIVE Octave session, visibly in their Command Window, and changes their variables. job_result checks unfinished jobs. Prefer small steps; never clear all, close all or exit unless the user asked. The user can Stop your job.")
+        lines[6] = '- The indymat MCP tools can inspect your live session: session_status, workspace_variables, variable_value (bounded typed preview while idle), and figure_image (open-figure PNG). ' + ('Code cannot be run in the session at this access level.' if session_access == 'inspect' else "run_code runs code in the user's LIVE " + ('' if rust_engine else 'Octave ') + "session, visibly in their Command Window, and changes their variables. job_result checks unfinished jobs. Prefer small steps; never clear all, close all or exit unless the user asked. The user can Stop your job.")
     if mode == 'ask': lines[5] = '- You may propose any change; each action that needs permission is shown to the user for approval, so prefer small, reviewable edits and explain in one line what an edit is for before making it.'
     if mode != 'read-only': lines.insert(6, '- Change files with small targeted edits rather than rewriting whole files: the user watches the open file update live in the editor.')
     if not first: lines = [lines[0], lines[-1]]
@@ -393,7 +397,7 @@ class Assistants(CodexConversations):
                 try: facts = facts if facts is not None else self.describe() if self.describe else {}
                 except Exception: facts = {}
                 loaded = [item.get('name') for item in facts.get('packages', []) if isinstance(item, dict) and item.get('loaded')]
-                note = environment_note(mode, folder, home, str(facts.get('version', '')), loaded, level, () if provider == 'codex' else editor)
+                note = environment_note(mode, folder, home, str(facts.get('version', '')), loaded, level, () if provider == 'codex' else editor, rust_engine=bool(facts.get('engine')))
                 # Measured with codex-cli 0.160.0 (5 Oct 2026): with this line an edit in ask mode arrives as a
                 # file-change approval carrying a diff; without it Codex writes through a shell command and the
                 # user is shown that command instead.

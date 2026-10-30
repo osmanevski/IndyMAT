@@ -3,6 +3,7 @@ function M = readmatrix(filename, varargin)
 % Supports .csv, .txt and .dat files plus Delimiter and NumHeaderLines.
 % Missing and nonnumeric fields are returned as NaN.
 % BOM removal and quote-aware delimiter detection share readcell's parser.
+  if exist('readmatrix','builtin')==5&&(ischar(filename)||isa(filename,'string'))&&strncmpi(fliplr(char(filename)),'xslx.',5),M=builtin('readmatrix',filename,varargin{:});return;endif
   filename=local_filename(filename);local_extension(filename);
   [delimiter,header_lines]=local_options(varargin{:});
   args={};if ~isempty(delimiter),args=[args {'Delimiter',delimiter}];endif

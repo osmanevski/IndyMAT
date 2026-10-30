@@ -60,5 +60,6 @@ export default {
   "Find Usages": "Kullanımları bul",
   "Untitled section": "Adsız bölüm",
   "Block diagram": "Blok diyagramı",
-  "A block diagram file name must end with .imbd.json.": "Blok diyagramı dosya adı .imbd.json ile bitmeli."
+  "A block diagram file name must end with .imbd.json.": "Blok diyagramı dosya adı .imbd.json ile bitmeli.",
+  "Syntax check unavailable": "Sözdizimi denetimi kullanılamıyor"
 };

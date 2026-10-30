@@ -1,0 +1,11 @@
+[package]
+name = "indy-kernel"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+indy-graphics-builtins = { path = "../indy-graphics-builtins" }
+indy-interp = { path = "../indy-interp" }
+indy-syntax = { path = "../indy-syntax" }
+indy-value = { path = "../indy-value" }

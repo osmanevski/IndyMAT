@@ -9,6 +9,7 @@ from urllib.parse import urlparse, parse_qs, unquote
 from backend.assistants import Assistants
 from backend.assistant_bridge_service import BridgeService
 from backend.kernel import Kernel
+from backend.kernel_rust import RustKernel, OctaveFreeServices, kernel_executable
 from backend.source_jobs import validate_source_context
 from backend.source_files import read_file_source
 from backend.files import Workspace
@@ -60,6 +61,8 @@ def workspace_mat_path(workspace,name,must_exist):
         return target.path
     finally:target.close()
 
+ENGINES=('octave','rust')  # The first is the default.
+
 class PublishKernel(Kernel):
     """App-side completion fence; no changes to the persistent engine protocol.
 
@@ -71,6 +74,10 @@ class PublishKernel(Kernel):
     def __init__(self,*args,publish_app,**kwargs):
         self.publish_app=publish_app
         super().__init__(*args,**kwargs)
+    def start(self):
+        # Epochs keep rising across an engine switch, so nothing from the previous engine stays valid.
+        self.generation=max(self.generation,getattr(self.publish_app,'engine_epoch',0))
+        return super().start()
     def _finish_publish(self):
         self.publish_app.finish_publish(self)
         if hasattr(self.publish_app,'workspace_actions'):self.publish_app.workspace_actions.finish(self)
@@ -93,6 +100,40 @@ class PublishKernel(Kernel):
         return super()._submit(*args,**kwargs)
     def reset(self):
         with self.lock:
+            if self.closed:raise ValueError(tr('The compute engine is switching. Try again in a moment.'))
+            generation=self.generation
+            try:return super().reset()
+            finally:
+                self.publish_app.discard_publish_stages(self,generation)
+                if hasattr(self.publish_app,'workspace_actions'):self.publish_app.workspace_actions.discard()
+    def close(self):
+        with self.lock:
+            try:return super().close()
+            finally:
+                self.publish_app.discard_publish_stages(self)
+                if hasattr(self.publish_app,'workspace_actions'):self.publish_app.workspace_actions.discard()
+
+class PublishRustKernel(RustKernel):
+    """The same completion fence as PublishKernel around the experimental Rust engine."""
+    def __init__(self,*args,publish_app,**kwargs):
+        self.publish_app=publish_app
+        super().__init__(*args,**kwargs)
+    def start(self):
+        self.generation=max(self.generation,getattr(self.publish_app,'engine_epoch',0))
+        return super().start()
+    _finish_publish=PublishKernel._finish_publish
+    def _job_finished(self):self._finish_publish()
+    def snapshot(self):
+        with self.lock:
+            self._finish_publish()
+            return super().snapshot()
+    def submit(self,*args,**kwargs):
+        with self.lock:
+            self._finish_publish()
+            return super().submit(*args,**kwargs)
+    def reset(self):
+        with self.lock:
+            if self.closed:raise ValueError(tr('The compute engine is switching. Try again in a moment.'))
             generation=self.generation
             try:return super().reset()
             finally:
@@ -106,7 +147,7 @@ class PublishKernel(Kernel):
                 if hasattr(self.publish_app,'workspace_actions'):self.publish_app.workspace_actions.discard()
 
 class App:
-    def __init__(self,workspace,port,open_browser):
+    def __init__(self,workspace,port,open_browser,engine=None):
         self.workspace=Workspace(workspace)
         self.runtime=ROOT/'.matlab-free';self.runtime.mkdir(exist_ok=True)
         os.chmod(self.runtime,0o700)
@@ -120,12 +161,16 @@ class App:
         self.workspace_actions=WorkspaceActions(self)
         self.workspace.source_private_roots=(self.runtime/'jobs',)
         self.server=ThreadingHTTPServer(('127.0.0.1',port),Handler)
-        try:self.kernel=PublishKernel(ROOT,self.runtime/'jobs',self.workspace.root,publish_app=self)
+        self.engine_file=self.runtime/'engine.json';self.engine_lock=threading.Lock();self.engine_epoch=0;self.engine_notice='';self.engine_switching=False
+        self.engine=engine or self._saved_engine()
+        if not engine and self.engine!=ENGINES[0] and self._engine_problem(self.engine):
+            self.engine_notice=tr('The saved Rust engine could not be used, so GNU Octave was started. {problem}', problem=self._engine_problem(self.engine))
+            self.engine=ENGINES[0]
+        try:self._open_engine(self.engine)
         except Exception:
             self.server.server_close();raise
-        self.linter=OctaveLinter(self.runtime/'lint',self.kernel.executable)
+        if engine:self._save_engine(engine)
         self.symbols=SymbolIndex()
-        self.octave_services=OctaveServices(ROOT,self.runtime/'services',self.kernel.executable)
         self.server.daemon_threads=True; self.server.app=self
         self.port=self.server.server_address[1]
         self.base=f'http://127.0.0.1:{self.port}'
@@ -133,6 +178,60 @@ class App:
         self.assistants.bridge=self.assistant_bridge
         self.open_browser=open_browser
     def close(self):self.assistants.close();self.octave_services.close();self.kernel.close();self.server.server_close()
+    # Compute engine: one engine at a time, GNU Octave unless the user chose otherwise.
+    def _open_engine(self,name):
+        # Built first, then published at once: no request sees one engine's kernel with the other's services.
+        if name=='rust':
+            kernel=PublishRustKernel(ROOT,self.runtime/'jobs',self.workspace.root,publish_app=self)
+            linter=services=OctaveFreeServices()
+        else:
+            kernel=PublishKernel(ROOT,self.runtime/'jobs',self.workspace.root,publish_app=self)
+            try:
+                linter=OctaveLinter(self.runtime/'lint',kernel.executable)
+                services=OctaveServices(ROOT,self.runtime/'services',kernel.executable)
+            except Exception:
+                kernel.close();raise
+        self.kernel,self.linter,self.octave_services=kernel,linter,services
+    def _saved_engine(self):
+        try:saved=json.loads(self.engine_file.read_text()).get('engine')
+        except (OSError,ValueError,AttributeError):return ENGINES[0]
+        return saved if saved in ENGINES else ENGINES[0]
+    def _save_engine(self,name):
+        temporary=self.engine_file.with_name(self.engine_file.name+'.tmp')
+        try:
+            temporary.write_text(json.dumps({'engine':name}));os.replace(temporary,self.engine_file)
+        except OSError:temporary.unlink(missing_ok=True)
+    def _engine_problem(self,name):
+        if name=='rust':
+            try:kernel_executable(ROOT)
+            except RuntimeError as e:return str(e)
+            return ''
+        if shutil.which(os.environ.get('MATLAB_FREE_OCTAVE') or 'octave') or Path('/opt/homebrew/bin/octave').exists():return ''
+        return tr('GNU Octave was not found.')
+    def engine_info(self):
+        problems={name:self._engine_problem(name) for name in ENGINES}
+        return {'engine':self.engine,'available':{name:not problem for name,problem in problems.items()},'problems':problems}
+    def switch_engine(self,name):
+        if name not in ENGINES:raise ValueError(tr('Unknown compute engine.'))
+        with self.engine_lock:
+            if name!=self.engine:
+                problem=self._engine_problem(name)
+                if problem:raise ValueError(problem)
+                previous=self.engine
+                self.engine_switching=True
+                try:
+                    self.kernel.close();self.octave_services.close()
+                    self.engine_epoch=self.kernel.generation+1
+                    try:self._open_engine(name)
+                    except Exception as e:
+                        self._open_engine(previous)
+                        raise ValueError(tr('The selected engine could not start, so the previous engine was restarted with a new session: {error}', error=e))
+                    self.engine=name
+                finally:self.engine_switching=False
+            self.engine_notice=''
+            self._save_engine(name)
+            return self.engine_info()
+    # End compute engine.
     # Command history manager: persistence only; these methods never submit jobs.
     HISTORY_ENTRY_BYTES=64_000
     HISTORY_TOTAL_BYTES=1_000_000
@@ -371,6 +470,9 @@ class Handler(BaseHTTPRequestHandler):
                     if state['status']=='idle':self.app.workspace.follow(state.get('cwd',''))
                     state.update(self.app.workspace.info())
                 state.update(epoch=self.app.kernel.generation,source_file_adapter_version=1)
+                # The kernel read above is closing: neither its 'dead' nor its last 'idle' describes the session.
+                if getattr(self.app,'engine_switching',False):state['status']='starting'
+                if getattr(self.app,'engine_notice',''):state['engine_notice']=self.app.engine_notice
                 return self.send(200,state)
             if path=='/api/files':
                 with self.app.file_lock:data=self.app.workspace.tree()
@@ -387,6 +489,7 @@ class Handler(BaseHTTPRequestHandler):
                 return self.send(200,data)
             if path=='/api/history':return self.send(200,self.app.history_codes())
             if path=='/api/history-detail':return self.send(200,self.app.history_detail())
+            if path=='/api/engine':return self.send(200,self.app.engine_info())
             if path=='/api/help':
                 state=self.app.kernel.snapshot();return self.send(200,self.app.octave_services.help(params.get('name',[''])[0],state.get('cwd') or self.app.workspace.current))
             if path=='/api/packages':
@@ -457,6 +560,10 @@ class Handler(BaseHTTPRequestHandler):
         if path=='/api/assistant/stop':
             if not isinstance(d,dict) or set(d)!={'session'} or not isinstance(d['session'],str):raise ValueError(tr('Invalid assistant request.'))
             return self.send(200,self.app.assistants.stop(d['session']))
+        if path=='/api/engine':
+            if not isinstance(d,dict) or set(d)!={'engine','confirm'}:raise ValueError(tr('Send only the engine and the confirmation.'))
+            if d['confirm'] is not True:raise ValueError(tr('Explicit confirmation is required to switch the compute engine.'))
+            return self.send(200,self.app.switch_engine(d['engine']))
         k=self.app.kernel;w=self.app.workspace
         # Command Window and Command History routes. History mutations only
         # replace the private history file; location resolution only reads a
@@ -661,14 +768,23 @@ class Handler(BaseHTTPRequestHandler):
             self.send(200,{'ok':True});threading.Thread(target=self.server.shutdown,daemon=True).start();return
         self.send(404,{'error':tr('Not found')})
 
+def take_server_lock(lock,attempts=4):
+    # launch.py --status holds this lock for an instant to look at it; only a holder that stays is a server.
+    import fcntl
+    for attempt in range(attempts):
+        try:return fcntl.flock(lock,fcntl.LOCK_EX|fcntl.LOCK_NB)
+        except BlockingIOError:
+            if attempt==attempts-1:raise
+            time.sleep(.05)
+
 def main():
     parser=argparse.ArgumentParser(description=tr('IndyMAT local scientific environment'))
     parser.add_argument('--port',type=int,default=8769);parser.add_argument('--workspace',default=str(ROOT/'workspace'));parser.add_argument('--no-browser',action='store_true')
+    parser.add_argument('--engine',choices=ENGINES,help=tr('Compute engine; the choice is remembered. Default: the saved choice, otherwise octave.'))
     args=parser.parse_args()
-    import fcntl
     (ROOT/'.matlab-free').mkdir(exist_ok=True)
     lock=open(ROOT/'.matlab-free/server.lock','w')
-    try:fcntl.flock(lock,fcntl.LOCK_EX|fcntl.LOCK_NB)
+    try:take_server_lock(lock)
     except BlockingIOError:
         print(tr('IndyMAT is already running.'));
         try:
@@ -676,12 +792,13 @@ def main():
             if not args.no_browser:webbrowser.open(launch['url'])
         except (OSError,ValueError):pass
         return 0
-    try:app=App(args.workspace,args.port,not args.no_browser)
+    try:app=App(args.workspace,args.port,not args.no_browser,args.engine)
     except Exception as e:print(tr('Could not start: {error}', error=e),file=sys.stderr);return 1
     # Token only in a private local launch file and URL fragment, never access logs.
     launch={'url':app.base+'/#'+app.token,'port':app.port,'pid':os.getpid()}
     launchfile=ROOT/'.matlab-free/launch.json';launchfile.write_text(json.dumps(launch));os.chmod(launchfile,0o600)
     print(tr('IndyMAT is running: {url}\nPress Ctrl+C to close.\n', url=app.base),flush=True)
+    if app.engine_notice:print(app.engine_notice,file=sys.stderr,flush=True)
     if app.open_browser:webbrowser.open(launch['url'])
     def stop(signum,frame):threading.Thread(target=app.server.shutdown,daemon=True).start()
     signal.signal(signal.SIGINT,stop);signal.signal(signal.SIGTERM,stop)

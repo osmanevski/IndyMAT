@@ -7,7 +7,18 @@ function lines = readlines(filename, varargin)
   filename=local_filename(filename);local_extension(filename);
   fid=fopen(filename,'rb');if fid<0,error('readlines: could not open file %s',filename);endif
   unwind_protect,text=fread(fid,Inf,'*char')';unwind_protect_cleanup,fclose(fid);end_unwind_protect
-  if numel(text)>=3&&isequal(uint8(text(1:3)),uint8([239 187 191])),text=text(4:end);endif
+  % fread decodes '*char' as UTF-8; an engine that returns bytes shows the BOM as 3 chars.
+  if any(double(text)==65533)
+    % Not valid UTF-8: read as Latin-1, like the path-based readtable. U+FFFD
+    % written in the file itself (the bytes EF BF BD) is valid and stays.
+    fid=fopen(filename,'rb','n','ISO-8859-1');
+    if fid>=0
+      unwind_protect,bytes=fread(fid,Inf,'*char')';unwind_protect_cleanup,fclose(fid);end_unwind_protect
+      if numel(strfind(bytes,char([239 191 189])))~=sum(double(text)==65533),text=bytes;endif
+    endif
+  endif
+  if ~isempty(text)&&double(text(1))==65279,text=text(2:end);
+  elseif numel(text)>=3&&isequal(uint8(text(1:3)),uint8([239 187 191])),text=text(4:end);endif
   text=strrep(text,sprintf('\r\n'),sprintf('\n'));text=strrep(text,sprintf('\r'),sprintf('\n'));
   values=cell(0,1);start=1;
   for stop=find(text==sprintf('\n'))

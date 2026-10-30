@@ -4,17 +4,19 @@
 
 **GNU Octave diliyle bilimsel hesaplama, veri analizi ve grafik üretimi için Türkçe ve İngilizce arayüzlü bir masaüstü çalışma ortamı.** Arayüz ilk açılışta sistem dilini izler; dil Ayarlar'dan değiştirilebilir. IndyMAT; kod editörünü, komut penceresini, değişken incelemesini ve grafikleri aynı pencerede bir araya getirir. Hesaplamalar bilgisayarınızda çalışır; normal kullanım için bulut hesabı veya internet bağlantısı gerekmez.
 
-*English:* IndyMAT is a local desktop workspace for scientific computing with GNU Octave: editor, Command Window, Workspace and figures in one window. An optional Assistant panel can drive coding-agent command line programs you already have installed (Claude Code, Codex CLI, Antigravity CLI), with approval cards for changes and optional access to the live session; IndyMAT itself makes no model calls. The interface is available in English and Turkish, follows the system language on first start, and uses the terms MATLAB users already know (Workspace, Command Window, Run Section). The rest of this document is in Turkish.
+IndyMAT'in iki hesaplama motoru vardır ve ikisi de aynı indirmede gelir: varsayılan ve önerilen **GNU Octave** ile geliştirme aşamasındaki **kendi Rust motoru**. Ayrıntı: [İki motor](#iki-motor).
+
+*English:* IndyMAT is a local desktop workspace for scientific computing with GNU Octave: editor, Command Window, Workspace and figures in one window. An optional Assistant panel can drive coding-agent command line programs you already have installed (Claude Code, Codex CLI, Antigravity CLI), with approval cards for changes and optional access to the live session; IndyMAT itself makes no model calls. The interface is available in English and Turkish, follows the system language on first start, and uses the terms MATLAB users already know (Workspace, Command Window, Run Section). The rest of this document is in Turkish. IndyMAT has two engines in the same download: GNU Octave (the default and recommended engine) and its own Rust engine (experimental, in development: 753 of the 781 compatibility cases pass, against 711 for Octave with IndyMAT's helpers; figures export to PNG, JPEG, TIFF, SVG and PDF; heatmap, imread/imwrite, help, the packages UI, the profiler and publishing are not available yet). Build it with `cd motor && cargo build --release` (requires [Rust](https://rustup.rs)) and choose it when the macOS app starts or under Settings, Compute Engine.
 
 ## Hangi dil ile çalışır?
 
-IndyMAT'te **GNU Octave dilinde** komutlar, `.m` betikleri ve fonksiyonlar yazılır. Octave, matris ve vektör işlemleri üzerine kurulu sayısal hesaplama dilidir. Hesaplamaları gerçek GNU Octave motoru yürütür; değişkenler komutlar arasında bellekte korunur.
+IndyMAT'te **GNU Octave dilinde** komutlar, `.m` betikleri ve fonksiyonlar yazılır. Octave, matris ve vektör işlemleri üzerine kurulu sayısal hesaplama dilidir. Varsayılan olarak hesaplamaları gerçek GNU Octave motoru yürütür; değişkenler komutlar arasında bellekte korunur.
 
 Uygulamanın teknik yapısı:
 
 | Bileşen | Teknoloji |
 | --- | --- |
-| Sayısal hesaplama ve betikler | GNU Octave |
+| Sayısal hesaplama ve betikler | GNU Octave (varsayılan) veya IndyMAT'in kendi Rust motoru (deneysel) |
 | Yerel sunucu ve süreç yönetimi | Python standart kütüphanesi |
 | Editör ve arayüz | JavaScript, CodeMirror 6, HTML ve CSS |
 | macOS uygulama penceresi | Swift, AppKit ve WebKit |
@@ -53,6 +55,31 @@ Bu paketler için sürümlü yamalar `octave/paket-yamalari/` altındadır. Her 
 
 Bu fonksiyonların sonuçları yamasız paketinkinden farklı olabilir. `python3 scripts/patch_packages.py --package <paket-sürüm>` (örneğin `control-4.2.3`) yamaları projenin `.packages/` klasöründeki pakete uygular; sistem genelinde kurulu paketlere dokunmaz. `--package` verilmezse yalnızca `datatypes` işlenir. `--check` yalnızca durumu gösterir, `--revert` özgün dosyaları geri yükler. Betik paketin kendi dosyalarını yerinde değiştirir, ama yalnızca içerikleri beklenen özgün sürümle birebir aynıysa. Tanımadığı bir paket sürümüne, içeriği değişmiş bir dosyaya ve oluşturacağı yerde zaten var olan bir dosyaya dokunmaz. Bir paket yeniden kurulur ya da güncellenirse yamalar kaybolur; betiği o paket için yeniden çalıştırın.
 
+## İki motor
+
+Tek uygulama, iki motor: ayrı bir indirme veya ayrı bir uygulama yoktur. Aynı anda yalnızca bir motor çalışır.
+
+| | GNU Octave | Rust motoru |
+| --- | --- | --- |
+| Durum | **Varsayılan, önerilen** | **Geliştirme aşamasında, deneysel** |
+| Gerekenler | GNU Octave kurulumu | Rust araç zinciriyle bir kez derlemek; Octave gerekmez |
+| Uyumluluk setinde geçen durum (781) | 711 (IndyMAT yardımcılarıyla) | 753 |
+
+Bu sayılar yalnızca IndyMAT'in kendi uyumluluk setinin sonucudur; setin ölçmediği alanlar için bir söz vermez ve hiçbiri tam MATLAB uyumluluğu anlamına gelmez. Sonuçlardan emin olmanız gereken işlerde varsayılan motoru kullanın.
+
+**Rust motorunda çalışanlar:** komutlar, `.m` betikleri ve fonksiyonlar; 2B ve 3B etkileşimli grafikler, PNG görünümü ve PNG, JPEG, TIFF, SVG, PDF dışa aktarma (`print`, `saveas`, `exportgraphics`); koşullu kesme noktaları, adımlı hata ayıklama ve imlece kadar çalıştırma; MAT (işlev tutamaçları ve `string` dizileri dahil; bu tür dosyalar henüz gerçek MATLAB'de açılarak doğrulanmadı), xlsx ve WAV dosyaları; seyrek matrisler; `table`, `datetime` ve `string` türleri; motora yerleşik istatistik, kontrol ve sinyal işlevleri.
+
+**Henüz olmayanlar:** `heatmap`, `imread` ve `imwrite`, `yyaxis` için etkileşimli görünüm (yalnız PNG görünümünde çizilir), işlev yardımı (`help`, F1), paket arayüzü ve Octave paketleri, «Çalıştır ve süreyi ölç» ve «HTML raporu oluştur» komutları, sözdizimi denetimi, kaynak uyarlayıcı, Çalışma Alanı ve Değişken düzenleyicide değer düzenleme, PNG döndürme. Arayüz bu özellikleri Rust motorunda göstermez; kodda çağrılan desteklenmeyen işlevler uydurma bir sonuç yerine açık bir hata verir.
+
+**Rust motorunu derleme** ([Rust](https://rustup.rs) gerekir; yalnız standart kütüphane kullanılır, internetten bağımlılık indirilmez):
+
+```sh
+cd motor
+cargo build --release
+```
+
+**Motor seçimi:** macOS uygulaması, çalışan bir oturum yoksa açılışta hangi motorla başlayacağını sorar; son seçim hazır gelir, Return ile onaylanır. Sonradan: Ayarlar → Hesaplama motoru. Motor değiştirmek, Sıfırla gibi onay ister ve oturumu yeniden başlatır: bellekteki değişkenler, grafikler ve kesme noktaları silinir, dosyalarınız korunur. Seçim hatırlanır. Motor derlenmemişse uygulama nasıl derleneceğini söyler ve mevcut oturum olduğu gibi kalır. Durum çubuğu etkin motoru gösterir. Octave kurulu olmayan bir bilgisayarda Rust motoruyla başlamak için: `python3 app.py --engine rust`.
+
 ## Kodlama asistanları (isteğe bağlı)
 
 Sağdaki Asistan paneli, bilgisayarınızda zaten kurulu ve oturum açılmış kodlama asistanı komut satırı programlarını (Claude Code, Codex CLI, Antigravity CLI) geçerli klasörde çalıştırır. IndyMAT'ın kendisi hiçbir model çağrısı yapmaz, anahtar ya da model barındırmaz; program kurulu değilse o seçenek kapalı görünür ve uygulamanın geri kalanı aynen çalışır.
@@ -66,7 +93,7 @@ Asistanın çalıştırdığı kod ve komutlar sizin kullanıcı yetkilerinizle 
 
 ## Başlatma
 
-Python **3.10+** ve GNU Octave gerekir. macOS üzerinde Python 3.11 ve Octave 11.3.0 ile doğrulanmıştır. Arayüz hazır derlenmiş olarak gelir; normal kullanımda Node.js gerekmez.
+Python **3.10+** ve GNU Octave gerekir (yalnız [Rust motoru](#iki-motor) kullanılacaksa Octave yerine Rust araç zinciri). macOS üzerinde Python 3.11 ve Octave 11.3.0 ile doğrulanmıştır. Arayüz hazır derlenmiş olarak gelir; normal kullanımda Node.js gerekmez.
 
 ```sh
 git clone https://github.com/osmanevski/IndyMAT.git
@@ -125,7 +152,7 @@ npm ci
 npm run build
 ```
 
-Testler gerçek Octave ve Chromium kullanır. Gerekirse test tarayıcısını `npx playwright install chromium` ile kurun.
+Testler gerçek Octave ve Chromium kullanır; Rust motoru testleri motoru gerekirse `cargo` ile derler, `cargo` yoksa atlanır. Gerekirse test tarayıcısını `npx playwright install chromium` ile kurun.
 
 ```sh
 python3 scripts/check.py
@@ -133,7 +160,7 @@ python3 scripts/check.py
 
 **Test komutu bu proje klasöründeki açık sunucuyu kapatır. Aktif hesaplama sırasında çalıştırmayın.**
 
-Kaynaklar: `backend/` yerel servis ve motor, `octave/` hesaplama köprüsü, `frontend/` arayüz kaynakları, `static/` hazır arayüz, `macos/` masaüstü penceresi, `scripts/` denetim ve paket araçları, `uyumluluk/` MATLAB karşılaştırma ölçümleri, `tests/` kontroller ve `workspace/examples/` örnekler.
+Kaynaklar: `backend/` yerel servis ve motor, `octave/` hesaplama köprüsü, `motor/` deneysel Rust motoru, `frontend/` arayüz kaynakları, `static/` hazır arayüz, `macos/` masaüstü penceresi, `scripts/` denetim ve paket araçları, `uyumluluk/` MATLAB karşılaştırma ölçümleri, `tests/` kontroller ve `workspace/examples/` örnekler.
 
 ## Lisans
 

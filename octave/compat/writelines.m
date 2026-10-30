@@ -42,7 +42,7 @@ function local_atomic_write(filename,payload,mode)
   if strcmp(mode,'append')&&exist(filename,'file')==2
     fid=fopen(filename,'rb');if fid<0,error('writelines: could not read existing file %s',filename);endif
     unwind_protect
-      old=fread(fid,Inf,'*char')';
+      old=fread(fid,Inf,'*uint8')';
       [msg,err]=ferror(fid);if err,error('writelines: could not read existing file: %s',msg);endif
     unwind_protect_cleanup
       fclose(fid);
@@ -56,7 +56,7 @@ function local_atomic_write(filename,payload,mode)
   unwind_protect
     [fid,temporary,msg]=mkstemp(fullfile(folder,'.indymat-XXXXXX'));
     if fid<0,error('writelines: could not create temporary file: %s',msg);endif
-    if fwrite(fid,[old payload],'char')~=numel(old)+numel(payload),error('writelines: incomplete write to temporary file');endif
+    if fwrite(fid,old,'uint8')~=numel(old)||fwrite(fid,payload,'char')~=numel(payload),error('writelines: incomplete write to temporary file');endif
     [msg,err]=ferror(fid);if err,error('writelines: write failed: %s',msg);endif
     status=fclose(fid);fid=-1;
     if status~=0,error('writelines: could not close temporary file');endif

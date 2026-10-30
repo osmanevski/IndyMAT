@@ -4,9 +4,10 @@ import WebKit
 final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate, WKUIDelegate, WKScriptMessageHandler, WKDownloadDelegate {
     var window: NSWindow!
     var webView: WKWebView!
-    var loading: NSTextField!
+    var splash: SplashView!
     var baseURL: URL?
     var ready = false
+    var starting = false
     // Native text follows the page: system language until the page reports its own setting.
     var turkish = (Locale.preferredLanguages.first ?? "").hasPrefix("tr")
 
@@ -51,12 +52,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate, 
         webView.autoresizingMask = [.width, .height]
         webView.frame = window.contentView!.bounds
         window.contentView!.addSubview(webView)
-        loading = NSTextField(wrappingLabelWithString: L("Starting IndyMAT…", "IndyMAT başlatılıyor…"))
-        loading.alignment = .center
-        loading.font = .systemFont(ofSize: 17)
-        loading.frame = NSRect(x: 30, y: 380, width: 1260, height: 80)
-        loading.autoresizingMask = [.width, .minYMargin, .maxYMargin]
-        window.contentView!.addSubview(loading)
+        splash = SplashView(frame: window.contentView!.bounds)
+        splash.autoresizingMask = [.width, .height]
+        window.contentView!.addSubview(splash)
         for (name, on) in [(NSWindow.willEnterFullScreenNotification, true), (NSWindow.didExitFullScreenNotification, false)] {
             NotificationCenter.default.addObserver(forName: name, object: window, queue: .main) { [weak self] _ in
                 self?.webView.evaluateJavaScript("document.documentElement.classList.toggle('native-fullscreen', \(on))")
@@ -119,28 +117,74 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate, 
     }
 
     @objc func reload() {
-        if ready { webView.reload() } else { launchServer() }
+        if ready { webView.reload() } else if !starting { launchServer() }
+    }
+
+    // launch.py with the private pipes of the native window; a failure carries launch.py's own message.
+    func runLauncher(_ arguments: [String]) throws -> String {
+        let resource = Bundle.main.resourceURL!
+        let config = try JSONSerialization.jsonObject(with: Data(contentsOf: resource.appendingPathComponent("launcher.json"))) as! [String: String]
+        let process = Process()
+        process.executableURL = URL(fileURLWithPath: config["python"]!)
+        process.arguments = [resource.appendingPathComponent("launch.py").path] + arguments
+        let output = Pipe(), errors = Pipe()
+        process.standardOutput = output
+        process.standardError = errors
+        try process.run()
+        process.waitUntilExit()
+        let text = String(data: output.fileHandleForReading.readDataToEndOfFile(), encoding: .utf8)?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        guard process.terminationStatus == 0 else {
+            let error = String(data: errors.fileHandleForReading.readDataToEndOfFile(), encoding: .utf8)?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+            throw NSError(domain: "IndyMAT", code: 1, userInfo: [NSLocalizedDescriptionKey: error.isEmpty ? self.L("The local server could not be started.", "Yerel sunucu başlatılamadı.") : error])
+        }
+        return text
     }
 
     func launchServer() {
-        loading.isHidden = false
-        loading.stringValue = L("Starting IndyMAT…", "IndyMAT başlatılıyor…")
+        starting = true
+        splash.showProgress("")
         DispatchQueue.global(qos: .userInitiated).async {
             do {
-                let resource = Bundle.main.resourceURL!
-                let config = try JSONSerialization.jsonObject(with: Data(contentsOf: resource.appendingPathComponent("launcher.json"))) as! [String: String]
-                let process = Process()
-                process.executableURL = URL(fileURLWithPath: config["python"]!)
-                process.arguments = [resource.appendingPathComponent("launch.py").path, "--print-url"]
-                let output = Pipe(), errors = Pipe()
-                process.standardOutput = output
-                process.standardError = errors
-                try process.run()
-                process.waitUntilExit()
-                let text = String(data: output.fileHandleForReading.readDataToEndOfFile(), encoding: .utf8)?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
-                guard process.terminationStatus == 0, let url = URL(string: text), url.scheme == "http", url.host == "127.0.0.1", url.fragment != nil else {
-                    let error = String(data: errors.fileHandleForReading.readDataToEndOfFile(), encoding: .utf8) ?? ""
-                    throw NSError(domain: "IndyMAT", code: 1, userInfo: [NSLocalizedDescriptionKey: error.isEmpty ? self.L("The local server could not be started.", "Yerel sunucu başlatılamadı.") : error])
+                let text = try self.runLauncher(["--status"])
+                let status = try JSONSerialization.jsonObject(with: Data(text.utf8)) as? [String: Any] ?? [:]
+                DispatchQueue.main.async {
+                    if status["running"] as? Bool == true {
+                        self.startServer(engine: nil)
+                    } else {
+                        self.starting = false
+                        self.askEngine(saved: status["engine"] as? String ?? "octave", rustAvailable: status["rust_available"] as? Bool == true)
+                    }
+                }
+            } catch {
+                DispatchQueue.main.async { self.showFailure(error.localizedDescription) }
+            }
+        }
+    }
+
+    func askEngine(saved: String, rustAvailable: Bool) {
+        splash.showChoice(
+            question: L("Which engine should IndyMAT start with?", "IndyMAT hangi motorla başlasın?"),
+            footnote: L("Press Return to start with the selected engine. You can change it later in Settings, Compute Engine.", "Seçili motorla başlamak için Return’e basın. Sonradan Ayarlar’da, Hesaplama motoru bölümünden değiştirebilirsiniz."),
+            options: [
+                EngineOption(id: "octave", name: "GNU Octave", note: L("recommended", "önerilen"), enabled: true, hint: nil),
+                EngineOption(id: "rust", name: L("Rust engine", "Rust motoru"), note: L("experimental", "deneysel"), enabled: rustAvailable,
+                             hint: rustAvailable ? nil : L("The Rust engine is not built yet. Build it with:\ncd motor && cargo build --release", "Rust motoru henüz derlenmemiş. Şu komutla derleyin:\ncd motor && cargo build --release")),
+            ],
+            selected: saved) { [weak self] engine in
+                self?.startServer(engine: engine)
+            }
+    }
+
+    // No engine means attaching to the server that is already running.
+    func startServer(engine: String?) {
+        starting = true
+        splash.showProgress(engine == nil ? L("Opening IndyMAT…", "IndyMAT açılıyor…") : L("Starting IndyMAT…", "IndyMAT başlatılıyor…"))
+        window.makeFirstResponder(webView)
+        DispatchQueue.global(qos: .userInitiated).async {
+            do {
+                let text = try self.runLauncher(["--print-url"] + (engine.map { ["--engine", $0] } ?? []))
+                guard let url = URL(string: text), url.scheme == "http", url.host == "127.0.0.1", url.fragment != nil else {
+                    throw NSError(domain: "IndyMAT", code: 1, userInfo: [NSLocalizedDescriptionKey: self.L("The local server could not be started.", "Yerel sunucu başlatılamadı.")])
                 }
                 DispatchQueue.main.async {
                     self.baseURL = url
@@ -154,17 +198,21 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate, 
 
     func showFailure(_ message: String) {
         ready = false
-        loading.isHidden = false
-        loading.stringValue = L("IndyMAT could not be opened.\n\(message)\nTry again with View → Reload.", "IndyMAT açılamadı.\n\(message)\nGörünüm → Yeniden Yükle ile tekrar deneyin.")
+        starting = false
+        splash.showMessage(L("IndyMAT could not be opened.\n\(message)\nTry again with View → Reload.", "IndyMAT açılamadı.\n\(message)\nGörünüm → Yeniden Yükle ile tekrar deneyin."))
     }
 
     func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
         ready = true
-        loading.isHidden = true
+        starting = false
+        splash.dismiss()
         window.makeFirstResponder(webView)
     }
     func webView(_ webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation!, withError error: Error) {
         showFailure(L("The workspace could not be loaded. Check the local server connection.", "Çalışma alanı yüklenemedi. Yerel sunucu bağlantısını kontrol edin."))
+    }
+    func webView(_ webView: WKWebView, didFail navigation: WKNavigation!, withError error: Error) {
+        if !ready { showFailure(L("The workspace could not be loaded. Check the local server connection.", "Çalışma alanı yüklenemedi. Yerel sunucu bağlantısını kontrol edin.")) }
     }
     func webViewWebContentProcessDidTerminate(_ webView: WKWebView) {
         showFailure(L("The display process closed. The computation engine keeps running separately.", "Görüntüleme süreci kapandı. Hesaplama motoru ayrı çalışmaya devam eder."))
@@ -210,9 +258,3 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate, 
         alert.beginSheetModal(for: window)
     }
 }
-
-let app = NSApplication.shared
-let delegate = AppDelegate()
-app.delegate = delegate
-app.setActivationPolicy(.regular)
-app.run()

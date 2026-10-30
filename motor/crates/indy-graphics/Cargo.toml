@@ -1,0 +1,8 @@
+[package]
+name = "indy-graphics"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Graphics object model for the Rust engine: MATLAB-style figures emitted as Figure-Data v3 JSON."
+
+[dependencies]

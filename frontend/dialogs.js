@@ -9,6 +9,7 @@ function wordUnderCursor() {
   return doc.slice(from, to);
 }
 async function showDocumentation(name) {
+  registry.requireSupported?.("help");
   if (!name) throw new Error(t("Place the cursor on a function name."));
   let waiting = registry.el("div", "muted-empty", t("Loading Octave help…"));
   registry.modal(name + " — " + t("Help"), waiting);
@@ -29,13 +30,15 @@ function help() {
     e.preventDefault();
     registry.safe(() => showDocumentation(input.value.trim()));
   };
-  let info = registry.el("div");
-  info.innerHTML = `<div class="help-grid"><section><h3>${t("Keyboard Shortcuts")}</h3><div class="shortcut">${t("Function help at cursor")} <kbd>F1</kbd></div><div class="shortcut">${t("Save")} <kbd>⌘ / Ctrl S</kbd></div><div class="shortcut">${t("Go to File")} <kbd>⌘ / Ctrl P</kbd></div><div class="shortcut">${t("Font size")} <kbd>⌘ / Ctrl + − 0</kbd></div><div class="shortcut">${t("Run File")} <kbd>F5</kbd></div><div class="shortcut">${t("Run Selected Code")} <kbd>F9</kbd></div><div class="shortcut">${t("Run the %% section")} <kbd>⌘ / Ctrl Enter</kbd></div><div class="shortcut">${t("Search in Editor")} <kbd>⌘ / Ctrl F</kbd></div><div class="shortcut">${t("Stop the running computation")} <kbd>Ctrl C</kbd></div><div class="shortcut">${t("Command History")} <kbd>↑ / ↓</kbd></div><h3 style="margin-top:20px">${t("Files and Variables")}</h3><p>${t("Type <code>doc fft</code> in the Command Window for GNU Octave help. Run saves the file first. Click a variable to inspect its contents. Click the breakpoint gutter of a saved .m file to start debugging.")}</p></section><section><h3>${t("Compute Engine")}</h3><p>${t("IndyMAT runs on GNU Octave. Matrices, .m scripts and functions, 2-D/3-D plots, FFT, and differential equations are available. The signal and control examples require their respective packages.")}</p><h3>${t("Compatibility Limits")}</h3><p>${t("Supported functions depend on GNU Octave and installed packages. The debugger uses the documented subset of GNU Octave file and line breakpoints and step commands. Figures appear as PNGs when execution ends; they are not live animations or graphics callbacks.")}</p><h3>${t("Session")}</h3><p>${t("Variables persist while Octave is open; use <code>save('veriler.mat')</code> to keep them. Resetting the session clears memory. Run only code you trust.")}</p></section></div>`;
-  wrap.append(form, info);
+  let info = registry.el("div"), lookup = !registry.unsupported?.("help");
+  info.innerHTML = `<div class="help-grid"><section><h3>${t("Keyboard Shortcuts")}</h3>${lookup ? `<div class="shortcut">${t("Function help at cursor")} <kbd>F1</kbd></div>` : ""}<div class="shortcut">${t("Save")} <kbd>⌘ / Ctrl S</kbd></div><div class="shortcut">${t("Go to File")} <kbd>⌘ / Ctrl P</kbd></div><div class="shortcut">${t("Font size")} <kbd>⌘ / Ctrl + − 0</kbd></div><div class="shortcut">${t("Run File")} <kbd>F5</kbd></div><div class="shortcut">${t("Run Selected Code")} <kbd>F9</kbd></div><div class="shortcut">${t("Run the %% section")} <kbd>⌘ / Ctrl Enter</kbd></div><div class="shortcut">${t("Search in Editor")} <kbd>⌘ / Ctrl F</kbd></div><div class="shortcut">${t("Stop the running computation")} <kbd>Ctrl C</kbd></div><div class="shortcut">${t("Command History")} <kbd>↑ / ↓</kbd></div><h3 style="margin-top:20px">${t("Files and Variables")}</h3><p>${t("Type <code>doc fft</code> in the Command Window for GNU Octave help. Run saves the file first. Click a variable to inspect its contents. Click the breakpoint gutter of a saved .m file to start debugging.")}</p></section><section><h3>${t("Compute Engine")}</h3><p>${shared.engine.engine ? t("This session runs on IndyMAT's own Rust engine, which is experimental and in development; GNU Octave is not used. Features the engine does not support yet are reported as unsupported, never with a made-up result.") : t("IndyMAT runs on GNU Octave. Matrices, .m scripts and functions, 2-D/3-D plots, FFT, and differential equations are available. The signal and control examples require their respective packages.")}</p><h3>${t("Compatibility Limits")}</h3><p>${t("Supported functions depend on GNU Octave and installed packages. The debugger uses the documented subset of GNU Octave file and line breakpoints and step commands. Figures appear as PNGs when execution ends; they are not live animations or graphics callbacks.")}</p><h3>${t("Session")}</h3><p>${t("Variables persist while Octave is open; use <code>save('veriler.mat')</code> to keep them. Resetting the session clears memory. Run only code you trust.")}</p></section></div>`;
+  if (lookup) wrap.append(form);
+  wrap.append(info);
   registry.modal(t("Help"), wrap);
-  input.focus();
+  if (lookup) input.focus();
 }
 async function packageSession(action, name) {
+  registry.requireSupported?.("packages");
   registry.requireIdle();
   let result = await registry.api("package-session", { action, name });
   shared.lastJob = result.job;
@@ -60,6 +63,7 @@ async function watchPackageJob(job, output, refresh) {
   }
 }
 async function packages() {
+  registry.requireSupported?.("packages");
   let wrap = registry.el("div", "package-view");
   registry.modal(t("Packages"), wrap);
   async function refresh() {

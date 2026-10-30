@@ -54,6 +54,7 @@ function renderOutline(root) {
 function renderCodeIssues(root) {
   const state = shared.active?.lintState;
   root.append(registry.el("div", "editor-intel-label", tr("Octave syntax")));
+  if (registry.unsupported?.("lint")) return root.append(registry.el("div", "muted-empty", tr("Syntax check unavailable")));
   if (!state || state.kind === "checking") root.append(registry.el("div", "muted-empty", tr("Checking…")));
   else if (state?.kind === "unavailable") root.append(registry.el("div", "muted-empty", tr("Unable to check Octave syntax.")));
   else if (state?.kind === "error") {

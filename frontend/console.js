@@ -34,6 +34,7 @@ function scrollConsole() {
 async function execute(code, mode = "code", argument = "", label, recordHistory = false, source = "", onAccepted, sourceContext = null, fileHash = null) {
   registry.requireIdle();
   const generation = shared.uiGeneration;
+  if (registry.unsupported?.("source_adapter")) sourceContext = fileHash = null;
   if (fileHash !== null && shared.engine.source_file_adapter_version !== 1) throw new Error(t("Restart the application to enable saved-file adaptation. Your current session has not been reset."));
   const payload = { code, mode, argument, history: recordHistory };
   if (sourceContext) Object.assign(payload, { adapt_editor_literals: true, source_context: sourceContext });
@@ -97,9 +98,11 @@ async function runFileMode(mode, label) {
   await registry.poll();
 }
 function runProfile() {
+  registry.requireSupported?.("profiler");
   return runFileMode("profile", t("Profile"));
 }
 function publishFile() {
+  registry.requireSupported?.("publish");
   return runFileMode("publish", t("Publish"));
 }
 function requireCodeTab() {
@@ -165,7 +168,7 @@ function setStatus(s) {
   registry.$("#stop").disabled = !running && !paused;
   for (let selector of ["#run", "#run-section", "#run-selection", "#run-profile", "#publish", "#editor-run-section", "#editor-run-advance", "#editor-run-to-end", "#editor-run-selection"]) registry.$(selector).disabled = s.status !== "idle";
   registry.$("#command").disabled = shared.starting || s.status === "dead";
-  registry.$("#debug-controls").hidden = !paused;
+  registry.$("#debug-controls").hidden = !paused || !!registry.unsupported?.("debugger");
   for (let button of document.querySelectorAll("#debug-controls button")) button.disabled = !s.debug?.ready;
   registry.$("#input-bar").hidden = !s.waiting_input;
   registry.$("#status-dot").style.background = s.status === "dead" ? "var(--danger)" : "";

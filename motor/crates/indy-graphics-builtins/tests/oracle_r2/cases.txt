@@ -1,0 +1,23 @@
+% Oracle cases for the graphics functions added by lane r/grafik-2 that GNU
+% Octave 11.3 has natively. Each case starts with "%% name"; the body is
+% MATLAB code run in a fresh invisible figure. Regenerate with
+%   GRAFIK_CASES=motor/crates/indy-graphics-builtins/tests/oracle_r2/cases.txt \
+%     motor/scripts/grafik_oracle.sh
+% tests/oracle_r2.rs runs each body through the interpreter and compares.
+
+%% hist_default
+hist([1 2 2 3 3 3 4 7 7.5 10])
+%% hist_bins
+hist([1 2 2 3 3 3 4 7 7.5 10], 4)
+%% hist_centers
+hist([0.2 0.5 0.5 1.4 2.2 2.9], [0 1 2 3])
+%% hist_matrix
+hist([1 2;3 4;5 5], 3)
+%% hist_matrix3
+hist([1 2 3;3 4 4;5 5 6], 2)
+%% hist_norm
+hist([1 2 3 4 5 6], 3, 1)
+%% hist_constant
+hist([5 5 5], 3)
+%% hist_title
+hist([0.1 0.4 0.4 0.9]); title('h'); xlabel('x'); grid on

@@ -13,6 +13,7 @@ async function poll() {
     if (generation !== shared.uiGeneration) return;
     shared.wasDisconnected = false;
     shared.engine = s;
+    registry.syncEngine?.(s);
     registry.syncAssistantJobs?.(s, commandJob);
     registry.setStatus(s);
     let nextBreakpointKey = JSON.stringify(s.breakpoints || []);
@@ -26,7 +27,7 @@ async function poll() {
     registry.$("#workspace-path").title = s.current || s.workspace;
     registry.$("#cwd-status").textContent = s.cwd === (s.current || s.workspace) ? "" : s.cwd;
     registry.$("#cwd-status").title = s.cwd || "";
-    registry.$("#engine-version").textContent = "GNU Octave " + s.version;
+    registry.$("#engine-version").textContent = s.engine ? (s.engine.stub ? s.version : t("Rust engine (experimental)")) : "GNU Octave " + s.version;
     registry.$("#engine-packages").textContent = (s.packages || []).map((p) => p.name).join(", ");
     if (shared.lastEpoch !== null && shared.lastEpoch !== s.epoch) {
       registry.variableEpochChanged(s.epoch);

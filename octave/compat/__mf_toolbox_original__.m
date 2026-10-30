@@ -24,5 +24,11 @@ function handle = __mf_toolbox_original__ (name)
     handles.(name) = handle;
     return;
   endfor
+  % No original m-file (the Rust engine has no Octave library): use the engine builtin.
+  if (exist (name, 'builtin') == 5)
+    handle = @(varargin) builtin (name, varargin{:});
+    handles.(name) = handle;
+    return;
+  endif
   error ('%s: original function is unavailable', name);
 endfunction

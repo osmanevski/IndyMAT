@@ -1,0 +1,24 @@
+% Sparse values for the MAT-file interop check (run by both engines).
+sp_real = sparse([1 3 2], [1 2 3], [5 -7.5 1e-300], 4, 3);
+sp_inf = sparse([1 2 3], [1 1 2], [Inf -Inf NaN], 3, 2);
+sp_complex = sparse([1 2 2], [1 1 3], [1+2i -3i 4], 2, 3);
+sp_logical = sparse([1 2], [2 1], [true true], 2, 2);
+sp_logfull = sparse(logical([1 1]));
+sp_logcol = sparse(logical([1; 0; 1]));
+sp_logempty = sparse(logical(zeros(2, 3)));
+sp_empty = sparse(2, 3);
+sp_00 = sparse(0, 0);
+sp_03 = sparse(0, 3);
+sp_30 = sparse(3, 0);
+sp_log00 = sparse(false(0, 0));
+sp_1xn = sparse([0 2 0 0 3]);
+sp_nx1 = sparse([0; 0; 9]);
+sp_scalar = sparse(4);
+sp_zero = sparse(0);
+sp_full = sparse([1 2; 3 4]);
+sp_large = sparse([1 500000 1000000], [1 700000 1000000], [1 2 3], 1000000, 1000000);
+sp_largerow = sparse(1, 2000000, 8);
+sp_large_c = sparse(100000, 100000) + sparse(5, 7, 1+1i, 100000, 100000);
+sp_cell = {sparse([1 0; 0 2]), {sparse(logical([0 1]))}, 'text'};
+sp_struct = struct('a', sparse(1, 2, 3), 'b', {{sparse(2, 2)}});
+sp_structarr = struct('s', {sparse([1 0]), sparse(0, 1)});

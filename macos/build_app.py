@@ -24,10 +24,20 @@ with tempfile.TemporaryDirectory(prefix='indymat-native-') as temp:
     subprocess.run(['/usr/bin/swiftc', '-swift-version', '5', '-O',
                     '-target', f'{arch}-apple-macos12.0',
                     '-module-cache-path', str(ROOT / '.build.noindex' / 'ModuleCache'),
-                    str(ROOT / 'macos' / 'App.swift'), '-o', str(executable),
+                    *(str(ROOT / 'macos' / name) for name in ('App.swift', 'Splash.swift', 'main.swift')),
+                    '-o', str(executable),
                     '-framework', 'Cocoa', '-framework', 'WebKit'], check=True)
     shutil.copy2(ROOT / 'macos' / 'launch.py', resources / 'launch.py')
     (resources / 'launcher.json').write_text(json.dumps({'project_root': str(ROOT), 'python': PYTHON}, indent=2))
+    # The launch screen's logo and type, from the brand kit. Splash.swift names the same files.
+    splash = resources / 'splash'
+    splash.mkdir()
+    for variant in ('black', 'white'):
+        shutil.copy2(ROOT / 'docs' / 'brand' / 'logo' / 'png' / f'indymat-logo-horizontal-{variant}-1024.png', splash)
+    for subset in ('latin', 'latin-ext'):
+        for weight in (400, 600):
+            shutil.copy2(ROOT / 'docs' / 'brand' / 'fonts' / 'web' / f'montserrat-{subset}-{weight}-normal.woff2', splash)
+    shutil.copy2(ROOT / 'docs' / 'brand' / 'fonts' / 'OFL.txt', splash / 'montserrat-OFL.txt')
     icons = temp / 'IndyMAT.iconset'
     icons.mkdir()
     for size in (16, 32, 128, 256, 512):
@@ -57,6 +67,8 @@ with tempfile.TemporaryDirectory(prefix='indymat-native-') as temp:
     with (bundle / 'Contents' / 'Info.plist').open('wb') as f:
         plistlib.dump(info, f)
     subprocess.run(['/usr/bin/codesign', '--force', '--sign', '-', str(bundle)], check=True)
-    shutil.copytree(bundle, APP, dirs_exist_ok=True)
+    # A fresh copy: a file the previous build had and this one lacks would break the signature.
+    shutil.rmtree(APP, ignore_errors=True)
+    shutil.copytree(bundle, APP)
 subprocess.run(['/usr/bin/codesign', '--verify', '--strict', str(APP)], check=True)
 print(f'Built and verified: {APP}')

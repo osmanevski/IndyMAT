@@ -131,7 +131,8 @@ registry.bootstrap = () => {
     shared.activeOutput = null;
   });
   registry.on("#reset", async () => {
-    if (!confirm(t("Reset the Octave session? Variables and figures in memory will be cleared; your files will be kept."))) return;
+    const rust = !!shared.engine.engine;
+    if (!confirm(rust ? t("Reset the session? Variables and figures in memory will be cleared; your files will be kept.") : t("Reset the Octave session? Variables and figures in memory will be cleared; your files will be kept."))) return;
     shared.uiGeneration++;
     shared.publishRenders.clear();
     await registry.api("reset", {});
@@ -139,7 +140,7 @@ registry.bootstrap = () => {
     shared.lastFiguresKey = "";
     registry.poll.completed = null;
     shared.activeOutput = null;
-    registry.toast(t("Starting a new Octave session."));
+    registry.toast(rust ? t("Starting a new session.") : t("Starting a new Octave session."));
   });
   registry.on("#clear-workspace", registry.clearWorkspace);
   registry.on("#send-input", async () => {
@@ -207,7 +208,7 @@ registry.registerShortcut({ defaultMatch: { keys: ["p"], lowercase: true, modifi
 registry.registerShortcut({ defaultMatch: { keys: ["+", "="], modifiers: "primary" }, id: "global.font-increase", label: "Increase editor font size", scope: "global", scopeLabel: "General", bindings: ["Mod+Equal"], ignoreShift: true, command: () => registry.changeEditorFont(1) });
 registry.registerShortcut({ defaultMatch: { keys: ["-"], modifiers: "primary" }, id: "global.font-decrease", label: "Decrease editor font size", scope: "global", scopeLabel: "General", bindings: ["Mod+Minus"], ignoreShift: true, command: () => registry.changeEditorFont(-1) });
 registry.registerShortcut({ defaultMatch: { keys: ["0"], modifiers: "primary" }, id: "global.font-reset", label: "Reset editor font size", scope: "global", scopeLabel: "General", bindings: ["Mod+Digit0"], command: () => registry.resetEditorFont() });
-registry.registerShortcut({ defaultMatch: { keys: ["F1"], modifiers: "any" }, id: "global.documentation", label: "Open function help", scope: "global", scopeLabel: "General", bindings: ["F1"], command: () => registry.safe(() => registry.showDocumentation(registry.wordUnderCursor())) });
+registry.registerShortcut({ defaultMatch: { keys: ["F1"], modifiers: "any" }, id: "global.documentation", label: "Open function help", scope: "global", scopeLabel: "General", bindings: ["F1"], when: () => !registry.unsupported?.("help"), command: () => registry.safe(() => registry.showDocumentation(registry.wordUnderCursor())) });
 registry.registerShortcut({ id: "global.run", label: "Run File", scope: "global", scopeLabel: "General", bindings: ["F5"], command: () => registry.safe(registry.runFile) });
 registry.registerShortcut({ id: "global.run-selection", label: "Run Selected Code", scope: "global", scopeLabel: "General", bindings: ["F9"], command: () => registry.safe(registry.runSelection) });
 registry.registerShortcut({ defaultMatch: { keys: ["c"], lowercase: true, modifiers: "control" }, id: "global.stop", label: "Stop the running computation", scope: "global", scopeLabel: "General", bindings: ["Ctrl+KeyC"], configurable: false, when: (event) => {

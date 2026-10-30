@@ -1,0 +1,18 @@
+[workspace]
+resolver = "3"
+members = [
+    "crates/indy-syntax",
+    "crates/indy-corpus",
+    "crates/indy-kernel",
+    "crates/indy-value",
+    "crates/indy-interp",
+    "crates/indy-cli",
+    "crates/indy-graphics",
+    "crates/indy-graphics-builtins",
+    "crates/indy-raster",
+]
+
+[workspace.package]
+version = "0.0.1"
+edition = "2024"
+license = "MIT"

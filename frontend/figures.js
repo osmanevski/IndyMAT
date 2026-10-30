@@ -97,6 +97,8 @@ function loadActiveData() {
   });
 }
 const emptyPlot = { value: null };
+// `state.engine` exists only on the experimental Rust engine.
+const rustEngine = () => !!shared.engine?.engine;
 const plotNumber = (n) => n !== null && n !== "" && Number.isFinite(Number(n)) ? Number(n) : null;
 function cssColor(name) {
   return getComputedStyle(document.body).getPropertyValue(name).trim();
@@ -264,6 +266,15 @@ class InteractiveFigure {
   point(e) {
     let r = this.canvas.getBoundingClientRect();
     return { x: e.clientX - r.left, y: e.clientY - r.top };
+  }
+  // Rust engine only (Octave figures keep their measured widths):
+  // LineWidth is in points: 1 pt = 96/72 CSS px on the exported figure,
+  // scaled like the figure itself; never thinner than one device pixel.
+  lineWidthPx(points) {
+    const size = this.data.source?.figure_size, view = this.figureViewport;
+    const scale = Array.isArray(size) && size[0] > 0 && view?.width > 0 ? view.width / size[0] : 1;
+    const pt = Number.isFinite(points) && points > 0 ? points : 0.5;
+    return Math.max(1 / (globalThis.devicePixelRatio || 1), pt * 96 / 72 * scale);
   }
   box(i) {
     const fitted = this.axesViewport(i);
@@ -476,7 +487,7 @@ class InteractiveFigure {
     const c = this.ctx, face = s.face_color === "none" ? null : rawColor(s.face_color);
     const edge = s.edge_color === "none" || s.line_style === "none" ? null : plotColor(s.edge_color, this.palette);
     const faceAlpha = alphaValue(s.face_alpha), edgeAlpha = alphaValue(s.edge_alpha);
-    c.lineWidth = Math.max(1, s.line_width);
+    c.lineWidth = rustEngine() ? this.lineWidthPx(s.line_width) : Math.max(1, s.line_width);
     c.lineJoin = "miter";
     for (const polygon of shapes.facePolygons(s)) {
       const points = [];
@@ -544,7 +555,7 @@ class InteractiveFigure {
     }
     if (s.edge_color !== "none" && s.line_style !== "none") {
       c.strokeStyle = plotColor(s.edge_color, this.palette);
-      c.lineWidth = Math.max(1, s.line_width);
+      c.lineWidth = rustEngine() ? this.lineWidthPx(s.line_width) : Math.max(1, s.line_width);
       c.setLineDash(plotDash(s.line_style));
       c.strokeRect(layout.box.x, layout.box.y, layout.box.w, layout.box.h);
       c.setLineDash([]);
@@ -569,14 +580,14 @@ class InteractiveFigure {
       let x = this.dataPixel(s.x[n], i, "x"), y = this.dataPixel(s.y[n], i, "y");
       points.push(x === null || y === null ? null : { x, y, vx: s.x[n], vy: s.y[n], series: s });
     }
-    c.lineWidth = 1.5;
+    c.lineWidth = rustEngine() ? this.lineWidthPx(s.line_width) : 1.5;
     c.setLineDash(plotDash(s.line_style));
     if (style.line && s.span) {
       // A baseline or constant line crosses the whole current view.
       const b = this.box(i), across = s.span === "horizontal", at = across ? points[0]?.y : points[0]?.x;
       if (at !== undefined && at !== null) {
         c.strokeStyle = style.line;
-        c.lineWidth = s.role === "bar" ? 1 : 1.5;
+        if (!rustEngine()) c.lineWidth = s.role === "bar" ? 1 : 1.5;
         c.beginPath();
         c.moveTo(across ? b.x : at, across ? at : b.y);
         c.lineTo(across ? b.x + b.w : at, across ? at : b.y + b.h);
@@ -800,11 +811,18 @@ function figureDetail(data, supported) {
     }
     return " " + t("· Interactive data limited to 2000 points; endpoints were preserved.");
   }
-  if (!supported && !data?.loading) {
-    const reason = data?.reason_code ? figureReasonText(data.reason_code, data.reason_args) : data?.reason || shared.figures[shared.figureIndex]?.fallback_reason || t("Only the PNG view is available.");
-    return ` · ${reason}`;
-  }
+  if (!supported && !data?.loading) return ` · ${figureReason(data)}`;
   return "";
+}
+// Why the active figure has no interactive view (the localized reason_code message).
+function figureReason(data) {
+  return data?.reason_code ? figureReasonText(data.reason_code, data.reason_args) : data?.reason || shared.figures[shared.figureIndex]?.fallback_reason || t("Only the PNG view is available.");
+}
+// The Rust engine could not draw this figure's PNG: show the reason instead of a broken image.
+function figureUnavailable(data) {
+  const note = registry.el("div", "figure-unavailable", data?.loading ? "" : figureReason(data));
+  note.setAttribute("role", "status");
+  return note;
 }
 function supportedData(data) {
   return !!data?.supported && [2, 3].includes(data.version);
@@ -849,7 +867,9 @@ function renderFigures() {
   const index = shared.figureIndex;
   let data = shared.figureData[index];
   let supported = supportedData(data);
-  let showInteractive = !!shared.figures.length && supported && shared.plotMode === "interactive";
+  // Every Octave figure has a PNG; without one the interactive view is the only view.
+  const hasImage = !rustEngine() || !!shared.figureURLs[index];
+  let showInteractive = !!shared.figures.length && supported && (shared.plotMode === "interactive" || !hasImage);
   const is3D = showInteractive && data.version === 3 && data.axes.some((axes) => axes.dimension === 3);
   const fallbackData = data;
   const fallback = (code, args = {}) => {
@@ -868,7 +888,8 @@ function renderFigures() {
         showInteractive = false;
       }
     } else if (showInteractive) shared.interactivePlot = new InteractiveFigure(area, data);
-    if (!showInteractive) {
+    if (!showInteractive && !hasImage) area.append(figureUnavailable(data));
+    else if (!showInteractive) {
       const img = registry.el("img");
       img.src = shared.figureURLs[index];
       img.alt = shared.figures[index].name;
@@ -882,12 +903,20 @@ function renderFigures() {
   }
   registry.$("#plot-interactive").disabled = !shared.figures.length || !supported;
   registry.$("#plot-interactive").classList.toggle("active", showInteractive);
-  registry.$("#plot-png").disabled = !shared.figures.length;
-  registry.$("#plot-png").classList.toggle("active", !!shared.figures.length && !showInteractive);
-  registry.$("#plot-download").disabled = !shared.figures.length;
-  registry.$("#plot-expand").disabled = !shared.figures.length;
+  registry.$("#plot-png").disabled = !shared.figures.length || !hasImage;
+  registry.$("#plot-png").classList.toggle("active", !!shared.figures.length && !showInteractive && hasImage);
+  registry.$("#plot-download").disabled = !shared.figures.length || !hasImage;
+  registry.$("#plot-expand").disabled = !shared.figures.length || (!showInteractive && !hasImage);
   registry.$("#plot-fit").disabled = !shared.figures.length;
-  registry.$("#rotate-left").disabled = registry.$("#rotate-right").disabled = !shared.figures.length;
+  updateRotateControls();
+}
+// The interactive 3D viewer rotates locally; only the engine-side PNG rotation can be unsupported.
+function updateRotateControls() {
+  const hidden = !!registry.unsupported?.("figure_rotate") && !(shared.interactivePlot instanceof Figure3D);
+  for (const id of ["#rotate-left", "#rotate-right"]) {
+    registry.$(id).hidden = hidden;
+    registry.$(id).disabled = !shared.figures.length || hidden;
+  }
 }
 function resetFigure() {
   if (shared.interactivePlot instanceof Figure3D) shared.interactivePlot.tools.reset();
@@ -925,6 +954,7 @@ function expandFigure() {
   const viewer = shared.interactivePlot;
   if (!viewer) {
     // PNG mode, or no interactive data for this figure.
+    if (rustEngine() && !shared.figureURLs[shared.figureIndex]) return;
     const img = registry.el("img");
     img.src = shared.figureURLs[shared.figureIndex];
     img.alt = shared.figures[shared.figureIndex].name;
@@ -955,6 +985,7 @@ async function rotate(angle) {
     shared.interactivePlot.rotateAzimuth(angle);
     return;
   }
+  registry.requireSupported?.("figure_rotate");
   registry.requireIdle();
   if (!shared.figures.length) return;
   let result = await registry.api("execute", { mode: "rotate", argument: JSON.stringify({ figure: shared.figures[shared.figureIndex].number, angle }) });
@@ -967,7 +998,7 @@ async function rotate(angle) {
 registry.captureEmptyPlot = () => {
   emptyPlot.value = registry.$("#plot-area").innerHTML;
 };
-Object.assign(registry, { updateFigures, emptyPlot, plotNumber, cssColor, plotTheme, plotLuminance, plotColor, plotFormat, InteractiveFigure, figureDetail, renderFigures, rotate, resetFigure, expandFigure });
+Object.assign(registry, { updateRotateControls, updateFigures, emptyPlot, plotNumber, cssColor, plotTheme, plotLuminance, plotColor, plotFormat, InteractiveFigure, figureDetail, renderFigures, rotate, resetFigure, expandFigure });
 
 onLanguageChange(() => {
   if (shared.interactivePlot instanceof Figure3D) shared.interactivePlot.requestRender();
@@ -979,5 +1010,7 @@ onLanguageChange(() => {
   const figure = shared.figures[shared.figureIndex];
   if (!figure) return;
   const data = shared.figureData[shared.figureIndex];
+  const note = registry.$("#plot-area .figure-unavailable");
+  if (note) note.replaceWith(figureUnavailable(data));
   registry.$("#figure-caption").textContent = figure.name + figureDetail(data, supportedData(data));
 });

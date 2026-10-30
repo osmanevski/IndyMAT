@@ -46,6 +46,13 @@ function safe(fn) {
 function on(id, fn) {
   $(id).addEventListener("click", () => safe(fn));
 }
+// state.unsupported names engine features the UI must not offer; empty or absent gates nothing.
+function unsupported(feature) {
+  return !!shared.unsupported?.has?.(feature);
+}
+function requireSupported(feature) {
+  if (unsupported(feature)) throw new Error(t("This feature is not supported by the Rust engine yet."));
+}
 function draftStore() {
   try {
     let data = JSON.parse(localStorage.getItem("mf-drafts-v2") || "null");
@@ -61,4 +68,4 @@ function joinPath(root, name) {
   if (name.startsWith("/")) return name;
   return root.replace(/\/$/, "") + "/" + name.replace(/^\.\//, "");
 }
-Object.assign(registry, { $, el, api, textAPI, blobAPI, toast, safe, on, draftStore, within, joinPath });
+Object.assign(registry, { $, el, api, textAPI, blobAPI, toast, safe, on, unsupported, requireSupported, draftStore, within, joinPath });

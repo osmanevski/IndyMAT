@@ -19,3 +19,8 @@ release-manifest.json
 scripts/install_local.py
 docs/*
 !docs/brand/
+
+# Rust engine build output
+motor/target/
+# Local decision notes stay off the public tree
+motor/docs/Karar-*.md

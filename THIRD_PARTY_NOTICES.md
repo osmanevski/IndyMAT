@@ -8,10 +8,15 @@ The MIT license in [LICENSE](LICENSE) covers the original application code only.
 - datatypes 1.5.0: `.packages/datatypes-1.5.0/packinfo/COPYING`.
 - CodeMirror 6 and related editor packages: MIT; notices in `licenses/` and source package repositories.
 - MathJax 3.2.2: Apache License 2.0; bundled locally for offline publish-time TeX-to-SVG conversion. See `licenses/mathjax-LICENSE`.
+- Turbo colormap table in `motor/crates/indy-graphics/src/turbo.rs`: Google (Anton Mikhailov), Apache License 2.0; attribution in the file.
 - esbuild and Playwright: build/test dependencies only; versioned in package-lock.json with their upstream license files in node_modules when installed.
 
 GNU Octave and package binaries are machine-specific dependencies; preserve their accompanying notices when distributing them. They are not included in this source repository.
 
 The IndyMAT mark and logo (`docs/brand/`, `static/icon.png`, `static/favicon.*`, `macos/icon.png`) are original project artwork; the lettering in the logo files is converted to outlines.
 
-- Montserrat SemiBold (`static/fonts/montserrat-latin-600-normal.woff2`): SIL Open Font License 1.1, bundled locally and used only for the product name. See `licenses/montserrat-OFL.txt`. The brand kit in `docs/brand/` carries further Montserrat weights for documents and the web under the same license (`docs/brand/fonts/OFL.txt`); the application does not load them.
+- Montserrat SemiBold (`static/fonts/montserrat-latin-600-normal.woff2`): SIL Open Font License 1.1, bundled locally and used only for the product name. See `licenses/montserrat-OFL.txt`. The brand kit in `docs/brand/` carries further Montserrat weights for documents and the web under the same license (`docs/brand/fonts/OFL.txt`); of these, the macOS launch screen bundles Regular and SemiBold with the same license text.
+
+## Fonts embedded in the Rust engine (`motor/crates/indy-raster/fonts`)
+
+Subsets derived from Liberation Sans 2.1.5 (Copyright (c) 2010 Google Corporation, with Reserved Font Arimo, Tinos and Cousine; Copyright (c) 2012 Red Hat, Inc., with Reserved Font Name Liberation) and JetBrains Mono 2.304 (Copyright 2020 The JetBrains Mono Project Authors). Both under the SIL Open Font License 1.1: `licenses/OFL-LiberationSans.txt`, `licenses/OFL-JetBrainsMono.txt`.

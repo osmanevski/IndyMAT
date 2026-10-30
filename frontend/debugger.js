@@ -42,18 +42,21 @@ async function changeBreakpoint(path, line, action, condition, enabled) {
   registry.setStatus({ ...shared.engine, status: "running" });
 }
 async function toggleBreakpoint(line) {
+  registry.requireSupported?.("breakpoints");
   if (!shared.active || !shared.active.path.endsWith(".m") || !shared.active.hash || shared.active.dirty) throw new Error(t("Save the .m file before setting a breakpoint."));
   let current = pointAt(shared.active.path, line);
   await changeBreakpoint(shared.active.path, line, current ? "remove" : "set", current ? void 0 : "", current ? void 0 : true);
   registry.refreshDebugEditor();
 }
 async function editBreakpointCondition(line, path = shared.active?.path) {
+  registry.requireSupported?.("breakpoints");
   if (!path || !path.endsWith(".m")) throw new Error(t("Select a saved .m file for the condition."));
   let current = pointAt(path, line), value = prompt(t("Breakpoint condition (leave blank to stop unconditionally):"), current?.condition || "");
   if (value === null) return;
   await changeBreakpoint(path, line, "set", value, current?.enabled ?? true);
 }
 async function debugCommand(command, code = "") {
+  registry.requireSupported?.("debugger");
   await registry.api("debug", { command, code });
   registry.setStatus({ ...shared.engine, status: "running" });
   registry.refreshDebugEditor();
@@ -74,6 +77,7 @@ async function switchDebugFrame(index) {
   await debugCommand("frame", index);
 }
 async function runToCursor() {
+  registry.requireSupported?.("run_to_cursor");
   if (!shared.active || !shared.active.path.endsWith(".m") || !shared.active.hash || shared.active.dirty) throw new Error(t("Save the .m file before running to the cursor."));
   if (shared.engine.status !== "paused" || !shared.engine.debug?.ready) throw new Error(t("Run to Cursor is available only while the debugger is paused."));
   let line = shared.editor.state.doc.lineAt(shared.editor.state.selection.main.head).number;
@@ -141,7 +145,7 @@ function renderDebuggerPanel(state = shared.engine) {
   if (key === shared.debugPanelKey) return;
   shared.debugPanelKey = key;
   let paused = state.status === "paused", hasBreakpoints = rows.some(([, points]) => points.length);
-  registry.$("#debugger-panel").hidden = !paused && !hasBreakpoints;
+  registry.$("#debugger-panel").hidden = !!registry.unsupported?.("debugger") || !paused && !hasBreakpoints;
   registry.$("#debug-stack-section").hidden = !paused;
   registry.$("#debugger-state").textContent = paused ? state.run_to_cursor ? t("Waiting to run to cursor") : t("Paused") : t("Breakpoints");
   if (paused && state.debug?.ready && !(state.debug.file && state.debug.line > 0)) registry.$("#debugger-state").textContent = t("Paused — no source location");

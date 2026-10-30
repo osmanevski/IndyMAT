@@ -275,6 +275,7 @@ function openSettings() {
   fileAdapterRow.querySelector("input").dataset.setting = "adaptFileLiterals";
   preferences.append(fileAdapterRow);
   preferences.append(registry.el("p", "file-source-settings-note", t("Experimental: saved entry scripts only; dependencies, Profile and Publish run natively. Functions, classes, private folders, debugging and uncertain source run unchanged. Adapted copies expose generated mfilename and stack paths and remain until an explicit session reset.")));
+  registry.appendEngineSection?.(preferences, preferenceRow, selectControl);
   panels.append(registry.el("h3", "", t("Panels")));
   for (const [name, label] of [["files", "Current Folder"], ["workspace", "Workspace"], ["history", "Command History"], ["figures", "Figures"], ["debugger", "Debugger (when needed)"], ["bottom", "Bottom panel"]]) {
     const row = checkboxRow(t(label), shared.settings.panels[name], (value) => updateSetting("panels", name, value));

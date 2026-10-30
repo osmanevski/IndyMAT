@@ -2,6 +2,7 @@ function writecell(C, filename, varargin)
 % WRITECELL Write scalar numeric, logical and text cells to delimited text.
 % Supports .csv, .txt and .dat, Delimiter, and WriteMode overwrite/append.
 % Single uses 7 significant digits, double 15; integers stay integers, logicals 0/1.
+  if exist('writecell','builtin')==5&&(ischar(filename)||isa(filename,'string'))&&strncmpi(fliplr(char(filename)),'xslx.',5),builtin('writecell',C,filename,varargin{:});return;endif
   if ~iscell(C)||ndims(C)>2,error('writecell: C must be a two-dimensional cell array');endif
   filename=local_filename(filename);local_extension(filename);
   [delimiter,mode]=local_options(varargin{:});
@@ -82,7 +83,7 @@ function local_atomic_write(filename,payload,mode)
   if strcmp(mode,'append')&&exist(filename,'file')==2
     fid=fopen(filename,'rb');if fid<0,error('writecell: could not read existing file %s',filename);endif
     unwind_protect
-      old=fread(fid,Inf,'*char')';
+      old=fread(fid,Inf,'*uint8')';
       [msg,err]=ferror(fid);if err,error('writecell: could not read existing file: %s',msg);endif
     unwind_protect_cleanup
       fclose(fid);
@@ -96,7 +97,7 @@ function local_atomic_write(filename,payload,mode)
   unwind_protect
     [fid,temporary,msg]=mkstemp(fullfile(folder,'.indymat-XXXXXX'));
     if fid<0,error('writecell: could not create temporary file: %s',msg);endif
-    if fwrite(fid,[old payload],'char')~=numel(old)+numel(payload),error('writecell: incomplete write to temporary file');endif
+    if fwrite(fid,old,'uint8')~=numel(old)||fwrite(fid,payload,'char')~=numel(payload),error('writecell: incomplete write to temporary file');endif
     [msg,err]=ferror(fid);if err,error('writecell: write failed: %s',msg);endif
     status=fclose(fid);fid=-1;
     if status~=0,error('writecell: could not close temporary file');endif

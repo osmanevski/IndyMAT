@@ -25,7 +25,15 @@ function original = __mf_original_function__ (name)
       break;
     endif
   endfor
-  if (isempty (target)), error ('%s: original function could not be resolved', name); endif
+  if (isempty (target))
+    % No original m-file (the Rust engine has no Octave library): use the engine builtin.
+    if (exist (name, 'builtin') == 5)
+      original = @(varargin) builtin (name, varargin{:});
+      handles.(name) = original;
+      return;
+    endif
+    error ('%s: original function could not be resolved', name);
+  endif
   previous = pwd ();
   unwind_protect
     cd (fileparts (target));

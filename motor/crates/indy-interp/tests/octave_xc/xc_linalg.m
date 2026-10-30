@@ -1,0 +1,43 @@
+1;
+function show(name, v)
+  printf('%s: size=%s |', name, mat2str(size(v)));
+  printf(' %.8g', real(v(:))); if ~isreal(v), printf(' i'); printf(' %.8g', imag(v(:))); end; printf('\n');
+end
+A = [4 1+2i 0; 1-2i 5 1; 0 1 3]; B = [1 2i; 3 4]; C = [1 2+1i 3; 4i 5 6; 7 8 9-2i]; R = [4 1 2; 1 5 3; 2 3 6];
+show('det c', det(B)); show('det C', det(C)); show('inv B', inv(B)); show('inv C', inv(C));
+show('rank', rank(C)); show('rank def', rank([1 2i; 2 4i]));
+show('mldiv', B\[1;2]); show('mldiv C', C\[1 2;3 4i;5 6]); show('mrdiv', [1 2]/B);
+
+show('svd B', svd(B)); show('svd C', svd(C)); show('svd tall', svd([1 2;3 4i;5 6]));
+[U,S,V] = svd(C); show('svd rec', norm(U*S*V' - C) < 1e-12);
+[U,S,V] = svd([1 2;3 4i;5 6]); show('svd rec t', norm(U*S*V' - [1 2;3 4i;5 6]) < 1e-12); show('U size', size(U));
+[U,S,V] = svd([1 2;3 4i;5 6], 'econ'); show('econ size', size(U));
+[U,S,V] = svd([1 2i 3; 4 5 6i]); show('svd rec w', norm(U*S*V' - [1 2i 3;4 5 6i]) < 1e-12); show('S w', S);
+[L,U2,P] = lu(C); show('lu rec', norm(P*C - L*U2) < 1e-12); show('lu U', abs(U2)); show('lu P', P);
+[L,U2] = lu(C); show('lu2 rec', norm(L*U2 - C) < 1e-12);
+[Q,R2] = qr(C); show('qr rec', norm(Q*R2 - C) < 1e-12); show('qr unitary', norm(Q'*Q - eye(3)) < 1e-12); show('qr Rdiag', diag(R2));
+[Q,R2] = qr([1 2i;3 4;5 6], 0); show('qr econ', size(Q)); show('qr econ rec', norm(Q*R2 - [1 2i;3 4;5 6]) < 1e-12);
+[Q,R2,P] = qr(C); show('qrp rec', norm(Q*R2 - C*P) < 1e-12);
+show('norm2', norm(B)); show('norm2 C', norm(C)); show('norm2 real', norm([1 2;3 4])); show('norm fro', norm(C,'fro')); show('norm 1', norm(C,1)); show('norm inf', norm(C,inf));
+show('cond', cond(C)); show('cond real', cond([1 2;3 4])); show('cond1', cond([1 2;3 4],1)); show('condinf', cond([1 2;3 4],inf)); show('condfro', cond([1 2;3 4],'fro')); 
+show('cond rect', cond([1 2;3 4;5 6]));
+show('chol', chol(R)); show('chol c', chol(A)); show('chol lower', chol(R,'lower'));
+[Rc,p] = chol([1 2;2 1]); show('chol p', p); show('chol p R', Rc);
+show('null', abs(null([1 1;1 1]))); show('null w', norm([1 1i 2]*null([1 1i 2])));
+show('null size', size(null([1 2 3;4 5 6;7 8 9]))); show('orth size', size(orth([1 2;2 4]))); show('orth c', norm(orth([1 1i;1i -1])' * [1;1i]) > 0);
+show('pinv', pinv([1 2;3 4;5 6])); show('pinv c', pinv([1 1i;1i 2;3 4]));
+show('expm', expm([0 1;-1 0])); show('expm c', expm([0 1i;1i 0]));
+show('sqrtm', sqrtm([4 1;0 9])); show('sqrtm sym', sqrtm([5 2;2 5])); show('sqrtm diag', sqrtm(diag([4 -9])));
+show('sqrtm c', sqrtm(C)); show('sqrtm sq', norm(sqrtm(C)^2 - C) < 1e-10);
+show('logm', logm([2 1;0 3])); show('logm sym', logm([5 2;2 5])); show('logm c', logm(C)); show('logm rt', norm(expm(logm(C)) - C) < 1e-9);
+show('eig c', sort(abs(eig(C)))); show('eig B', sort(real(eig(B))));
+show('bitcmp', bitcmp(uint8(5))); show('bitcmp 16', bitcmp(uint16([1 2 65535]))); show('bitcmp i8', bitcmp(int8([0 5 -3]))); show('bitcmp d', bitcmp(5));
+show('bitshift', bitshift(uint8(5),2)); show('bitshift n', bitshift(uint8(255),-3)); show('bitshift ov', bitshift(uint8(200),2)); show('bitshift d', bitshift(5,[1 2 -1]));
+show('idivide fix', idivide(int32([7 -7]),int32(2),'fix')); show('idivide fl', idivide(int32([7 -7]),int32(2),'floor')); show('idivide ce', idivide(int32([7 -7]),int32(2),'ceil')); show('idivide ro', idivide(int32([7 -7 5]),int32(2),'round'));
+show('trace', trace(C)); show('kron', kron([1 2i],[1;3])); show('kron3', kron([1 2],[1 2],[1 2]));
+x = [1 2 3 4 5 6 7 8]; [p,f] = periodogram(x); show('pg', p(1:5)); show('pg f', f(1:3)); show('pg n', size(p));
+[p,f] = periodogram(x,[],16,100); show('pg16', p); show('pg16 f', f);
+[p,f] = periodogram(x,hamming(8),32); show('pgw', p(1:6));
+[p,f] = periodogram(x,[],16,'twosided'); show('pg2', p(1:4)); show('pg2 f', f(1:3));
+[p,f] = periodogram(x,[],15); show('pg15', p(1:4));
+[p,f] = periodogram(x,[],16,'power'); show('pgp', p(1:4));

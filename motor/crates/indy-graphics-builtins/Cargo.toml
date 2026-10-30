@@ -1,0 +1,12 @@
+[package]
+name = "indy-graphics-builtins"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "MATLAB graphics builtins for the IndyMAT Rust interpreter, over the indy-graphics object model."
+
+[dependencies]
+indy-graphics = { path = "../indy-graphics" }
+indy-interp = { path = "../indy-interp" }
+indy-raster = { path = "../indy-raster" }
+indy-value = { path = "../indy-value" }

@@ -154,6 +154,7 @@ function renameWorkspaceShortcut(event, variable) {
 }
 
 function editableScalar(variable) {
+  if (registry.unsupported?.("workspace_edit")) return false;
   return variable.size === "1x1" && !variable.complex && editableScalarClasses.has(variable.class);
 }
 
@@ -218,6 +219,7 @@ function parseWorkspaceScalar(variable, text) {
 }
 
 function beginWorkspaceValueEdit(cell, variable) {
+  registry.requireSupported?.("workspace_edit");
   if (!editableScalar(variable)) return registry.toast(t("Only numeric, logical, or character scalars can be edited here."));
   if (shared.engine.status === "paused") return registry.toast(t("Workspace is read-only while debugging is paused."));
   let initial = variable.class === "char" ? variable.preview : variable.preview || "";
@@ -276,6 +278,7 @@ async function workspacePathDialog(title, buttonText, initial) {
 }
 
 async function saveWorkspace(all) {
+  registry.requireSupported?.("mat_files");
   let names = all ? [] : selectedWorkspaceNames();
   if (!all && !names.length) throw new Error(t("Select variables to save."));
   let path = await workspacePathDialog(all ? t("Save Workspace") : t("Save Selection"), t("Save"), all ? "workspace.mat" : "selection.mat");
@@ -293,6 +296,7 @@ async function saveWorkspace(all) {
 }
 
 async function loadWorkspace() {
+  registry.requireSupported?.("mat_files");
   let path = await workspacePathDialog(t("Load MAT-file"), t("Inspect"), "workspace.mat");
   if (!path) return;
   await submitWorkspace({ action: "load-inspect", path });
@@ -321,6 +325,9 @@ function updateWorkspaceActions(status = shared.engine.status) {
   registry.$("#workspace-save-all").disabled = unavailable;
   registry.$("#workspace-save-selection").disabled = count === 0 || unavailable;
   registry.$("#workspace-load").disabled = unavailable;
+  let noEdit = !!registry.unsupported?.("workspace_edit"), noMat = !!registry.unsupported?.("mat_files");
+  registry.$("#workspace-edit-value").hidden = noEdit;
+  registry.$("#workspace-save-all").hidden = registry.$("#workspace-save-selection").hidden = registry.$("#workspace-load").hidden = noMat;
 }
 
 function editWorkspaceSelection() {

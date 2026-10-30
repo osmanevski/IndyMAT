@@ -19,6 +19,7 @@ import "./variable_editor.js";
 import "./workspace.js";
 import "./publish.js";
 import "./figures.js";
+import "./engine_gating.js";
 import "./poll.js";
 import "./dialogs.js";
 import "./assistant.js";

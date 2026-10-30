@@ -6,7 +6,7 @@ import { undo, redo } from "@codemirror/commands";
 import { tags } from "@lezer/highlight";
 import { octave } from "@codemirror/legacy-modes/mode/octave";
 import { autocompletion } from "@codemirror/autocomplete";
-import { linter, lintGutter } from "@codemirror/lint";
+import { linter, lintGutter, forceLinting } from "@codemirror/lint";
 
 import shared from "./state.js";
 import registry from "./registry.js";
@@ -68,12 +68,13 @@ function breakpointRanges(doc) {
   return builder.finish();
 }
 const breakpointGutter = gutter({ class: "cm-breakpoint-gutter", renderEmptyElements: true, markers: (view) => view.state.field(breakpointField), domEventHandlers: { mousedown(view, line, event) {
-  if (event.button !== 0) return false;
+  if (event.button !== 0 || registry.unsupported?.("breakpoints")) return false;
   event.preventDefault();
   let number = view.state.doc.lineAt(line.from).number;
   registry.safe(() => event.shiftKey ? registry.editBreakpointCondition(number) : registry.toggleBreakpoint(number));
   return true;
 }, contextmenu(view, line, event) {
+  if (registry.unsupported?.("breakpoints")) return false;
   event.preventDefault();
   let number = view.state.doc.lineAt(line.from).number;
   registry.safe(() => registry.editBreakpointCondition(number));
@@ -125,6 +126,12 @@ function updateLintCaption() {
     node.textContent = tr("Block diagram");
     return;
   }
+  if (registry.unsupported?.("lint")) {
+    node.classList.remove("error");
+    node.textContent = tr("Syntax check unavailable");
+    registry.scheduleEditorIntel?.();
+    return;
+  }
   node.classList.toggle("error", state?.kind === "error");
   node.textContent = state?.kind === "ok" ? tr("No issues") : state?.kind === "error" ? tr("1 syntax error, line {line}", { line: state.line }) : state?.kind === "unavailable" ? tr("Unable to check") : tr("Checking…");
   registry.scheduleEditorIntel?.();
@@ -136,6 +143,11 @@ function lintDiagnostic(issue, doc) {
 async function lintSource(view) {
   let tab = shared.active, source = view.state.doc.toString(), request = ++shared.lintSequence;
   if (!tab) return [];
+  if (registry.unsupported?.("lint")) {
+    tab.lintState = { kind: "disabled", issues: [] };
+    if (shared.active === tab) updateLintCaption();
+    return [];
+  }
   tab.lintState = { kind: "checking", issues: [] };
   if (shared.active === tab) updateLintCaption();
   try {
@@ -152,6 +164,11 @@ async function lintSource(view) {
     }
     return [];
   }
+}
+// Re-run (or, when unsupported, clear) the check after state.unsupported changes.
+function refreshLintGating() {
+  if (shared.editor) forceLinting(shared.editor);
+  updateLintCaption();
 }
 const octaveFold = foldService.of((state, lineStart) => {
   let doc = state.doc, line = doc.lineAt(lineStart), lexicalLines = editorLexicalLines(doc), text = lexicalLines[line.number - 1].code;
@@ -478,4 +495,4 @@ onLanguageChange(() => {
   updateCursor();
   refreshDebugEditor();
 });
-Object.assign(registry, { themeCompartment, words, completion, highlight, sectionLine, debugLine, debugFrameLine, debugCurrentFrameLine, setDebugLine, setBreakpointMarkers, BreakpointMarker, breakpointField, debugLineField, breakpointRanges, breakpointGutter, refreshDebugEditor, revealLine, sections, updateLintCaption, lintDiagnostic, lintSource, octaveFold, themeFor, isDark, makeState, setEditorFont, changeEditorFont, resetEditorFont, applyTheme, persistDrafts, migrateLegacyDrafts, updateCursor, fileLabel, renderTabs, switchTab, closeTab, openFile, createUntitled, modal, askName, saveActive, saveAs });
+Object.assign(registry, { themeCompartment, words, completion, highlight, sectionLine, debugLine, debugFrameLine, debugCurrentFrameLine, setDebugLine, setBreakpointMarkers, BreakpointMarker, breakpointField, debugLineField, breakpointRanges, breakpointGutter, refreshDebugEditor, revealLine, sections, updateLintCaption, refreshLintGating, lintDiagnostic, lintSource, octaveFold, themeFor, isDark, makeState, setEditorFont, changeEditorFont, resetEditorFont, applyTheme, persistDrafts, migrateLegacyDrafts, updateCursor, fileLabel, renderTabs, switchTab, closeTab, openFile, createUntitled, modal, askName, saveActive, saveAs });

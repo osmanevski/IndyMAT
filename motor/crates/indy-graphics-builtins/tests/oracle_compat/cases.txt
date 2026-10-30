@@ -1,0 +1,17 @@
+% Oracle cases for functions GNU Octave 11.3 lacks but IndyMAT's own MIT
+% compatibility layer (octave/compat) provides: measured with that layer,
+% i.e. against what IndyMAT (Octave) shows. Regenerate with
+%   GRAFIK_COMPAT=1 GRAFIK_CASES=motor/crates/indy-graphics-builtins/tests/oracle_compat/cases.txt \
+%     motor/scripts/grafik_oracle.sh
+% tests/oracle_r2.rs runs each body through the interpreter and compares.
+
+%% sgtitle_subplots
+subplot(2,1,1); plot(1:3); subplot(2,1,2); plot(3:-1:1); sgtitle('Ana başlık')
+%% sgtitle_bold_explicit_axes
+axes('Position',[0.1 0.1 0.5 0.5]); plot(1:3); sgtitle('B','FontWeight','bold')
+%% sgtitle_two_lines
+subplot(1,2,1); plot(1:3); subplot(1,2,2); bar([2 1]); sgtitle({'iki','satir'})
+%% sgtitle_replace
+subplot(2,2,1); plot(1:3); sgtitle('a'); sgtitle('b','FontSize',12,'Color',[0 0 1])
+%% sgtitle_large_figure
+set(gcf,'Position',[100 50 1000 800]); subplot(3,1,1); plot(1:2); subplot(3,1,3); plot(2:-1:1); sgtitle('T')

@@ -241,9 +241,13 @@ async function copySelection(tab, event) {
   }
 }
 
+function writesUnsupported() {
+  return !!registry.unsupported?.("variable_editor_write");
+}
+
 function writeAllowed(tab, paste = false) {
   let data = tab.data;
-  if (tab.path.length || !data.editable || !data.real) throw new Error(t("This view is read-only."));
+  if (tab.path.length || !data.editable || !data.real || writesUnsupported()) throw new Error(t("This view is read-only."));
   if (shared.engine.status !== "idle" || shared.busy || shared.engine.waiting_input) throw new Error(t("Finish the running operation or input request first."));
   if (paste && !["double", "single", "logical", ...integerClasses].includes(data.class)) throw new Error(t("Rectangular paste is limited to numeric and logical matrices."));
 }
@@ -270,6 +274,7 @@ async function pasteSelection(tab, text) {
 }
 
 function beginCellEdit(tab, cell, row, column, initial) {
+  if (writesUnsupported()) return;
   registry.safe(async () => {
     writeAllowed(tab);
     let input = registry.el("input", "variable-cell-input");
@@ -404,7 +409,7 @@ function renderActions(wrap, tab) {
   let copy = registry.el("button", "", t("Copy Selection"));
   copy.onclick = () => registry.safe(() => copySelection(tab));
   let paste = registry.el("button", "", t("Paste from Clipboard"));
-  paste.disabled = !tab.data.editable || tab.path.length > 0 || !["double", "single", "logical", ...integerClasses].includes(tab.data.class) || shared.engine.status !== "idle";
+  paste.disabled = writesUnsupported() || !tab.data.editable || tab.path.length > 0 || !["double", "single", "logical", ...integerClasses].includes(tab.data.class) || shared.engine.status !== "idle";
   paste.onclick = () => registry.safe(async () => pasteSelection(tab, await navigator.clipboard.readText()));
   actions.append(copy, paste);
   wrap.append(actions);
@@ -427,7 +432,7 @@ function renderVariableEditor(tab) {
   else wrap.append(registry.el("pre", "variable-detail", data.text || t("Empty value")));
   let note = data.note || t("Pages are limited to 100 rows × 30 columns; only the visible range is transferred.");
   if (data.truncated) note += " " + t("Value is shown in pages.");
-  if (tab.path.length || !data.editable || data.real === false) note += " " + t("This view is read-only.");
+  if (tab.path.length || !data.editable || data.real === false || writesUnsupported()) note += " " + t("This view is read-only.");
   else if (data.kind !== 'char-text') note += " " + t("Double-click a cell to edit; Enter saves, Escape or leaving the cell cancels. Paste does not expand the array.");
   wrap.append(registry.el("p", "variable-limit", note));
   registry.modal(t("{name} — Variable View", { name: tab.name }), wrap);
@@ -437,7 +442,7 @@ function renderVariableEditor(tab) {
 
 function renderText(wrap, tab) {
   let data = tab.data;
-  if (!data.editable) {
+  if (!data.editable || writesUnsupported()) {
     wrap.append(registry.el('pre', 'variable-detail', data.text || t('Empty text')));
     return;
   }
